@@ -1,0 +1,4516 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<link rel="manifest" href="manifest.json">
+  <meta name="author" content="Y&Z Studio - Powered by AI & Human Creativity">
+<meta name="copyright" content="© 2025 Y&Z Studio - yudabastard84@gmail.com">
+  <title> Audio Player Final</title>
+  <style>
+:root {  
+  --accent-color: #00ffe7;  
+  --bg-start: #000510;  
+  --bg-end: #001b2d;  
+  --glass-bg: rgba(255, 255, 255, 0.04);  
+  --glass-border: rgba(255, 255, 255, 0.1);  
+  --glass-shadow: rgba(0, 255, 255, 0.15);  
+}  
+* {  
+  margin: 0;  
+  padding: 0;  
+  box-sizing: border-box;  
+}  
+  
+body {  
+  font-family: var(--font-main);  
+  background: linear-gradient(135deg, var(--bg-start), var(--bg-end));  
+  color: var(--accent-color);  
+  display: flex;  
+  justify-content: center;  
+  padding: 20px;  
+    width: 100vw;  
+  height: 100vh;  
+    overflow-x: hidden; /* ⛔ cegah geser kanan */
+      overflow-y: auto; 
+}  
+
+body, html {
+  height: 100%;
+}
+
+/* Fullscreen video background */
+.video-background {
+  position: fixed;
+  top: 0;
+  left: 0;
+  height: 100%;
+  width: 100%;
+  z-index: -1;
+  overflow: hidden;
+}
+
+.video-bg {
+  position: fixed;
+  top: 0; left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: -1;
+  overflow: hidden;
+}
+
+.video-bg video {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.bg-media {
+  position: fixed;      /* Nempel di layar */
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100vh;        /* Full tinggi layar */
+  z-index: -1;          /* Di belakang konten */
+  overflow: hidden;
+  pointer-events: none; /* Biar nggak ganggu klik */
+}
+
+.bg-media video,
+.bg-media img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;    /* Potong rapi, tetap proporsional */
+  object-position: center;
+}
+
+/* PLAYER UI DI ATAS VIDEO */
+.player-container {
+  position: relative;
+  z-index: 10;
+  padding: 2rem;
+  color: white;
+  text-align: center;
+  backdrop-filter: blur(10px) brightness(0.7);
+  background: rgba(0, 0, 0, 0.4);
+  margin: 2rem;
+  border-radius: 20px;
+}
+
+
+.container {  
+  max-width: 100%;  
+  background: var(--dark);  
+  padding: 20px;  
+  border-radius: 16px;  
+  box-shadow: 0 0 20px #000a;  
+    overflow-x: hidden; /* ⛔ cegah geser kanan */
+      overflow-y: auto; 
+        justify-content: center;  
+}  
+  
+.header {  
+  display: flex;  
+  justify-content: space-between;  
+  align-items: center;  
+  margin-bottom: 40px;  
+}  
+  
+@keyframes rainbowGlow {  
+  0%   { stroke: #ff0055; fill: none; }  
+  25%  { stroke: #00eaff; fill: none; }  
+  50%  { stroke: #00ffae; fill: none; }  
+  75%  { stroke: #ffd500; fill: none; }  
+  100% { stroke: #ff0055; fill: none; }  
+}  
+  
+@keyframes rainbowText {  
+  0%   { color: #ff0055; text-shadow: 0 0 15px #ff0055aa; }  
+  25%  { color: #00eaff; text-shadow: 0 0 15px #00eaffaa; }  
+  50%  { color: #00ffae; text-shadow: 0 0 15px #00ffaebb; }  
+  75%  { color: #ffd500; text-shadow: 0 0 15px #ffd500bb; }  
+  100% { color: #ff0055; text-shadow: 0 0 15px #ff0055aa; }  
+}  
+  
+.logo-background {  
+  position: fixed;  
+  top: 72%;  
+  left: 50%;  
+  transform: translate(-50%, -50%);  
+  opacity: 0.15;  
+  z-index: 0;  
+  pointer-events: none;  
+  display: flex;  
+  flex-direction: column;  
+  align-items: center;  
+  justify-content: center;  
+  width: 100vw;  
+  height: 100vh;  
+  background: none;  
+        z-index: 1;  
+}  
+  
+.logo-shape {  
+  width: 280px;  
+  height: 280px;  
+  animation: rainbowGlow 8s linear infinite;  
+    z-index: 1;  
+}  
+  
+.logo-shape text {  
+  font-size: 36px;  
+  font-family: 'Saira Stencil One', sans-serif;  
+  animation: rainbowText 8s linear infinite;  
+  fill: currentColor;  
+    z-index: 1;  
+}  
+  
+.logo-text {  
+  font-size: 36px;  
+  font-family: 'Saira Stencil One', sans-serif;  
+  animation: rainbowText 8s linear infinite;  
+  letter-spacing: 2px;  
+  margin-top: 10px;  
+    z-index: 1;  
+}   
+    
+.logo-shape {  
+  filter: drop-shadow(0 0 6px rgba(255, 255, 255, 0.3));  
+    z-index: 1;  
+}  
+  
+#logoCanvas {  
+  position: absolute;  
+  top: 0;  
+  left: 0;  
+  width: 300px;  
+  height: 300px;  
+background: transparent;
+  z-index: 1;  
+}  
+  
+    svg {  
+      width: 100%;  
+      height: 100%;  
+        z-index: 1;  
+    }  
+  
+    circle {  
+    	  z-index: 1;  
+      transition: transform 0.05s linear;  
+      transform-origin: center;  
+    }  
+
+
+#peakContainer {
+  z-index: 0;
+}
+
+#digitalClock {
+  position: absolute;
+  top: 10px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(0, 0, 0, 0.25);
+  color: #ff3c3c;
+  font-weight: 900;
+  letter-spacing: 0.5px;
+  padding: 6px 18px;
+  border-radius: 12px;
+  border: 1px solid rgba(255,255,255,0.08);
+  backdrop-filter: blur(6px);
+  box-shadow: 0 0 8px #ff3c3c88, 0 0 16px #00ffff66;
+  animation: pulseText 1.4s ease-in-out infinite;
+  z-index: 999;
+  font-size: 13px;
+  text-align: center;
+  max-width: 90vw;
+  white-space: pre-line;
+  cursor: pointer;
+}
+@keyframes pulseText {  
+  0% { opacity: 0.5; }  
+  100% { opacity: 1; }  
+}
+  
+.trackname {
+  display: block;
+  max-width: 100%;
+  overflow: hidden;
+      overflow-x: hidden; /* ⛔ cegah geser kanan */
+  white-space: nowrap;
+  border-radius: 10px;
+  font-weight: 600;
+  color: transparent;
+  background: linear-gradient(90deg, #00faff, #ff00e0, #00ff91, #ffd500, #ff00e0, #00faff);
+  background-clip: text;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  animation: scrollText 15s linear infinite;
+}
+  
+@keyframes scrollText {
+  0% { transform: translateX(100%); }
+  100% { transform: translateX(-100%); }
+}
+  
+    .controls {  
+      display: flex;  
+      align-items: center;  
+      gap: 16px;  
+      margin-bottom: 10px;  
+      flex-wrap: wrap;  
+      justify-content: center;  
+    }  
+  
+    .btn {  
+      background: none;  
+      border: none;  
+      cursor: pointer;  
+      color: white;  
+      padding: 4px;  
+    }  
+  
+    .btn svg {  
+    	      background: none;  
+      border: none;  
+      width: 26px;  
+      height: 26px;  
+      fill: white;  
+      transition: 0.2s ease;  
+    }  
+  
+    .btn:hover svg {  
+      fill: #00d0ff;  
+    }  
+  
+    .progress-area {  
+      display: flex;  
+      align-items: center;  
+      justify-content: space-between;  
+      width: 100%;  
+    }  
+  
+    .progress-bar {  
+      flex: 1;  
+      height: 6px;  
+      background: #444;  
+      border-radius: 3px;  
+      overflow: hidden;  
+      margin-right: 8px;  
+    }  
+  
+    .progress {  
+      width: 0%;  
+      height: 100%;  
+      background: linear-gradient(to right, #00d0ff, #00ffa2);  
+      transition: width 0.2s linear;  
+    }  
+      
+    .timer {  
+      font-size: 10px;  
+      color:  #ffffff;  
+      min-width: 60px;  
+      text-align: right;  
+    }  
+  
+.vol-panel {  
+  display: flex;  
+  align-items: center;  
+  justify-content: center;  
+  gap: 12px;  
+  margin: 12px 0;  
+  color: #ccc;  
+}  
+  
+.vol-btn {  
+  background: rgba(0, 255, 200, 0.1);  
+  border: 1px solid rgba(0, 255, 200, 0.3);  
+  color: #fff;  
+  font-size: 18px;  
+  padding: 8px 16px;  
+  border-radius: 16px;  
+  backdrop-filter: blur(6px);  
+  cursor: pointer;  
+  box-shadow: 0 0 12px rgba(0, 255, 200, 0.3);  
+  transition: all 0.2s ease;  
+  text-shadow: 0 1px 2px #000;  
+}  
+  
+.vol-btn:hover {  
+  background: rgba(0, 255, 200, 0.2);  
+  border-color: rgba(0, 255, 200, 0.6);  
+  box-shadow: 0 0 18px rgba(0, 255, 200, 0.5);  
+}  
+  
+.vol-num {  
+  font-size: 13px;  
+  width: 36px;  
+  text-align: center;  
+}  
+  
+    .eq-wrapper {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 12px;
+      width: 92vw;
+      max-width: 360px;
+    }
+
+    .eq-container {
+      display: flex;
+      gap: 6px; 
+    }
+
+    .eq-sliders {
+      display: flex;
+      gap: 8px;
+      padding: 12px 0;
+      justify-content: center;
+      flex-direction: column;
+      align-items: center;
+      width: 28px;
+      position: relative;
+    }
+
+    .slider-wrapper {
+      position: relative;
+      height: 140px;
+      width: 20px;
+      background: none;
+    }
+
+    .slider-wrapper::before {
+      content: '';
+      position: absolute;
+      top: 8px;
+      bottom: 8px;
+      left: 50%;
+      width: 2px;
+      background: linear-gradient(to bottom, #666, #aaa, #666);
+      transform: translateX(-50%);
+    }
+
+    .slider-lines {
+      position: absolute;
+      width: 100%;
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+    }
+
+    .slider-lines span {
+      height: 1px;
+      background: #444;
+      opacity: 0.6;
+    }
+
+    .slider {
+      position: absolute;
+      width: 140px;
+      height: 20px;
+      transform: rotate(270deg);
+      top: 50%;
+      left: 50%;
+      translate: -50% -50%;
+      background: transparent;
+      appearance: none;
+      z-index: 2;
+    }
+
+    .slider::-webkit-slider-thumb {
+      appearance: none;
+      width: 10px;
+      height: 10px;
+      background: #ccc;
+      border: 1px solid #777;
+      box-shadow: 0 1px 2px #000a;
+      cursor: pointer;
+    }
+
+    .slider::-moz-range-thumb {
+      width: 10px;
+      height: 10px;
+      background: #ccc;
+      border: 1px solid #777;
+      box-shadow: 0 1px 2px #000a;
+      cursor: pointer;
+    }
+
+    .freq-label {
+      margin-top: 5px;
+      font-size: 9px;
+      color:  #ffffff;  
+       text-align: center;
+    }
+    
+
+#folderPicker {  
+  position: absolute;  
+  top: 12px;  
+  left: 12px;  
+  opacity: 0;  
+  width: 36px;  
+  height: 36px;  
+  z-index: 10;  
+}  
+  
+label[for="folderPicker"] {  
+  position: absolute;  
+  top: 105px;  
+  left: 30px;  
+  width: 36px;  
+  height: 36px;  
+  display: flex;  
+  justify-content: center;  
+  align-items: center;  
+  font-size: 18px;  
+  color: #0ff;  
+  cursor: pointer;  
+  z-index: 5;  
+}  
+  
+footer.footer-animated {  
+	  position: fixed;
+  bottom: 30;
+  left: 57;
+  text-align: center;  
+  padding: 18px 12px;  
+  font-size: 0.88rem;  
+  color: #cce4f4;  
+  backdrop-filter: blur(12px);  
+  border-top: 1px solid rgba(255, 255, 255, 0.04);  
+    font-family: sans-serif;
+      -webkit-backdrop-filter: blur(10px);
+        z-index: 0;  
+}  
+
+  
+footer .brand {  
+  font-weight: 700;  
+  background: linear-gradient(90deg, #00ffff, #6f00ff, #ff00aa, #ff6600, #00ffff);  
+  background-size: 400% 100%;  
+  -webkit-background-clip: text;  
+  -webkit-text-fill-color: transparent;  
+  animation: animateText 5s ease-in-out infinite;  
+}  
+  
+@keyframes animateText {  
+  0% { background-position: 0% 50%; }  
+  50% { background-position: 100% 50%; }  
+  100% { background-position: 0% 50%; }  
+}  
+
+details.section {  
+  /* COLLAPSIBLE STYLE AJA */  
+  /* Jangan pasang di div global bro */  
+  background: transparent;  
+  padding: 10px 0 16px;  
+  margin-bottom: 20px;  
+  border-left: 3px solid #00f0ff66;  
+  backdrop-filter: none;  
+}  
+  
+  summary {  
+    cursor: pointer;  
+    font-size: 17px;  
+    font-weight: 600;  
+    color: #ffffff;  
+    padding-left: 10px;  
+    margin-bottom: 6px;  
+  }  
+  
+  summary::marker {  
+    content: "🎚️ ";  
+    color: #00f0ff;  
+  }  
+  
+  summary:hover {  
+    color: #00f0ff;  
+  }  
+  
+  details.section > *:not(summary) {  
+    margin-left: 14px;  
+  }  
+  
+  .row {  
+    display: flex;  
+    flex-wrap: wrap;  
+    gap: 12px;  
+    margin-top: 6px;  
+    padding-left: 4px;  
+  }  
+  
+  select, button {  
+    padding: 6px 12px;  
+    border-radius: 6px;  
+    font-size: 14px;  
+    border: none;  
+    background: none;  
+    color: #fff;  
+  }  
+  
+  .btn {  
+      background: none;  
+      border: none;  
+  }  
+  
+  .blend-control {  
+    display: flex;  
+    align-items: center;  
+    gap: 10px;  
+    padding-left: 4px;  
+    margin-top: 6px;  
+  }  
+  
+#blendToggleBtn {
+  padding: 6px 16px;
+  font-size: 13px;
+  border-radius: 20px;
+  border: none;
+  color: #fff;
+  background-color: #444;
+  transition: background-color 0.3s ease;
+}
+#blendToggleBtn.on {
+  background-color: #00c8ff;
+}
+#blendToggleBtn.off {
+  background-color: #666;
+}
+  
+button.active {  
+  background-color: #4caf50;  
+  color: white;  
+  font-weight: bold;  
+}  
+
+.toggle-btn.on {
+  background: #00ffa2;
+  color: black;
+}
+.toggle-btn.off {
+  background: #444;
+  color: white;
+}
+
+body.locked {  
+  overflow: hidden;  
+}  
+
+#toolsPanel {
+  max-height: 60vh;
+  overflow-y: auto;
+  margin-top: 12px;
+  padding: 10px;
+  border-radius: 14px;
+background: transparent;
+}
+
+.player-container {  
+  transition: all 0.3s ease-in-out;  
+}  
+
+
+    canvas {
+      border: none;
+      background: none;
+      margin-top: 20px;
+      border-radius: 8px;
+          padding-left: 4px;  
+    }
+
+  </style>  
+<link href="https://fonts.googleapis.com/css2?family=Saira+Stencil+One&display=swap" rel="stylesheet">
+</head>  
+<body onclick="enterFullscreenOnce()">
+	
+  <div class="container">  
+    <div class="header">  
+
+        	  <!-- VIDEO BACKGROUND -->
+<!--
+<div class="video-background">
+  <video autoplay muted loop playsinline id="bgVideo">
+    <source src="https://raw.githubusercontent.com/yuda2525/YZ01-site/main/istockphoto-461913676-640_adpp_is.mp4" type="video/mp4">
+  </video>
+</div>
+-->
+	
+	
+	
+<div class="video-bg">
+  <video autoplay muted loop playsinline>
+    <source src="assets/Background18.mp4" type="video/mp4">
+    Your browser does not support the video tag.
+  </video>
+</div>
+
+<!--
+<div class="bg-media">
+  <img src="assets/Background14.jpeg" alt="" />
+</div>
+-->
+
+ <div class="logo"></div>    
+    </div> <div class="logo-background">  
+  <canvas id="logoCanvas" width="300" height="300"></canvas>  
+  <svg class="logo-shape" viewBox="0 0 100 100">  
+    <circle cx="50" cy="50" r="45" stroke-width="8" />  
+    <text x="50%" y="55%" text-anchor="middle" dy=".3em">Y&Z</text>  
+  </svg>  
+</div>  
+      
+    <!--  Cuma satu elemen jam -->  
+<div id="digitalClock">Loading Clock...</div>
+
+<!-- ✅ Now Playing -->
+<div id="nowPlayingBox" style="
+  width: 100%;
+  overflow: hidden;
+  text-align: center;
+  padding: 4px 0;
+">
+  <span id="trackTitle" style="
+    display: inline-block;
+    font-weight: bold;
+    font-size: 16px;
+    background: linear-gradient(90deg, 
+      #00faff, #ff00e0, #00ff91, #ffd500, #ff00e0, #00faff);
+    background-size: 300% auto;
+    color: transparent;
+    background-clip: text;
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    white-space: nowrap;
+    animation: scrollText 15s linear infinite;
+  ">-</span>
+</div>
+    
+    <div class="controls">  
+      <button class="btn" id="prevBtn">  
+        <svg viewBox="0 0 24 24"><path d="M6 19V5h2v14H6zm3.5-7L18 5v14l-8.5-7z"/></svg>  
+      </button>  
+      <button class="btn" id="playBtn">  
+        <svg id="playIcon" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>  
+      </button>  
+      <button class="btn" id="nextBtn">  
+        <svg viewBox="0 0 24 24"><path d="M18 5v14h-2V5h2zM15.5 12L7 19V5l8.5 7z"/></svg>  
+      </button>  
+<button id="repeatBtn" style="position: relative;">  
+  <svg id="repeatIcon" viewBox="0 0 24 24" width="24" height="24" fill="white">  
+    <path d="M17 1l4 4-4 4V6H7v4H5V5a2 2 0 012-2h10V1zM7 23l-4-4 4-4v3h10v-4h2v5a2 2 0 01-2 2H7v3z"/>  
+  </svg>  
+  <span id="repeatLabel"  
+        style="position: absolute; top: -4px; right: -4px; font-size: 10px; color: #00ffa2; font-weight: bold; display: none;">  
+  </span>  
+</button>  
+      <button class="btn" id="muteBtn">  
+        <svg id="muteIcon" viewBox="0 0 24 24"><path d="M5 9v6h4l5 5V4l-5 5H5z"/></svg>  
+      </button>  
+  
+    <div class="progress-area">  
+<div id="progressContainer" style="width:100%; height:6px; background:#333; cursor:pointer;">  
+  <div id="progressBar" style="height:100%; width:0%; background:#00ffa2;"></div>  
+</div>  
+      <div class="timer" id="timerText">00:00 / 00:00</div>  
+    </div>  
+  
+<!-- VOLUME PANEL DIPISAH -->  
+<div class="vol-panel" style="display: none;">
+  <button class="vol-btn" id="volDown">➖</button>
+  <div class="vol-num" id="volVal">100</div>
+  <button class="vol-btn" id="volUp">➕</button>
+      <input type="range" id="volumeRange" min="0" max="2.5" value="1" step="0.01" />
+  <span id="gain-info"></span>
+</div>
+  
+  <div class="eq-wrapper">
+    <div class="eq-container" id="eqContainer"></div>
+  </div>
+<audio id="audioPlayer" src="audio/lagu1.mp3"></audio>
+    </div>  
+<!-- Tombol Lock/Unlock -->
+<button id="screenLockBtn" title="Kunci layar" style="  
+  font-size: 28px;
+  background: none;
+  border: none;
+  color: #fff;
+  position: absolute;
+  bottom: 12px;
+  right: 12px;
+  cursor: pointer;
+  z-index: 100;
+  transition: transform 0.2s ease;
+">🔒</button>
+
+<!-- Layar lock overlay -->
+<div id="screenLockOverlay" style="  
+  display: none;
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: rgba(0,0,0,0.1);
+  z-index: 99;
+  pointer-events: all;
+"></div>
+
+
+<div style="display: flex; align-items: center; gap: 10px; margin-top: 10px;">
+  <!-- 🎵 Input File Audio -->
+  <label for="fileInput" style="cursor: pointer; font-weight: bold;">
+  </label>
+  <input type="file" id="fileInput" accept="audio/*" style="display: none;" />
+<!-- 📁 Folder Picker -->
+<label for="folderPicker" style="cursor: pointer; font-weight: bold; color: cyan;">
+  📁 
+</label>
+<input
+  type="file"
+  id="folderPicker"
+  webkitdirectory
+  multiple
+  accept="audio/*"
+  hidden
+/>
+</div>  
+
+  
+<!-- Tombol Reset: Nuclear Style -->  
+<button id="resetBtn" title="Reset Semua" style="  
+  font-size: 24px;  
+  background: none;  
+  border: none;  
+  cursor: pointer;  
+  color: #ffffff;  
+  text-shadow: 0 0 6px #ffffff, 0 0 12px #bbbbbb, 0 0 24px #ffffff;  
+  position: absolute;  
+  top: 12px;  
+  right: 12px;  
+  z-index: 99;  
+  transition: transform 0.2s ease;  
+" onclick="location.reload()">  
+  ☢️  
+</button>  
+
+
+
+<!-- === TOOLS Dropdown All-in-One === -->
+<div id="toolsPanel" style="
+  display: inline-block;
+  position: relative;
+  bottom: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 999;
+  max-height: 65vh;
+  overflow-y: auto;
+  scroll-padding: 20px;
+  box-sizing: border-box;
+">
+  <details style="
+  background: rgba(0,0,0,0.2);
+  border: 1px solid rgba(255,255,255,0.15);
+    color: #0ff;
+    color: white;
+    border-radius: 12px;
+    padding: 15px;
+    font-family: 'Segoe UI', 'Helvetica Neue', sans-serif;
+    width: 280px;
+  box-shadow: 0 0 10px rgba(0,255,255,0.2);
+  ">
+    <summary>Tools </summary>
+<!-- EQ Presets -->  
+<details open class="section">  
+  <summary><strong>Equalizer</strong></summary>  
+  <div class="row">  
+    <select id="presetBasicSelect">  
+      <option value="Flat">Flat</option>  
+      <option value="Bass Boost">Bass</option>  
+      <option value="Treble Boost">Treble</option>  
+      <option value="Rock">Rock</option>  
+      <option value="Pop">Pop</option>  
+      <option value="Jazz">Jazz</option>  
+       <option value="Classic">Classic</option>  
+      <option value="Dance">Dance</option>  
+            <option value="Chill Vibe">Chill Vibe</option>  
+                  <option value="Live Acoustic">Live Acoustic</option>  
+                       <option value="DangdutRemix">DangdutRemix</option>  
+                              <option value="Bright Mix">Bright Mix</option>  
+                                    <option value="Ballad Soft">Ballad Soft</option>  
+                                          <option value="EDM Festival">EDM Festival</option>  
+                                                <option value="R&B">R&B</option>  
+                                                      <option value="Orchestra">Orchestra</option>  
+                                                            <option value="Reggae Vibe">Reggae Vibe</option>  
+                                                                  <option value="Metal Attack">Metal Attack</option>  
+                                                                           <option value="Shape">Shape</option>  
+                                                                            <option value="Podcast Clarity">Podcast Clarity</option>  
+                                                                                  <option value="Surround Deep">Surround Deep</option>  
+    </select>  
+    
+    <select id="presetAdvanceSelect">  
+<option value="Advance Off/Flat" >Advance OFF</option> 
+      <option value="Sub Bass Lift">Sub Bass Lift</option>  
+      <option value="Vocal Airy Bright">Vocal Airy Bright</option>  
+      <option value="Treble Sparkle">Treble Sparkle</option>  
+      <option value="Hi-Fi Wide Range">Hi-Fi Wide</option>  
+        <option value="Warm & Wide">Warm & Wide</option>  
+        <option value="Clarity Focus">Clarity Focus</option>  
+                        <option value="Funky">Funky</option>  
+                                       <option value="Scoopy Smile">Scoopy Smile</option>  
+                                        <option value="AmbientSpace">AmbientSpace</option>  
+                                                <option value="Bassy Theater">Bassy Theater</option>  
+                                                        <option value="Bright Vocal">Bright Vocal</option>  
+                                                                <option value="StudioPro">StudioPro</option>  
+                                                                        <option value="Funky Shape">Funky Shape</option>  
+                                                                                <option value="AmbientNature">AmbientNature</option>  
+                                                                                        <option value="Clean Dialog">Clean Dialog</option>  
+                                                                           <option value="CinematicWide">CinematicWide</option>  
+                                                                                     <option value="Gaming FPS Focus">Gaming FPS Focus</option>  
+                                                                                         <option value="Vortex Mode">Vortex Mode</option>  
+                                                                                                  <option value="Punchy">Punchy</option>  
+                                                                                                 <option value="Boom Room">Boom Room</option>  
+                                                                                                    <option value="MidCut">MidCut</option>  
+                                                                                                         <option value="Hardcore Punch">Hardcore Punch</option>  
+                                                                                                               <option value="Movie">Movie</option>  
+                                                                                                                          <option value="ClubNight">ClubNight</option>  
+                                                                                                                               <option value="Dolby Atmos Style">Dolby Atmos Style</option>  
+                                                                                                                       <option value="LoFi Mode">LoFi Mode</option>  
+    </select>  
+  </div>  
+</details>
+
+
+
+
+<!-- Blend Section -->  
+<details class="section">  
+  <summary><strong>Blend</strong></summary>  
+  <div class="row">  
+    <select id="presetA">  
+      <option value="Flat">Flat</option>  
+      <option value="Bass Boost">Bass</option>  
+      <option value="Treble Boost">Treble</option>  
+      <option value="Rock">Rock</option>  
+      <option value="Pop">Pop</option>  
+      <option value="Jazz">Jazz</option>  
+       <option value="Classic">Classic</option>  
+      <option value="Dance">Dance</option>  
+    </select>  
+  
+    <button id="blendToggleBtn">OFF</button>  
+  
+    <select id="presetB">  
+      <option value="Sub Bass Lift">Sub Bass Lift</option>  
+      <option value="Vocal Presence">Vocal Presence</option>  
+      <option value="Treble Sparkle">Treble Sparkle</option>  
+      <option value="Hi-Fi Wide Range">Hi-Fi Wide</option>  
+       <option value="Warm & Wide">Warm & Wide</option>  
+    </select>  
+  </div>  
+  
+  <div class="blend-control">  
+    <button id="blendMinus">➖</button>  
+    <span id="blendValue">0.50x</span>  
+    <button id="blendPlus">➕</button>  
+    <input type="range" id="blendRatio" value="0.5" min="0" max="1" step="0.01" style="display:none;" />  
+  </div>  
+</details>  
+  
+<!-- Stereo Toggle -->  
+<details class="section">  
+  <summary><strong>Dynamic Stereo</strong></summary>  
+  <div class="row">  
+    <button class="btn toggle-btn" id="stereoToggleBtn">OFF</button>  
+  </div>  
+</details>  
+
+<!-- Booster Section -->  
+<details class="section">  
+  <summary><strong>Booster</strong></summary>  
+  <select id="presetSelect">  
+  <option value="Off">Booster Off</option>
+  <option value="Soft">Soft</option>
+  <option value="Normal">Normal</option>
+  <option value="Hard">Hard</option>
+  <option value="Extreme">Extreme</option>
+</select>
+  
+  <div class="row" style="gap: 10px; margin-top:10px;">  
+    <button id="boostLow">Low</button>  
+    <button id="boostMid">Mid</button>  
+    <button id="boostHigh">High</button>  
+  </div>  
+</details>  
+  </div>  
+
+  
+<!-- 🔘 Tombol Toggle Log -->
+<button id="logToggleBtn" title="Buka Log"
+  style="
+    position: fixed;
+    bottom: 20px;
+    left: 20px;
+    z-index: 9999;
+    background: rgba(0, 0, 0, 0.2);
+    border: 1px solid rgba(0, 255, 255, 0.4);
+    backdrop-filter: blur(8px);
+    border-radius: 50%;
+    padding: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    box-shadow: 0 0 8px rgba(0,255,255,0.3);
+  ">
+  <svg id="logIcon" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none"
+       stroke="#0ff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+       style="transition: transform 0.3s ease;">
+    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+    <polyline points="14 2 14 8 20 8"/>
+    <line x1="16" y1="13" x2="8" y2="13"/>
+    <line x1="16" y1="17" x2="8" y2="17"/>
+    <polyline points="10 9 9 9 8 9"/>
+  </svg>
+</button>
+
+<pre id="testLog" style="
+  display: none;
+  resize: both;
+  overflow: auto;
+  min-width: 260px;
+  min-height: 120px;
+  background: rgba(0,0,0,0.2);
+  border: 1px solid rgba(255,255,255,0.15);
+  color: #0ff;
+  padding: 12px;
+  font-size: 12px;
+  line-height: 1.4;
+  border-radius: 10px;
+  white-space: pre;
+  backdrop-filter: blur(6px);
+  box-shadow: 0 0 10px rgba(0,255,255,0.2);
+">
+Log mesin belum dijalankan...
+</pre>
+
+
+          <footer class="footer-animated">  
+      © 2025 <span class="brand">Y&Z Studio</span> · Powered by AI & Human Creativity  
+      <br>  
+      <a href="mailto:yudabastard84@gmail.com" class="brand">yudabastard84@gmail.com</a>  
+    </footer>  
+<canvas id="waveformCanvas" width="320" height="100"></canvas>
+  </div>
+</footer>
+
+<body>  
+<script type="module" src="main.js"></script>
+<script>
+window.addEventListener("error", e => console.error("❌ Global Error:", e.message));
+
+// ============ 🎧 GLOBAL SETUP ============
+const audio = document.getElementById('audioPlayer');
+const playBtn = document.getElementById('playBtn');
+const eqContainer = document.getElementById('eqContainer');
+const playIcon = document.getElementById('playIcon');
+const progress = document.getElementById('progressBar');
+const progressContainer = document.getElementById('progressContainer');
+const prevBtn = document.getElementById('prevBtn');
+const nextBtn = document.getElementById('nextBtn');
+const repeatBtn = document.getElementById('repeatBtn');
+const repeatLabel = document.getElementById('repeatLabel');
+const muteBtn = document.getElementById('muteBtn');
+const muteIcon = document.getElementById('muteIcon');
+const volDown = document.getElementById('volDown');
+const volUp = document.getElementById('volUp');
+const volVal = document.getElementById('volVal');
+const trackTitle = document.getElementById('trackTitle');
+const timerText = document.getElementById('timerText');
+const repeatIconPath = repeatBtn.querySelector("path");
+const basicSelect = document.getElementById("presetBasicSelect");
+const advanceSelect = document.getElementById("presetAdvanceSelect");
+const blendToggleBtn = document.getElementById("blendToggleBtn");
+const blendRatioSlider = document.getElementById("blendRatio");
+const blendValueLabel = document.getElementById("blendValue");
+const blendMinus = document.getElementById("blendMinus");
+const blendPlus = document.getElementById("blendPlus");
+const presetASelect = document.getElementById("presetA");
+const presetBSelect = document.getElementById("presetB");
+
+const presetSelect = document.getElementById("presetSelect");
+const boostLowBtn = document.getElementById("boostLow");
+const boostMidBtn = document.getElementById("boostMid");
+const boostHighBtn = document.getElementById("boostHigh");
+
+const bands = [10, 32, 64, 125, 250, 500, 1000, 2000, 4000, 10000, 16000, 20000];
+const playlist = [
+  { src: 'lagu1.mp3', title: 'My attitude depends on who you are' },
+  { src: 'lagu2.mp3', title: 'Lagu 2' }
+];
+let currentTrack = 0;
+let isRepeat = false;
+let sourceNode = [];
+let volInterval;
+
+let stereoPanner = null;
+let stereoGain = null;
+let crossfeed = null;
+
+let stereoNode;
+let stereoInterval = null;
+let crossfeedGainNodeL, crossfeedGainNodeR;
+let oscillatorTimer;
+let crossfeedL, crossfeedR;
+let autoPanTimer;
+let panTime = 0;
+
+// ===== ✅ STATUS =====
+let lastBasicPreset = "Flat";
+let lastAdvancePreset = "Advance Off/Flat";
+
+let boosterActive = false;
+let stereoActive = false;
+
+let blendRatio = 0.5; // default 50:50
+let blendActive = false;
+
+let lastPresetSource = null;
+let showFullClock = false;
+
+let eqNodes = []; // ✅ dideklarasi dulu
+let lastEQ = null; // atau bisa pakai function seperti: () => eqNodes.at(-1)
+let lastActivePreset = null;
+let lastManualPreset = "";
+
+let activeBand = null;
+let boosterMode = "Off";
+let boosterBand = null;
+let boosterAmount = 0;
+let eqBeforeBooster = []; // 🔄 Backup preset sebelum booster aktif
+
+let lastRootType = null; // "basic" | "advance"
+let lastRootPreset = null;
+
+let eqFilters = [];
+let frequencies = [10, 32, 64, 125, 250, 500, 1000, 2000, 4000, 10000, 16000, 20000];
+
+let clarity, clarityGain;
+let loudnessLow, loudnessHigh;
+let subwoofer, deEsser, ambient, toneBias;
+let biquadFilters = []; 
+
+let enhancer = null;
+let compressor = null;
+
+let agcLimiter, peakLimiter;
+let gainNode;
+
+let allNodes = [];
+let isUpdatingSlider = false;
+
+let analyser;
+let harmonicEnhancerNodes = [];
+let lastAudioNode = null;
+let stereoToggleState = true; // atau false (defaultnya aktif)
+
+let softLimiter = null;
+let boosterGainNode = null;
+
+let presetFromDynamic = false;
+let waveformActive = false;
+let loopVisualizer = true;
+
+// Player
+let player; // bakal di-assign saat DOM ready
+player = document.getElementById("audioPlayer");
+
+let smartLimiter;
+
+let powerAmpNode;
+let harmonicAIEngine;
+
+let lowCutFilter, subShelf, subMidCut, subCompressor;
+
+let snareSnap, snareCutMud, depBoost;
+let snareBoost;
+let snareAttack, snareCrack, snareBody;
+
+let waveHue = 0;  
+  
+let enhancerNodes = [];  
+
+let pianoEQ, pianoReverb, pianoCompressor;
+let bassEQ, midEQ, trebleEQ;
+
+let mixMidCut, mixAir;
+let clarityBoost;
+let orchestraEQ;
+
+let  lowShelf, trebleNotch, midCut, highShelf;
+
+// Debug toggle
+const isDev = false;
+function log(...args) {
+  if (isDev) console.log(...args);
+}
+
+// ============ 🎚️ SLIDER UI ============
+function createEQSliders() {
+  const eqContainer = document.getElementById("eqContainer");
+  if (!eqContainer) {
+    console.warn("❌ eqContainer tidak ditemukan!");
+    return;
+  }
+
+  eqContainer.innerHTML = ""; // 🧹 Clear dulu biar nggak dobel
+
+  bands.forEach((freq, i) => {
+    const sliderDiv = document.createElement('div');
+    sliderDiv.className = 'eq-slider';
+
+    const wrapper = document.createElement('div');
+    wrapper.className = 'slider-wrapper';
+
+    const lines = document.createElement('div');
+    lines.className = 'slider-lines';
+    for (let j = 0; j < 5; j++) lines.appendChild(document.createElement('span'));
+
+    const slider = document.createElement('input');
+    slider.type = 'range';
+    slider.className = 'slider';
+    slider.min = 0;
+    slider.max = 100;
+    slider.value = 50;
+
+    slider.addEventListener('input', () => {
+      if (isUpdatingSlider) return;
+      const val = parseInt(slider.value);
+      const db = (val - 50) / 5;
+      if (eqNodes[i]) eqNodes[i].gain.value = db;
+    });
+
+    wrapper.appendChild(lines);
+    wrapper.appendChild(slider);
+
+    const label = document.createElement('div');
+    label.className = 'freq-label';
+    label.innerText = freq >= 1000 ? (freq / 1000) + "kHz" : freq + "Hz";
+
+    sliderDiv.appendChild(wrapper);
+    sliderDiv.appendChild(label);
+    eqContainer.appendChild(sliderDiv);
+  });
+
+  console.log("✅ EQ sliders created");
+}
+
+
+async function injectPowerAmpV2AndConnect(currentNode) {
+  await injectPowerAmpV2();
+  if (!powerAmpNode) {
+    console.warn("❌ powerAmpNode gagal dibuat");
+    return currentNode;
+  }
+
+  currentNode.connect(powerAmpNode);
+  console.log("⚡ PowerAmp connected!");
+  return powerAmpNode;
+}
+
+// ============ 🎚️INIT ============
+async function initAudioContext() {
+  if (!audioCtx) {
+    console.log("⚙️ Creating AudioContext...");
+    audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    sourceNode = audioCtx.createMediaElementSource(audio);
+
+if (!audioCtx || audioCtx.state !== "running") {
+  console.error("❌ AudioContext belum aktif atau belum dibuat.");
+} else {
+  console.log("✅ AudioContext aktif:", audioCtx.state);
+}
+
+if (!sourceNode) {
+  console.warn("⚠️ sourceNode belum didefinisikan.");
+} else {
+  console.log("🎙️ Source node OK:", sourceNode);
+}
+
+    // 🎛️ EQ INIT
+    const frequencies = [10, 32, 64, 125, 250, 500, 1000, 2000, 4000, 10000, 16000, 20000];
+    eqNodes = frequencies.map(freq => {
+      const f = audioCtx.createBiquadFilter();
+      f.type = "peaking";
+      f.frequency.value = freq;
+      f.Q.value = 1;
+      f.gain.value = 0;
+      return f;
+    });
+    console.log("🎛️ EQ Nodes initialized");
+
+function initEQNodes(audioCtx) {
+  if (!audioCtx) {
+    console.warn("⛔ audioCtx belum diinisialisasi");
+    return;
+  }
+
+  const eqConfig = {
+    bass:   { freq: 100,  gain: 4, type: "lowshelf" },
+    kick:   { freq: 60,   gain: 8, type: "lowshelf" },
+    snare:  { freq: 1500, gain: 6, type: "peaking" },
+    guitar: { freq: 800,  gain: 2, type: "peaking" },
+    hihat:  { freq: 8000, gain: 4, type: "highshelf" },
+    piano:  { freq: 1200, gain: 3, type: "peaking" }
+  };
+
+  for (const [name, { freq, gain, type }] of Object.entries(eqConfig)) {
+    const filter = audioCtx.createBiquadFilter();
+    filter.type = type;
+    filter.frequency.value = freq;
+    filter.gain.value = gain;
+    filter.Q.value = 1;
+    eqNodes[name] = filter;
+  }
+
+  console.log("✅ EQ Nodes initialized:", eqNodes);
+}
+
+// Pastikan audioCtx sudah terinisialisasi sebelum baris ini
+if (!audioCtx) {
+  console.error("AudioContext belum diinisialisasi.");
+  return;
+}
+
+console.log("🎚 Inisialisasi EQ Filters...");
+
+lowCutFilter = audioCtx.createBiquadFilter();
+lowCutFilter.type = "highpass";
+lowCutFilter.frequency.value = 30;
+lowCutFilter.Q.value = 0.7; // Jangan terlalu sempit
+
+subShelf = audioCtx.createBiquadFilter();
+subShelf.type = "lowshelf";
+subShelf.frequency.value = 70;
+subShelf.gain.value = 2.5; // boost ringan
+
+subMidCut = audioCtx.createBiquadFilter();
+subMidCut.type = "peaking";
+subMidCut.frequency.value = 300; // area muddiness
+subMidCut.Q.value = 1.2;
+subMidCut.gain.value = -2.5;
+
+subCompressor = audioCtx.createDynamicsCompressor();
+subCompressor.threshold.value = -28;
+subCompressor.knee.value = 12;
+subCompressor.ratio.value = 2.5;
+subCompressor.attack.value = 0.005;
+subCompressor.release.value = 0.25;
+
+function updateSubGain(kickEnergy) {
+  const now = audioCtx.currentTime;
+  const targetGain = kickEnergy > 120 ? 0.85 : 1.0;
+  subGain.gain.setTargetAtTime(targetGain, now, 0.3);
+}
+
+console.log("🧰 Sub Compressor siap:", subCompressor);
+
+console.log("✅ Semua filter EQ bawah berhasil di-set!");
+
+function renderFrame() {
+  // Analisis real-time
+  const kickEnergy = analyseKick(); // fungsi lo sendiri
+  updateSubGain(kickEnergy);
+
+  requestAnimationFrame(renderFrame);
+}
+
+  // ✅ Low-shelf filter buat angkat bass
+  lowShelf = audioCtx.createBiquadFilter();
+  lowShelf.type = 'lowshelf';
+  lowShelf.frequency.value = 150;
+  lowShelf.gain.value = 3;
+
+// Bass
+eqNodes.bass = audioCtx.createBiquadFilter();
+eqNodes.bass.type = "lowshelf";
+eqNodes.bass.frequency.value = 100;
+eqNodes.bass.gain.value = 4;
+eqNodes.bass.Q.value = 1;
+
+// Kick
+eqNodes.kick = audioCtx.createBiquadFilter();
+eqNodes.kick.type = "lowshelf";
+eqNodes.kick.frequency.value = 60;
+eqNodes.kick.gain.value = 8;
+eqNodes.kick.Q.value = 1;
+
+// Snare
+eqNodes.snare = audioCtx.createBiquadFilter();
+eqNodes.snare.type = "peaking";
+eqNodes.snare.frequency.value = 1500;
+eqNodes.snare.gain.value = 6;
+eqNodes.snare.Q.value = 1;
+
+// Guitar
+eqNodes.guitar = audioCtx.createBiquadFilter();
+eqNodes.guitar.type = "peaking";
+eqNodes.guitar.frequency.value = 800;
+eqNodes.guitar.gain.value = 2;
+eqNodes.guitar.Q.value = 1;
+
+// Hihat
+eqNodes.hihat = audioCtx.createBiquadFilter();
+eqNodes.hihat.type = "highshelf";
+eqNodes.hihat.frequency.value = 8000;
+eqNodes.hihat.gain.value = 4;
+eqNodes.hihat.Q.value = 1;
+
+// Piano
+eqNodes.piano = audioCtx.createBiquadFilter();
+eqNodes.piano.type = "peaking";
+eqNodes.piano.frequency.value = 1200;
+eqNodes.piano.gain.value = 3;
+eqNodes.piano.Q.value = 1;
+
+console.log("✅ EQ Nodes (gain nyata) sudah diinisialisasi:", eqNodes);
+
+pianoEQ = audioCtx.createBiquadFilter();
+pianoEQ.type = "peaking";
+pianoEQ.frequency.value = 1200;
+pianoEQ.Q.value = 0.8;
+pianoEQ.gain.value = 3; // clarity & presence
+
+ pianoReverb = audioCtx.createConvolver();
+// loadImpulse(pianoReverb, "hall.wav"); // optional: reverb IR
+
+pianoCompressor = audioCtx.createDynamicsCompressor();
+pianoCompressor.threshold.value = -40;
+pianoCompressor.ratio.value = 4;
+pianoCompressor.attack.value = 0.01;
+pianoCompressor.release.value = 0.3;
+
+bassEQ = audioCtx.createBiquadFilter();
+bassEQ.type = "lowshelf";
+bassEQ.frequency.value = 100;
+bassEQ.gain.value = 6.5; // empuk bass
+
+midEQ = audioCtx.createBiquadFilter();
+midEQ.type = "peaking";
+midEQ.frequency.value = 1100;
+midEQ.Q.value = 1;
+midEQ.gain.value = 2; // bening vokal
+
+trebleEQ = audioCtx.createBiquadFilter();
+trebleEQ.type = "highshelf";
+trebleEQ.frequency.value = 6000;
+trebleEQ.gain.value = 1.5; // crisp & clarity
+
+snareSnap = audioCtx.createBiquadFilter();
+snareSnap.type = "peaking";
+snareSnap.frequency.value = 5200;   // khusus buat snare crack
+snareSnap.Q.value = 3.0;
+snareSnap.gain.value = 3.5;
+
+snareCutMud = audioCtx.createBiquadFilter();
+snareCutMud.type = "peaking";
+snareCutMud.frequency.value = 800; // buang nasal
+snareCutMud.Q.value = 2.5;
+snareCutMud.gain.value = -3;
+
+snareAttack = audioCtx.createBiquadFilter();
+snareAttack.type = "peaking";
+snareAttack.frequency.value = 3500;
+snareAttack.Q.value = 1.8;
+snareAttack.gain.value = 6;
+
+snareCrack = audioCtx.createBiquadFilter();
+snareCrack.type = "peaking";
+snareCrack.frequency.value = 7500;
+snareCrack.Q.value = 1.6;
+snareCrack.gain.value = 4;
+
+snareBody = audioCtx.createBiquadFilter();
+snareBody.type = "peaking";
+snareBody.frequency.value = 200;
+snareBody.Q.value = 1.2;
+snareBody.gain.value = 3.5;
+
+// Tambah peaking filter khusus snare attack
+snareBoost = audioCtx.createBiquadFilter();
+snareBoost.type = "peaking";
+snareBoost.frequency.value = 3200; // Fokus attack snare
+snareBoost.Q.value = 1.5;
+snareBoost.gain.value = 4.5;
+
+depBoost = audioCtx.createBiquadFilter();
+depBoost.type = "peaking";
+depBoost.frequency.value = 90;
+depBoost.Q.value = 1;
+depBoost.gain.value = 3.5;
+
+mixMidCut = audioCtx.createBiquadFilter();
+mixMidCut.type = "peaking";
+mixMidCut.frequency.value = 1100; // 950–1200Hz
+mixMidCut.Q.value = 1.2;
+mixMidCut.gain.value = -3.5; // Mulai dari -3 dB
+
+  // ✅ Peaking filter buat flatten mid kalau perlu
+  midCut = audioCtx.createBiquadFilter();
+  midCut.type = 'peaking';
+  midCut.frequency.value = 1200;
+  midCut.Q.value = 1.2;
+  midCut.gain.value = -4;
+
+mixAir = audioCtx.createBiquadFilter();
+mixAir.type = "highshelf";
+mixAir.frequency.value = 9500;
+mixAir.Q.value = 0.7;
+mixAir.gain.value = 2.0; // 1.5–3 dB cukup
+
+  // ✅ High-shelf filter buat "cut treble"
+  highShelf = audioCtx.createBiquadFilter();
+  highShelf.type = 'highshelf';
+  highShelf.frequency.value = 6000;    // Potong mulai dari 6kHz
+  highShelf.gain.value = -6;           // Potong treble 6 dB
+  
+trebleNotch = audioCtx.createBiquadFilter();
+trebleNotch.type = "notch";
+trebleNotch.frequency.value = 6500;
+trebleNotch.Q.value = 3;
+
+// ?? FX NODES INIT
+clarityBoost = audioCtx.createBiquadFilter();
+clarityBoost.type = "highshelf";
+clarityBoost.frequency.value = 4500;
+clarityBoost.gain.value = -2.5;
+
+clarity = audioCtx.createBiquadFilter();
+clarity.type = "bandpass";
+clarity.frequency.value = 4000;
+clarity.Q.value = 2; 
+clarity.gain.value = 2;
+
+clarityGain = audioCtx.createGain();
+clarityGain.gain.value = 0.7;
+
+guitarSnap = audioCtx.createBiquadFilter();
+guitarSnap.type = "peaking";
+guitarSnap.frequency.value = 3100;
+guitarSnap.Q.value = 2.0;
+guitarSnap.gain.value = 3;
+
+enhancer = audioCtx.createBiquadFilter();
+enhancer.type = "highshelf";
+enhancer.frequency.value = 9000;
+enhancer.gain.value = 2;
+
+loudnessLow = audioCtx.createBiquadFilter();
+loudnessLow.type = "lowshelf";
+loudnessLow.frequency.value = 150;
+loudnessLow.gain.value = 3;
+
+loudnessHigh = audioCtx.createBiquadFilter();
+loudnessHigh.type = "highshelf";
+loudnessHigh.frequency.value = 6000;
+loudnessHigh.gain.value = 3;
+
+subwoofer = audioCtx.createBiquadFilter();
+subwoofer.type = "lowshelf";
+subwoofer.frequency.value = 80;
+subwoofer.gain.value = 9;
+
+deEsser = audioCtx.createBiquadFilter();
+deEsser.type = "peaking";
+deEsser.frequency.value = 7800;
+deEsser.Q.value = 3;
+deEsser.gain.value = -3.5;
+
+orchestraEQ = audioCtx.createBiquadFilter();
+orchestraEQ.type = "peaking";
+orchestraEQ.frequency.value = 2500;
+orchestraEQ.gain.value = 2; // lift orchestral body
+
+stereoWidener = audioCtx.createStereoPanner();
+stereoWidener.pan.value = 0.6;
+
+orchestraReverb = audioCtx.createConvolver();
+// loadImpulse(orchestraReverb, "cathedral.wav");
+
+ambient = audioCtx.createBiquadFilter();
+ambient.type = "lowpass";
+ambient.frequency.value = 15000;
+ambient.Q.value = 1.5;
+
+toneBias = audioCtx.createBiquadFilter();
+toneBias.type = "peaking";
+toneBias.frequency.value = 500;
+toneBias.Q.value = 1;
+toneBias.gain.value = 1.0;
+
+const high = 5; // ← contoh nilai
+const now = audioCtx.currentTime;
+
+// 🔧 Bikin 1 filter peaking manual
+biquadFilter = audioCtx.createBiquadFilter();
+biquadFilter.type = "peaking";
+biquadFilter.frequency.value = 1400;  // frekuensi mid clarity
+biquadFilter.Q.value = 1.2;           // lebar frekuensi
+biquadFilter.gain.value = 3;        // boost +3.5 dB
+
+biquadFilter.gain.setTargetAtTime(high < 10 ? 2 : 1, now, 0.4);
+
+// 📈 DYNAMICS
+compressor = audioCtx.createDynamicsCompressor();
+compressor.threshold.value = -50;
+compressor.knee.value = 40;
+compressor.ratio.value = 12;
+compressor.attack.value = 0.003;
+compressor.release.value = 0.25;
+
+agcLimiter = audioCtx.createDynamicsCompressor();
+agcLimiter.threshold.value = -9;
+agcLimiter.knee.value = 8;
+agcLimiter.ratio.value = 8;
+agcLimiter.attack.value = 0.004;
+agcLimiter.release.value = 0.3;
+
+softLimiter = audioCtx.createDynamicsCompressor();
+softLimiter.threshold.value = -6;
+softLimiter.knee.value = 6;
+softLimiter.ratio.value = 4.5;
+softLimiter.attack.value = 0.008;
+softLimiter.release.value = 0.22;
+
+smartLimiter = audioCtx.createDynamicsCompressor();
+smartLimiter.threshold.value = -1;
+smartLimiter.knee.value = 4;
+smartLimiter.ratio.value = 10;
+smartLimiter.attack.value = 0.003;
+smartLimiter.release.value = 0.22;
+
+peakLimiter = audioCtx.createDynamicsCompressor();
+peakLimiter.threshold.value = -2;
+peakLimiter.knee.value = 0;
+peakLimiter.ratio.value = 20;
+peakLimiter.attack.value = 0.002;
+peakLimiter.release.value = 0.1;
+
+console.log("🎧 AudioContext dibuat:", audioCtx);  
+console.log("🎙️ Source node initialized:", sourceNode);  
+console.log("🎛️ Flat EQ nodes (graphic style) dibuat:", eqNodes);  
+  
+console.log("✅ Parametric EQ nodes (gain nyata) siap:", {  
+  bass: eqNodes.bass,  
+  kick: eqNodes.kick,  
+  snare: eqNodes.snare,  
+  guitar: eqNodes.guitar,  
+  hihat: eqNodes.hihat,  
+  piano: eqNodes.piano  
+});  
+  
+console.log("📈 Dynamics processors initialized:", {  
+  compressor,  
+  agcLimiter,  
+  softLimiter,  
+  peakLimiter,  
+  smartLimiter  
+});  
+  
+console.log("🎨 FX Filters aktif:", {  
+  clarity, guitarSnap, enhancer, toneBias,  
+  loudnessLow, loudnessHigh, subwoofer, deEsser  
+});  
+  
+console.log("🌌 Spatial & Reverb units:", {  
+  pianoReverb,  
+  orchestraReverb,  
+  stereoWidener,  
+  ambient  
+});  
+
+function logInfo(label, obj) {  
+  console.log(`ℹ️ ${label}:`, obj);  
+}  
+  
+logInfo("Dynamics", { compressor, smartLimiter });
+
+    // 🔊 Gain & Booster
+    boosterGainNode = audioCtx.createGain(); boosterGainNode.gain.value = 1.05;
+    gainNode = audioCtx.createGain(); gainNode.gain.value = 0.82;
+  
+    // 🎧 Stereo & Analyzer
+    stereoPanner = audioCtx.createStereoPanner();
+    analyser = audioCtx.createAnalyser(); analyser.fftSize = 2048;
+
+    // 🎼 PowerAmp & Harmonic AI (optional)
+    // Buat node-nya sebelumnya (powerAmpNode & harmonicAIEngine) kalau belum
+
+    console.log("🔗 Building initAudioContext");
+    
+    // ====== 🔀 Chain Setup ======
+    let current = sourceNode;
+
+// EQ Slider 12-band
+if (eqNodes?.length) {
+  eqNodes.forEach(node => {
+    current.connect(node);
+    current = node;
+  });
+  console.log(`🎚️ EQ Connected (${eqNodes.length} bands)`);
+}
+
+// FX Chain
+const fxChain = [
+  subwoofer,
+  loudnessLow,
+  toneBias,
+  enhancer,
+  loudnessHigh,
+  deEsser,
+  ambient,
+];
+fxChain.forEach(node => {
+  if (node) {
+    current.connect(node);
+    current = node;
+  }
+});
+console.log("🎛️ FX Chain Connected");
+
+function connectChain(nodes) {
+  for (let i = 0; i < nodes.length - 1; i++) {
+    if (nodes[i] && nodes[i + 1]) {
+      nodes[i].connect(nodes[i + 1]);
+    }
+  }
+}
+
+
+function buildSubwooferChain(audioCtx, inputNode) {
+  const lowCut = audioCtx.createBiquadFilter();
+  const shelf = audioCtx.createBiquadFilter();
+  const midCut = audioCtx.createBiquadFilter();
+  const comp = audioCtx.createDynamicsCompressor();
+
+  inputNode.connect(lowCut);
+  lowCut.connect(shelf);
+  shelf.connect(midCut);
+  midCut.connect(comp);
+
+  return comp; // ujung chain
+}
+
+connectChain([
+  snareBody,
+  snareCutMud,
+  snareBoost,
+  snareAttack,
+  snareSnap,
+  snareCrack,
+]);
+
+connectChain([
+  eqNodes.guitar,
+  guitarSnap,
+  enhancer,
+  stereoWidener,
+]);
+
+connectChain([
+  pianoEQ,
+  clarity,
+  clarityGain,
+  pianoCompressor,
+  pianoReverb, // optional
+]);
+
+connectChain([
+  eqNodes.kick,
+  depBoost,
+  subwoofer,
+]);
+
+connectChain([
+  eqNodes.bass,
+  bassEQ,
+]);
+
+connectChain([
+  orchestraEQ,
+  stereoWidener,
+  orchestraReverb, // optional
+]);
+
+connectChain([
+  midEQ,
+  trebleEQ,
+  toneBias,
+  biquadFilter,
+]);
+
+// Dynamics Chain
+current.connect(compressor);
+compressor.connect(agcLimiter);
+agcLimiter.connect(softLimiter);
+softLimiter.connect(peakLimiter);
+peakLimiter.connect(smartLimiter);
+current = smartLimiter;
+console.log("🧰 Dynamics Connected");
+
+// PowerAmp (optional)
+if (!powerAmpNode) {
+  console.log("⏳ Menunggu PowerAmp ready...");
+  await injectPowerAmpV2(); // injeksi dulu
+}
+
+if (powerAmpNode && typeof powerAmpNode.connect === "function") {
+  current.connect(powerAmpNode);
+  current = powerAmpNode;
+  console.log("⚡ PowerAmp Connected!");
+} else {
+  console.warn("⚠️ PowerAmpNode belum siap, dilewati");
+}
+
+  
+if (!powerAmpNode) {  
+  console.warn("❌ PowerAmpNode gagal dibuat");  
+} else {  
+  console.log("⚡ PowerAmp connected:", powerAmpNode);  
+}  
+  
+
+// Final Gain Stage
+current.connect(boosterGainNode);
+boosterGainNode.connect(gainNode);
+gainNode.connect(stereoPanner);
+stereoPanner.connect(analyser);
+analyser.connect(audioCtx.destination);
+
+    // Harmonic AI
+    if (typeof harmonicAIEngine !== "undefined") {
+      current.connect(harmonicAIEngine);
+      current = harmonicAIEngine;
+      console.log("🎼 Harmonic AI Engine Applied");
+    }
+
+    // Booster Gain
+    current.connect(boosterGainNode);
+    current = boosterGainNode;
+    console.log("🚀 Booster Gain Applied");
+
+    // Final Gain
+    current.connect(gainNode);
+    current = gainNode;
+    console.log("🔊 Final Gain Applied");
+
+    // Stereo Panner
+    current.connect(stereoPanner);
+    current = stereoPanner;
+    console.log("🎧 Stereo Panner Applied");
+
+    // Analyser
+    current.connect(analyser);
+    current = analyser;
+    console.log("📈 Analyser Connected");
+
+    // Final Output
+    current.connect(audioCtx.destination);
+    console.log("🔊 Audio Connected to Destination");
+
+    // Stereo Pan Motion
+    if (stereoEnabled) {
+      startSlowPan?.();
+      console.log("🌀 Stereo Motion Enabled");
+    }
+
+    // Parallel Clarity Injection
+    try {
+      if (
+        clarity instanceof BiquadFilterNode &&
+        clarityGain instanceof GainNode &&
+        compressor instanceof DynamicsCompressorNode
+      ) {
+        sourceNode.connect(clarity);
+        clarity.connect(clarityGain);
+        clarityGain.connect(compressor);
+        console.log("🎯 Clarity injected in parallel");
+      } else {
+        console.warn("⚠️ Clarity nodes not valid. Skipped clarity injection.");
+      }
+    } catch (err) {
+      console.warn("❌ Clarity injection error:", err.message);
+    }
+    
+    setTimeout(() => {
+  autoInjectHarmonicEnhancerV2();
+}, 1000); // kasih delay dikit biar audioCtx stabil dulu
+
+function autoInjectHarmonicEnhancerV2() {
+  if (!audioCtx || !analyser) return;
+
+  const enhancerNodes = [];
+  const harmonicBus = audioCtx.createGain();
+  harmonicBus.gain.value = 0.7;
+
+  // Inject ke bus mastering, bukan ke destination langsung
+  harmonicBus.connect(softLimiter || gainNode || audioCtx.destination);
+
+// ✅ ini baru
+const tones = [
+  { freq: 55, type: "sine", baseGain: 0.012 },
+  { freq: 110, type: "sine", baseGain: 0.015 },
+  { freq: 220, type: "triangle", baseGain: 0.013 },
+  { freq: 440, type: "triangle", baseGain: 0.012 },
+  { freq: 880, type: "square", baseGain: 0.01 },
+  { freq: 14000, type: "sine", baseGain: 0.008 }
+];
+
+  tones.forEach(t => {
+    const osc = audioCtx.createOscillator();
+    const gain = audioCtx.createGain();
+
+    osc.type = t.type;
+    osc.frequency.value = t.freq;
+    gain.gain.value = 0;
+
+    osc.connect(gain);
+    gain.connect(harmonicBus);
+    osc.start();
+
+    enhancerNodes.push({ osc, gain, baseGain: t.baseGain });
+
+    // Auto stop & restart setiap 10 detik (hemat CPU)
+    setTimeout(() => {
+      try {
+        osc.stop();
+      } catch {}
+    }, 10000);
+
+    setTimeout(() => {
+      if (audioCtx.state === "running") {
+        const oscNew = audioCtx.createOscillator();
+        oscNew.type = t.type;
+        oscNew.frequency.value = t.freq;
+        const gainNew = audioCtx.createGain();
+        gainNew.gain.value = gain.gain.value;
+
+        oscNew.connect(gainNew).connect(harmonicBus);
+        oscNew.start();
+
+        enhancerNodes.push({ osc: oscNew, gain: gainNew, baseGain: t.baseGain });
+      }
+    }, 10500);
+  });
+
+  window.harmonicEnhancerNodes = enhancerNodes;
+
+  function updateHarmonicEnhancer() {
+    const freqData = new Uint8Array(analyser.frequencyBinCount);
+    analyser.getByteFrequencyData(freqData);
+
+    const mid = freqData.slice(60, 180).reduce((a, b) => a + b, 0) / 120;
+    const high = freqData.slice(180).reduce((a, b) => a + b, 0) / (freqData.length - 180);
+    const scale = Math.min(1.1, (mid + high) / 180);
+
+    enhancerNodes.forEach(node => {
+      const target = node.baseGain * scale;
+      node.gain.gain.setTargetAtTime(target, audioCtx.currentTime, 0.5);
+    });
+  }
+
+  window.updateHarmonicEnhancer = updateHarmonicEnhancer;
+  console.log("🌈 Harmonic Enhancer V2.1 injected (auto cycle, adaptive, no freeze)");
+}
+
+async function injectPowerAmpV2() {
+  const code = `
+    class PowerAmpProcessor extends AudioWorkletProcessor {
+      static get parameterDescriptors() {
+        return [
+          { name: 'gain', defaultValue: 3.5, minValue: 1.0, maxValue: 10.0 },
+          { name: 'drive', defaultValue: 0.6, minValue: 0.0, maxValue: 1.0 },
+          { name: 'mode', defaultValue: 3.0 }
+        ];
+      }
+
+      process(inputs, outputs, parameters) {
+        const input = inputs[0];
+        const output = outputs[0];
+        const gain = parameters.gain;
+        const drive = parameters.drive;
+        const mode = parameters.mode[0];
+
+        for (let channel = 0; channel < input.length; channel++) {
+          const inCh = input[channel];
+          const outCh = output[channel];
+
+          for (let i = 0; i < inCh.length; i++) {
+            let val = inCh[i];
+            let g = gain.length > 1 ? gain[i] : gain[0];
+            let d = drive.length > 1 ? drive[i] : drive[0];
+
+            val *= g;
+            if (Math.abs(val) > 0.8) d *= 0.65;
+
+            let shaped = Math.atan(val * (1 + d * 2)) / Math.atan(1 + d * 2);
+
+            // === MODE SWITCH ===
+            if (mode === 0) {
+              shaped *= 0.75;
+            }
+            if (mode === 1) {
+              shaped = shaped * 0.9 + 0.12 * Math.pow(shaped, 3);
+            }
+            if (mode === 2) {
+              shaped = shaped * 1.2 + 0.08 * Math.sin(i * 0.03);
+            }
+            if (mode === 3) {
+              shaped = shaped * 1.12 + 0.04 * Math.sin(i * 0.05);
+            }
+            if (mode === 6) {
+              shaped = shaped * 1.05 + 0.01 * Math.sin(i * 0.2) + 0.005 * Math.sin(i * 0.8);
+            }
+            if (mode === 9) {
+              if (val < 0) shaped = val * 1.1;
+              else shaped = val * 1.25 + 0.02 * Math.sin(i * 0.03);
+            }
+            if (mode === 11) {
+              shaped = shaped * (1 + 0.01 * Math.sin(i * 0.1 + channel));
+            }
+
+            outCh[i] = shaped;
+          }
+        }
+        return true;
+      }
+    }
+
+    registerProcessor('power-amp-processor', PowerAmpProcessor);
+  `;
+
+ const blob = new Blob([code], { type: 'application/javascript' });
+  const blobURL = URL.createObjectURL(blob);
+
+  // Clean-up lama
+  if (powerAmpNode) {
+    try {
+      powerAmpNode.disconnect();
+    } catch {}
+    powerAmpNode = null;
+  }
+
+  try {
+    await audioCtx.audioWorklet.addModule(blobURL);
+    console.log("✅ PowerAmp module registered");
+
+    powerAmpNode = new AudioWorkletNode(audioCtx, 'power-amp-processor');
+
+    powerAmpNode.parameters.get('gain').value = 1;
+    powerAmpNode.parameters.get('drive').value = 0.2;
+    powerAmpNode.parameters.get('mode').value = 1;
+
+    console.log("🎛️ PowerAmp v2 injected + parameters set!");
+  } catch (err) {
+    console.error("❌ Failed to inject PowerAmp:", err);
+  }
+}
+
+function startAllAIModesAndVisualizer() {
+  if (
+    !analyser || !clarityGain || !clarity || !subwoofer || !enhancer ||
+    !toneBias || !deEsser || !ambient || !loudnessLow || !stereoPanner
+  ) {
+    console.warn("❌ Audio nodes belum lengkap.");
+    return;
+  }
+
+  const freqData = new Uint8Array(analyser.frequencyBinCount);
+  const timeData = new Uint8Array(analyser.fftSize);
+
+  function avg(data, from, to) {
+    let sum = 0;
+    for (let i = from; i < to; i++) sum += data[i];
+    return sum / (to - from);
+  }
+
+  function loop() {
+    analyser.getByteFrequencyData(freqData);
+    analyser.getByteTimeDomainData(timeData);
+
+    const low = avg(freqData, 0, 40);
+    const mid = avg(freqData, 41, 180);
+    const high = avg(freqData, 181, 512);
+    const total = low + mid + high || 1;
+
+    const lowRatio = low / total;
+    const midRatio = mid / total;
+    const highRatio = high / total;
+    const now = audioCtx.currentTime;
+    
+  window.AIModeStatus = {
+  timbre: false,
+  transparency: false,
+  harmonicEnhancer: false,
+  stereoPan: false,
+  shimmer: false
+};
+
+    // === 🎛 Dynamic Tone AI ===
+    subwoofer.gain.setTargetAtTime(2.2 + Math.max(0, Math.min(1, (lowRatio - 0.3) / 0.3)) * 3.6, now, 0.6);
+    loudnessLow.gain.setTargetAtTime(lowRatio > 0.38 ? 3.2 : 1.6, now, 0.6);
+    clarityGain.gain.setTargetAtTime(mid < 15 ? 0.9 : 0.6, now, 0.4);
+    clarity.gain.setTargetAtTime(mid < 15 ? 3.2 : 1.6, now, 0.4);
+    enhancer.gain.setTargetAtTime(highRatio > 0.4 ? 0.2 : 2.6, now, 0.6);
+    toneBias.gain.setTargetAtTime(midRatio < 0.25 ? 2.2 : 1.1, now, 0.5);
+    deEsser.gain.setTargetAtTime(highRatio > 0.42 ? -6.5 : -4, now, 0.4);
+    ambient.frequency.setTargetAtTime(6000 + Math.max(0, Math.min(1, (high - 14) / 6)) * 6000, now, 0.5);
+    ambient.Q.setTargetAtTime(1.4 - Math.max(0, Math.min(1, (high - 14) / 6)) * 0.75, now, 0.5);
+    
+    window.AIModeStatus.harmonicEnhancer = true;
+
+    // === 🎨 Timbre AI Mode ===
+    clarity.Q.setTargetAtTime(mid > 20 ? 1.2 : 0.8, now, 0.6);
+    clarity.frequency.setTargetAtTime(mid < 25 ? 3400 : 4000, now, 0.6);
+    clarityGain.gain.setTargetAtTime(mid > 25 ? 0.75 : 0.6, now, 0.6);
+    toneBias.gain.setTargetAtTime(mid < 18 ? 2.0 : 1.2, now, 0.5);
+    enhancer.gain.setTargetAtTime(high > 28 ? 2.8 : 1.5, now, 0.5);
+    
+    window.AIModeStatus.timbre = true;
+
+    // === 🔍 Transparent Mix Mode ===
+    toneBias.gain.setTargetAtTime(mid > 35 ? 0.9 : 1.3, now, 0.3);
+    clarityGain.gain.setTargetAtTime(mid > 50 ? 0.55 : 0.7, now, 0.3);
+    clarity.Q.setTargetAtTime(1.2, now, 0.3);
+    clarityGain.gain.setTargetAtTime(mid > 50 ? 0.55 : 0.7, now, 0.3);
+    deEsser.gain.setTargetAtTime(high > 35 ? -5.5 : -3.5, now, 0.2);
+    
+    window.AIModeStatus.transparency = true;
+
+    // === 🌀 Stereo Widening
+    if (typeof stereoToggleState !== 'undefined' && stereoToggleState) {
+      stereoPanner.pan.setTargetAtTime(Math.sin(Date.now() / 2000) * 0.15, now, 0.3);
+    }
+    
+    window.AIModeStatus.stereoPan = true;
+
+    // === ✨ Final Polish
+    toneBias.gain.setTargetAtTime(mid > 40 ? 1 : 1.4, now, 0.4);
+    clarityGain.gain.setTargetAtTime(mid > 50 ? 0.55 : 0.7, now, 0.3);
+    deEsser.gain.setTargetAtTime(high > 42 ? -5.5 : -3.5, now, 0.25);
+
+// === 🌈 Optional: Simulasi Pitch Fluctuation (analog shimmer)
+const pitchFluct = Math.sin(now * 0.8) * 20 + Math.sin(now * 1.7) * 12;
+clarity.frequency.setTargetAtTime(4000 + pitchFluct, now, 0.4);
+
+lastPitchFluct = pitchFluct;
+
+window.AIModeStatus.shimmer = true;
+
+// Optional shimmer stereo mod
+if (typeof stereoToggleState !== 'undefined' && stereoToggleState) {
+  const shimmer = Math.sin(now * 1.3) * 0.18;
+  stereoPanner.pan.setTargetAtTime(shimmer, now, 0.25);
+}
+
+    // === 🎨 Visualizer
+function drawAllVisuals() {
+  requestAnimationFrame(drawAllVisuals);
+  if (!audioCtx || audioCtx.state !== "running") return;
+
+  // ✅ Peak meters & shimmer aman...
+
+  // 🌈 Waveform Visualizer
+  if (typeof drawWaveform === "function") {
+    drawWaveform(analyser); // ✅ loop terus
+  }
+}
+
+    requestAnimationFrame(loop);
+  }
+
+  loop();
+  console.log("✅ All AI & Visualizer Loop Started");
+}
+
+    try {
+      startAllAIModesAndVisualizer();
+      console.log("✨ startAllAIModesAndVisualizer");
+    } catch (err) {
+      console.warn("❌ AI Engine gagal:", err.message);
+    }
+
+    // ✅ PowerAmp Inject & Connect
+try {
+  await injectPowerAmpV2(); // ⬅️ pastikan ini async & selesai dulu
+  smartLimiter.disconnect?.();
+  smartLimiter.connect(powerAmpNode);
+  powerAmpNode.connect(gainNode);
+  console.log("⚡ PowerAmp connected");
+} catch (err) {
+  console.warn("❌ PowerAmp error:", err.message);
+}
+
+    console.log("✅ initAudioContext Finalized [EQ ➝ FX ➝ Dynamics ➝ Harmonic ➝ PowerAmp ➝ AI ➝ Gain ➝ Stereo ➝ Out]");
+  } else {
+    console.log("⏳ AudioContext already initialized");
+  }
+}
+
+function startWaveform() {
+  if (!analyser || !freqCanvas) return;
+  if (!waveformRunning) {
+    waveformRunning = true;
+    renderFreq();
+  }
+}
+
+let waveformRunning = false;
+
+let freqCanvas;
+let freqCtx;
+let freqDataArray;
+
+
+function drawWaveform(analyser) {
+  const waveCanvas = document.getElementById("waveformCanvas");
+  if (!waveCanvas) return;
+
+  const waveCtx = waveCanvas.getContext("2d");
+  const waveDataArray = new Uint8Array(analyser.fftSize);
+
+function render() {
+  analyser.getByteTimeDomainData(waveDataArray);
+  waveCtx.clearRect(0, 0, waveCanvas.width, waveCanvas.height);
+  const midY = waveCanvas.height / 2;
+  const sliceWidth = waveCanvas.width / waveDataArray.length;
+  let x = 0;
+
+  const grad = waveCtx.createLinearGradient(0, 0, waveCanvas.width, 0);
+  for (let i = 0; i <= 1; i += 0.2) {
+    const hue = (waveHue + i * 360) % 360;
+    grad.addColorStop(i, `hsl(${hue}, 100%, 60%)`);
+  }
+  waveHue = (waveHue + 1.5) % 360;
+
+  // --- DRAW TOP WAVEFORM (normal)
+  waveCtx.beginPath();
+  x = 0;
+  for (let i = 0; i < waveDataArray.length; i++) {
+    let v = (waveDataArray[i] - 128) / 128;
+    if (Math.abs(v) < 0.015) v = 0;
+    const boost = Math.sign(v) * Math.pow(Math.abs(v), 2.5);
+    const y = midY + boost * midY * 0.9;
+    i === 0 ? waveCtx.moveTo(x, y) : waveCtx.lineTo(x, y);
+    x += sliceWidth;
+  }
+  waveCtx.strokeStyle = grad;
+  waveCtx.lineWidth = 3;
+  waveCtx.shadowColor = grad;
+  waveCtx.shadowBlur = 60;
+  waveCtx.stroke();
+
+// MIRROR REFLECTION
+waveCtx.save();
+waveCtx.translate(0, waveCanvas.height); // pindah ke bawah canvas
+waveCtx.scale(1, -1); // flip vertical
+waveCtx.globalAlpha = 0.4; // transparan refleksi
+waveCtx.filter = "blur(4px)";
+
+waveCtx.beginPath();
+x = 0;
+for (let i = 0; i < waveDataArray.length; i++) {
+  let v = (waveDataArray[i] - 128) / 128;
+  if (Math.abs(v) < 0.015) v = 0;
+  const boost = Math.sign(v) * Math.pow(Math.abs(v), 2.3);
+  const reflectY = midY + boost * waveCanvas.height * 0.25; // lebih kecil dari wave atas
+  i === 0 ? waveCtx.moveTo(x, reflectY) : waveCtx.lineTo(x, reflectY);
+  x += sliceWidth;
+}
+waveCtx.stroke();
+
+// Optional: fade refleksi ke bawah
+const fadeGrad = waveCtx.createLinearGradient(0, 0, 0, waveCanvas.height);
+fadeGrad.addColorStop(0, "rgba(255,255,255,0)");
+fadeGrad.addColorStop(1, "rgba(255,255,255,1)");
+waveCtx.fillStyle = fadeGrad;
+waveCtx.globalCompositeOperation = "destination-out";
+waveCtx.fillRect(0, 0, waveCanvas.width, waveCanvas.height);
+
+waveCtx.restore();
+
+    requestAnimationFrame(render); // 🔁 loop animasi
+  }
+
+  render(); // 🚀 mulai loop
+}
+
+player.addEventListener("play", () => {
+  audioCtx.resume();
+  drawWaveform(analyser);  // yang ini udah auto-loop
+});
+
+
+function reconnectNodesToStereo() {
+  // Putuskan koneksi lama
+  try {
+    source.disconnect();
+    gainNode.disconnect();
+    stereoMerger.disconnect();
+  } catch (e) {}
+
+  if (stereoEnabled) {
+    // stereo ON
+    source.connect(splitter);
+    splitter.connect(leftGain, 0);
+    splitter.connect(rightGain, 1);
+    leftGain.connect(stereoMerger, 0, 0);
+    rightGain.connect(stereoMerger, 0, 1);
+    stereoMerger.connect(analyser);
+  } else {
+    // stereo OFF
+    source.connect(gainNode);
+    gainNode.connect(analyser);
+  }
+
+  analyser.connect(audioCtx.destination);
+
+  // Pastikan waveform jalan
+  if (!waveformRunning) {
+    waveformRunning = true;
+    drawWaveform();
+  }
+}
+
+
+let audioCtx;
+let myDecodedBuffer;
+
+function ensureAudioContext() {
+  if (!audioCtx || audioCtx.state === "closed") {
+    audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  }
+}
+
+document.getElementById("fileInput").addEventListener("change", async e => {
+  const file = e.target.files[0];
+  if (!file) return;
+
+  ensureAudioContext();
+  const arrayBuffer = await file.arrayBuffer();
+
+  audioCtx.decodeAudioData(arrayBuffer).then(decoded => {
+    myDecodedBuffer = decoded;
+    window.lastRenderedBuffer = decoded;
+    log("✅ Audio lokal berhasil didecode");
+
+    playDecodedAudio(decoded);
+    autoRenderOnReady();
+  }).catch(err => log("❌ Gagal decode file: " + err.message));
+});
+
+function playDecodedAudio(buffer) {
+  const source = audioCtx.createBufferSource();
+  source.buffer = buffer;
+  source.connect(audioCtx.destination);
+  source.start();
+  log("▶️ Audio diputar");
+}
+
+// === Auto render jika buffer siap
+function autoRenderOnReady() {
+  const checkReady = setInterval(() => {
+    if (window.lastRenderedBuffer instanceof AudioBuffer) {
+      clearInterval(checkReady);
+      log("✅ Buffer siap, mulai render...");
+      render32bitAudio(10).catch(err => log("❌ Gagal render: " + err.message));
+    }
+  }, 500);
+}
+
+// === Render dan auto-download 16-bit + 32-bit WAV
+async function render32bitAudio(durationInSec = 10) {
+  const sampleRate = audioCtx?.sampleRate || 44100;
+  const srcBuffer = window.lastRenderedBuffer;
+  if (!srcBuffer) return log("❌ Buffer tidak ditemukan");
+
+  const offlineCtx = new OfflineAudioContext(2, durationInSec * sampleRate, sampleRate);
+  const source = offlineCtx.createBufferSource();
+  source.buffer = srcBuffer;
+
+  // FX Chain
+  const snap = offlineCtx.createBiquadFilter();
+  snap.type = "peaking"; snap.frequency.value = 2100; snap.gain.value = 4; snap.Q.value = 1.2;
+
+  const clarity = offlineCtx.createBiquadFilter();
+  clarity.type = "highshelf"; clarity.frequency.value = 4800; clarity.gain.value = 3;
+
+  const boost = offlineCtx.createGain();
+  boost.gain.value = 1.25;
+
+  source.connect(snap).connect(clarity).connect(boost).connect(offlineCtx.destination);
+  source.start();
+
+  log("🎛️ [Render] Mulai render...");
+  const renderedBuffer = await offlineCtx.startRendering();
+
+  const wav16 = encodeWAV16bit(renderedBuffer);
+  const wav32 = encodeWAVFloat32(renderedBuffer);
+
+  autoDownload(wav16, "rendered-16bit.wav");
+  autoDownload(wav32, "rendered-32bit-float.wav");
+
+  log("✅ Render dan download selesai");
+}
+
+function autoDownload(blob, filename) {
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob);
+  a.download = filename;
+  a.style.display = "none";
+  document.body.appendChild(a);
+  a.click();
+  setTimeout(() => {
+    URL.revokeObjectURL(a.href);
+    document.body.removeChild(a);
+  }, 1000);
+}
+
+// === Encode WAV 16-bit PCM
+function encodeWAV16bit(buffer) {
+  const numChannels = buffer.numberOfChannels;
+  const sampleRate = buffer.sampleRate;
+  const length = buffer.length * numChannels * 2;
+  const wav = new DataView(new ArrayBuffer(44 + length));
+  let offset = 0;
+
+  function writeString(s) {
+    for (let i = 0; i < s.length; i++) wav.setUint8(offset++, s.charCodeAt(i));
+  }
+
+  function floatTo16bitPCM(output, offset, input) {
+    for (let i = 0; i < input.length; i++, offset += 2) {
+      let s = Math.max(-1, Math.min(1, input[i]));
+      s = s < 0 ? s * 0x8000 : s * 0x7FFF;
+      output.setInt16(offset, s, true);
+    }
+  }
+
+  writeString("RIFF"); wav.setUint32(offset, 36 + length, true); offset += 4;
+  writeString("WAVE"); writeString("fmt "); wav.setUint32(offset, 16, true); offset += 4;
+  wav.setUint16(offset, 1, true); offset += 2;
+  wav.setUint16(offset, numChannels, true); offset += 2;
+  wav.setUint32(offset, sampleRate, true); offset += 4;
+  wav.setUint32(offset, sampleRate * numChannels * 2, true); offset += 4;
+  wav.setUint16(offset, numChannels * 2, true); offset += 2;
+  wav.setUint16(offset, 16, true); offset += 2;
+  writeString("data"); wav.setUint32(offset, length, true); offset += 4;
+
+  for (let ch = 0; ch < numChannels; ch++) {
+    floatTo16bitPCM(wav, offset + ch * 2, buffer.getChannelData(ch));
+  }
+
+  return new Blob([wav], { type: "audio/wav" });
+}
+
+// === Encode WAV 32-bit Float
+function encodeWAVFloat32(buffer) {
+  const numChannels = buffer.numberOfChannels;
+  const sampleRate = buffer.sampleRate;
+  const length = buffer.length * numChannels * 4;
+  const wav = new DataView(new ArrayBuffer(44 + length));
+  let offset = 0;
+
+  function writeString(s) {
+    for (let i = 0; i < s.length; i++) wav.setUint8(offset++, s.charCodeAt(i));
+  }
+
+  function writeFloat32(output, offset, input) {
+    for (let i = 0; i < input.length; i++, offset += 4) {
+      output.setFloat32(offset, input[i], true);
+    }
+  }
+
+  writeString("RIFF"); wav.setUint32(offset, 36 + length, true); offset += 4;
+  writeString("WAVE"); writeString("fmt "); wav.setUint32(offset, 16, true); offset += 4;
+  wav.setUint16(offset, 3, true); offset += 2; // Format 3 = float
+  wav.setUint16(offset, numChannels, true); offset += 2;
+  wav.setUint32(offset, sampleRate, true); offset += 4;
+  wav.setUint32(offset, sampleRate * numChannels * 4, true); offset += 4;
+  wav.setUint16(offset, numChannels * 4, true); offset += 2;
+  wav.setUint16(offset, 32, true); offset += 2;
+  writeString("data"); wav.setUint32(offset, length, true); offset += 4;
+
+  for (let ch = 0; ch < numChannels; ch++) {
+    writeFloat32(wav, offset + ch * 4, buffer.getChannelData(ch));
+  }
+
+  return new Blob([wav], { type: "audio/wav" });
+}
+
+// Log helper
+function log(msg) {
+  console.log(msg);
+  const div = document.getElementById("statusLog");
+  if (div) {
+    const line = document.createElement("div");
+    line.textContent = msg;
+    div.appendChild(line);
+  }
+}
+
+// === Encode WAV 24-bit PCM
+function encodeWAV24bit(buffer) {
+  const numChannels = buffer.numberOfChannels;
+  const sampleRate = buffer.sampleRate;
+  const length = buffer.length * numChannels * 3; // 3 bytes per sample
+  const wav = new DataView(new ArrayBuffer(44 + length));
+  let offset = 0;
+
+  function writeString(s) {
+    for (let i = 0; i < s.length; i++) wav.setUint8(offset++, s.charCodeAt(i));
+  }
+
+  function floatTo24bitPCM(output, offset, input) {
+    for (let i = 0; i < input.length; i++, offset += 3) {
+      let s = Math.max(-1, Math.min(1, input[i]));
+      let int = Math.floor(s * 8388607); // 2^23 - 1
+      output.setUint8(offset, int & 0xFF);         // low byte
+      output.setUint8(offset + 1, (int >> 8) & 0xFF);  // mid byte
+      output.setUint8(offset + 2, (int >> 16) & 0xFF); // high byte
+    }
+  }
+
+  writeString("RIFF"); wav.setUint32(offset, 36 + length, true); offset += 4;
+  writeString("WAVE"); writeString("fmt "); wav.setUint32(offset, 16, true); offset += 4;
+  wav.setUint16(offset, 1, true); offset += 2; // PCM format
+  wav.setUint16(offset, numChannels, true); offset += 2;
+  wav.setUint32(offset, sampleRate, true); offset += 4;
+  wav.setUint32(offset, sampleRate * numChannels * 3, true); offset += 4; // byteRate
+  wav.setUint16(offset, numChannels * 3, true); offset += 2; // blockAlign
+  wav.setUint16(offset, 24, true); offset += 2; // bitsPerSample
+  writeString("data"); wav.setUint32(offset, length, true); offset += 4;
+
+  // Tulis sample tiap channel
+  for (let ch = 0; ch < numChannels; ch++) {
+    floatTo24bitPCM(wav, offset + ch * 3, buffer.getChannelData(ch));
+  }
+  
+    return new Blob([wav], { type: "audio/wav" });
+}
+
+function renderAllBitDepth(durationInSec = 10) {
+  const sampleRate = audioCtx?.sampleRate || 44100;
+  const srcBuffer = window.lastRenderedBuffer;
+  if (!srcBuffer) return log("❌ Buffer tidak ditemukan");
+
+  const offlineCtx = new OfflineAudioContext(2, durationInSec * sampleRate, sampleRate);
+  const source = offlineCtx.createBufferSource();
+  source.buffer = srcBuffer;
+
+  // FX Chain
+  const snap = offlineCtx.createBiquadFilter();
+  snap.type = "peaking"; snap.frequency.value = 2100; snap.gain.value = 4; snap.Q.value = 1.2;
+
+  const clarity = offlineCtx.createBiquadFilter();
+  clarity.type = "highshelf"; clarity.frequency.value = 4800; clarity.gain.value = 3;
+
+  const boost = offlineCtx.createGain();
+  boost.gain.value = 1.25;
+
+  source.connect(snap).connect(clarity).connect(boost).connect(offlineCtx.destination);
+  source.start();
+
+  log("🎛️ [Render] Mulai render...");
+
+  offlineCtx.startRendering().then(renderedBuffer => {
+    const wav16 = encodeWAV16bit(renderedBuffer);
+    const wav24 = encodeWAV24bit(renderedBuffer);
+    const wav32 = encodeWAVFloat32(renderedBuffer);
+
+    autoDownload(wav16, "rendered-16bit.wav");
+    autoDownload(wav24, "rendered-24bit.wav");
+    autoDownload(wav32, "rendered-32bit-float.wav");
+
+    log("✅ Render & download semua format selesai");
+  }).catch(err => log("❌ Gagal render: " + err.message));
+}
+
+
+    window.lastRender16BitOK = true;
+    window.lastRender24BitOK = true;
+    window.lastRender32BitOK = true;
+
+
+function superAudioLogger(interval = 1000) {  
+  const out = document.getElementById("testLog");  
+  if (!out || !audioCtx) return console.warn("⛔ Log Panel atau AudioContext tidak ditemukan");  
+    
+  if (!eqNodes || eqNodes.length === 0) {  
+  lines.push("⚠️ eqNodes kosong atau belum siap");  
+}  
+  
+  setInterval(() => {  
+    const lines = [];  
+
+    // === 🎧 Audio Context Info ===
+    lines.push(`🎧 AudioContext State: ${audioCtx.state}`);
+    lines.push(`🎚 Sample Rate: ${audioCtx.sampleRate} Hz`);
+    lines.push(`🕒 Current Time: ${audioCtx.currentTime.toFixed(2)} sec`);
+
+    // === Preset Status ===
+    lines.push(`📢 Volume Preset: ${lastVolPreset || "(none)"}`);
+
+    // === Enhancer & Compressor Info ===
+    lines.push(`✨ Enhancer: ${enhancer ? enhancer.gain.value.toFixed(2) : 'n/a'}`);
+
+    // 🎛️ Preset & Mode Info  
+    lines.push(`🎛 Preset Aktif: ${lastManualPreset || "default"}`);  
+    lines.push(`🧩 EQ Mode: ${presetFromDynamic ? "Dynamic" : "Manual"}`);  
+    lines.push(`🌀 Blend Mode: ${blendActive ? "ON" : "OFF"}\n`);  
+      
+    // 🎛 EQ Nodes  
+    if (eqNodes?.length) {  
+      lines.push("🎛 EQ Bands:");  
+      eqNodes.forEach((f, i) => {  
+        lines.push(`  • Band ${i + 1}: ${f.frequency.value}Hz → ${f.gain.value.toFixed(2)} dB`);  
+      });  
+      lines.push("");  
+    }  
+lines.push("\n⚡ Booster Status:");  
+lines.push(`  • Mode: ${boosterMode}`);  
+lines.push(`  • Band: ${boosterBand ?? "-"}`);  
+lines.push(`  • Amount: ${boosterPresets[boosterMode] ?? 0} dB`);  
+  
+const boostedIndexes = bandMap[boosterBand] ?? [];  
+boostedIndexes.forEach(i => {  
+  const gain = eqNodes[i]?.gain?.value?.toFixed(2) ?? "-";  
+  lines.push(`    ↳ Band ${i} Gain: ${gain} dB`);  
+});  
+
+lines.push("🎛️ Sub EQ & Filters:");
+lines.push(`  • Low Cut: ${lowCutFilter?.frequency?.value ?? "-"}Hz | Q: ${lowCutFilter?.Q?.value.toFixed(2) ?? "-"}`);
+lines.push(`  • Sub Shelf: ${subShelf?.frequency?.value ?? "-"}Hz | Gain: ${subShelf?.gain?.value.toFixed(2) ?? "-"} dB`);
+lines.push(`  • Sub MidCut: ${subMidCut?.frequency?.value ?? "-"}Hz | Gain: ${subMidCut?.gain?.value.toFixed(2) ?? "-"} dB | Q: ${subMidCut?.Q?.value.toFixed(2) ?? "-"}`);
+
+lines.push("\n📉 Sub Compressor:");
+lines.push(`  • Threshold: ${subCompressor?.threshold?.value ?? "-"} dB`);
+lines.push(`  • Knee: ${subCompressor?.knee?.value ?? "-"}`);
+lines.push(`  • Ratio: ${subCompressor?.ratio?.value ?? "-"}`);
+lines.push(`  • Attack: ${subCompressor?.attack?.value ?? "-"}`);
+lines.push(`  • Release: ${subCompressor?.release?.value ?? "-"}`);
+
+lines.push(`🎛️ EQ Filters:`);
+lines.push(`   • Mix Mid Cut: ${mixMidCut.frequency.value} Hz @ ${mixMidCut.gain.value} dB (Q=${mixMidCut.Q.value})`);
+lines.push(`   • Clarity Boost: ${clarityBoost.frequency.value} Hz @ ${clarityBoost.gain.value} dB (Q=${clarityBoost.Q.value})`);
+lines.push(`   • Air Boost: ${mixAir.frequency.value} Hz @ ${mixAir.gain.value} dB (Q=${mixAir.Q.value})`);
+
+    // 🔊 Effect Nodes  
+lines.push("\n🔊 FX Nodes:");
+    lines.push(`  • Clarity Gain (Parallel): ${clarityGain?.gain?.value?.toFixed(2) ?? "-"}`);  
+    lines.push(`  • DeEsser: ${deEsser?.frequency?.value ?? "-"}Hz | Q: ${deEsser?.Q?.value.toFixed(2) ?? "-"} | Gain: ${deEsser?.gain?.value.toFixed(2) ?? "-"} dB`);  
+    lines.push(`  • DepBoost: ${depBoost?.type ?? "-"} | ${depBoost?.frequency?.value ?? "-"}Hz | Gain: ${typeof depBoost?.gain?.value === "number" ? depBoost.gain.value.toFixed(2) : "-"} dB | Q: ${typeof depBoost?.Q?.value === "number" ? depBoost.Q.value.toFixed(2) : "-"}`);  
+  
+lines.push("🔊 EQ Node Values:");
+lines.push(`  • Bass:   ${eqNodes.bass?.frequency?.value ?? "-"}Hz | Gain: ${eqNodes.bass?.gain?.value.toFixed(2) ?? "-"} dB`);
+lines.push(`  • Kick:   ${eqNodes.kick?.frequency?.value ?? "-"}Hz | Gain: ${eqNodes.kick?.gain?.value.toFixed(2) ?? "-"} dB`);
+lines.push(`  • Snare:  ${eqNodes.snare?.frequency?.value ?? "-"}Hz | Gain: ${eqNodes.snare?.gain?.value.toFixed(2) ?? "-"} dB`);
+lines.push(`  • Guitar: ${eqNodes.guitar?.frequency?.value ?? "-"}Hz | Gain: ${eqNodes.guitar?.gain?.value.toFixed(2) ?? "-"} dB`);
+lines.push(`  • Hihat:  ${eqNodes.hihat?.frequency?.value ?? "-"}Hz | Gain: ${eqNodes.hihat?.gain?.value.toFixed(2) ?? "-"} dB`);
+lines.push(`  • Piano:  ${eqNodes.piano?.frequency?.value ?? "-"}Hz | Gain: ${eqNodes.piano?.gain?.value.toFixed(2) ?? "-"} dB`);
+
+// Log untuk Snare Filters
+lines.push(`🥁 SnareSnap: ${snareSnap?.frequency?.value ?? "-"}Hz | Q: ${snareSnap?.Q?.value.toFixed(1) ?? "-"} | Gain: ${snareSnap?.gain?.value.toFixed(2) ?? "-"} dB`);
+lines.push(`🥁 SnareCutMud: ${snareCutMud?.frequency?.value ?? "-"}Hz | Q: ${snareCutMud?.Q?.value.toFixed(1) ?? "-"} | Gain: ${snareCutMud?.gain?.value.toFixed(2) ?? "-"} dB`);
+lines.push(`🥁 SnareAttack: ${snareAttack?.frequency?.value ?? "-"}Hz | Q: ${snareAttack?.Q?.value.toFixed(1) ?? "-"} | Gain: ${snareAttack?.gain?.value.toFixed(2) ?? "-"} dB`);
+lines.push(`🥁 SnareCrack: ${snareCrack?.frequency?.value ?? "-"}Hz | Q: ${snareCrack?.Q?.value.toFixed(1) ?? "-"} | Gain: ${snareCrack?.gain?.value.toFixed(2) ?? "-"} dB`);
+lines.push(`🥁 SnareBody: ${snareBody?.frequency?.value ?? "-"}Hz | Q: ${snareBody?.Q?.value.toFixed(1) ?? "-"} | Gain: ${snareBody?.gain?.value.toFixed(2) ?? "-"} dB`);
+lines.push(`🥁 SnareBoost: ${snareBoost?.frequency?.value ?? "-"}Hz | Q: ${snareBoost?.Q?.value.toFixed(1) ?? "-"} | Gain: ${snareBoost?.gain?.value.toFixed(2) ?? "-"} dB`);
+
+
+lines.push("\n🎧 FX Filters:");
+lines.push(`  • Clarity:   ${clarity?.frequency?.value ?? "-"}Hz | Q: ${clarity?.Q?.value.toFixed(1) ?? "-"} | Gain: ${clarity?.gain?.value.toFixed(2) ?? "-"} dB`);
+lines.push(`  • GuitarSnap: ${guitarSnap?.frequency?.value ?? "-"}Hz | Q: ${guitarSnap?.Q?.value.toFixed(1) ?? "-"} | Gain: ${guitarSnap?.gain?.value.toFixed(2) ?? "-"} dB`);
+lines.push(`  • Enhancer:  ${enhancer?.frequency?.value ?? "-"}Hz | Gain: ${enhancer?.gain?.value.toFixed(2) ?? "-"} dB`);
+
+lines.push("\n📡 Loudness Filters:");
+lines.push(`  • Loud Low:  ${loudnessLow?.frequency?.value ?? "-"}Hz | Gain: ${loudnessLow?.gain?.value.toFixed(2) ?? "-"} dB`);
+lines.push(`  • Loud High: ${loudnessHigh?.frequency?.value ?? "-"}Hz | Gain: ${loudnessHigh?.gain?.value.toFixed(2) ?? "-"} dB`);
+lines.push(`  • Subwoofer: ${subwoofer?.frequency?.value ?? "-"}Hz | Gain: ${subwoofer?.gain?.value.toFixed(2) ?? "-"} dB`);
+
+lines.push("\n🎹 Piano Chain:");
+lines.push(`  • EQ: ${pianoEQ?.frequency?.value ?? "-"}Hz | Gain: ${pianoEQ?.gain?.value.toFixed(2) ?? "-"} dB`);
+lines.push(`  • Reverb: ${pianoReverb ? "🟢" : "🔴"}`);
+lines.push(`  • Compressor: Threshold ${pianoCompressor?.threshold?.value ?? "-"} dB | Ratio: ${pianoCompressor?.ratio?.value ?? "-"}`);
+
+lines.push("\n🎼 Orchestra:");
+lines.push(`  • EQ: ${orchestraEQ?.frequency?.value ?? "-"}Hz | Gain: ${orchestraEQ?.gain?.value.toFixed(2) ?? "-"} dB`);
+lines.push(`  • Reverb: ${orchestraReverb ? "🟢" : "🔴"}`);
+
+lines.push("\n🎚️ Final EQ Stages:");
+lines.push(`  • Bass EQ: ${bassEQ?.frequency?.value ?? "-"}Hz | Gain: ${bassEQ?.gain?.value.toFixed(2) ?? "-"} dB`);
+lines.push(`  • Mid EQ: ${midEQ?.frequency?.value ?? "-"}Hz | Gain: ${midEQ?.gain?.value.toFixed(2) ?? "-"} dB`);
+lines.push(`  • Treble EQ: ${trebleEQ?.frequency?.value ?? "-"}Hz | Gain: ${trebleEQ?.gain?.value.toFixed(2) ?? "-"} dB`);
+
+lines.push("\n📈 Dynamics Compressor:");
+lines.push(`  • Threshold: ${compressor.threshold?.value ?? "-"}`);
+lines.push(`  • Knee: ${compressor.knee?.value ?? "-"}`);
+lines.push(`  • Ratio: ${compressor.ratio?.value ?? "-"}`);
+lines.push(`  • Attack: ${compressor.attack?.value ?? "-"}`);
+lines.push(`  • Release: ${compressor.release?.value ?? "-"}`);
+
+lines.push(`  • Gain Reduction: ${compressor.reduction?.toFixed(2) ?? "-"} dB`);
+
+lines.push("\n🌫️ Ambience:");
+lines.push(`  • Ambient LPF: ${ambient?.frequency?.value ?? "-"}Hz | Q: ${ambient?.Q?.value ?? "-"}`);
+lines.push(`  • Tone Bias: ${toneBias?.frequency?.value ?? "-"}Hz | Gain: ${toneBias?.gain?.value.toFixed(2) ?? "-"} dB`);
+
+  
+    // 🔍 Auto-Scan BiquadFilters in window  
+    const globalFilters = Object.entries(window)  
+      .filter(([k, v]) => v instanceof BiquadFilterNode)  
+      .sort((a, b) => a[0].localeCompare(b[0]));  
+      
+    if (globalFilters.length) {  
+      lines.push("🔊 Detected Biquad Filters:");  
+      globalFilters.forEach(([name, node]) => {  
+        lines.push(`  • ${name}: ${node.type} | ${node.frequency.value}Hz | Gain: ${node.gain.value.toFixed(2)} dB | Q: ${node.Q?.value?.toFixed(2) ?? "-"}`);  
+      });  
+      lines.push("");  
+    }  
+
+    // 📦 AGC, Soft, Peak, Smart Limiter  
+    const dynamicsList = { agcLimiter, softLimiter, peakLimiter, smartLimiter };  
+    Object.entries(dynamicsList).forEach(([name, node]) => {  
+      if (node instanceof DynamicsCompressorNode) {  
+        lines.push(`🧠 ${name}: Threshold: ${node.threshold.value} | Ratio: ${node.ratio.value} | Attack: ${node.attack.value} | Release: ${node.release.value}`);  
+      }  
+    });  
+    lines.push("");  
+
+
+  // PowerAmp info
+if (powerAmpNode instanceof AudioWorkletNode) {
+  lines.push("\n⚡ PowerAmp Active");
+  lines.push("✅ Injected successfully...");
+
+  const p = powerAmpNode.parameters;
+  const gain = p.get("gain")?.value ?? null;
+  const drive = p.get("drive")?.value ?? null;
+  const mode = p.get("mode")?.value ?? null;
+
+  const modeLabels = {
+    0: "Soft",
+    1: "Fat",
+    2: "Grunge",
+    3: "Gritty",
+    6: "DeepMod",
+    9: "AltClip",
+    11: "Breathing"
+  };
+
+  lines.push(`  • Gain : ${gain !== null ? gain.toFixed(2) : "?"}`);
+  lines.push(`  • Drive: ${drive !== null ? drive.toFixed(2) : "?"}`);
+  lines.push(`  • Mode : ${mode} (${modeLabels[mode] || "Unknown"})`);
+} else {
+  lines.push("\n⚠️ PowerAmp not active.");
+  lines.push("💡 Mungkin belum inject atau gagal load modul.");
+}
+    
+    // 🎼 Harmonic Enhancer  
+    if (window.harmonicEnhancerNodes?.length) {  
+      lines.push(`\n🎼 Harmonic AI Tones: ${window.harmonicEnhancerNodes.length} aktif`);  
+    }  
+    
+lines.push("\n🎛️ Dynamic Tone AI:");
+lines.push(`  • Subwoofer Gain: ${subwoofer.gain?.value ?? "-"}`);
+lines.push(`  • Loudness Low Gain: ${loudnessLow.gain?.value ?? "-"}`);
+lines.push(`  • Clarity Gain: ${clarityGain.gain?.value ?? "-"}`);
+lines.push(`  • Clarity: ${clarity.gain?.value ?? "-"}`);
+lines.push(`  • Enhancer: ${enhancer.gain?.value ?? "-"}`);
+lines.push(`  • Tone Bias: ${toneBias.gain?.value ?? "-"}`);
+lines.push(`  • De-Esser: ${deEsser.gain?.value ?? "-"}`);
+lines.push(`  • Ambient Freq: ${ambient.frequency?.value ?? "-"}`);
+lines.push(`  • Ambient Q: ${ambient.Q?.value ?? "-"}`);
+lines.push(`  • Harmonic Enhancer: ${window.AIModeStatus?.harmonicEnhancer ? "✅ ON" : "❌ OFF"}`);
+
+lines.push("\n🎨 Timbre AI Mode:");
+lines.push(`  • Clarity Freq: ${clarity.frequency?.value ?? "-"}`);
+lines.push(`  • Clarity Q: ${clarity.Q?.value ?? "-"}`);
+lines.push(`  • Clarity Gain: ${clarityGain.gain?.value ?? "-"}`);
+lines.push(`  • Tone Bias: ${toneBias.gain?.value ?? "-"}`);
+lines.push(`  • Enhancer: ${enhancer.gain?.value ?? "-"}`);
+lines.push(`  • Timbre Mode: ${window.AIModeStatus?.timbre ? "✅ ON" : "❌ OFF"}`);
+
+lines.push("\n🔍 Transparent Mix Mode:");
+lines.push(`  • Tone Bias: ${toneBias.gain?.value ?? "-"}`);
+lines.push(`  • Clarity Freq: ${clarity.frequency?.value ?? "-"}`);
+lines.push(`  • Clarity Q: ${clarity.Q?.value ?? "-"}`);
+lines.push(`  • Clarity Gain: ${clarityGain.gain?.value ?? "-"}`);
+lines.push(`  • De-Esser: ${deEsser.gain?.value ?? "-"}`);
+lines.push(`  • Transparency Mode: ${window.AIModeStatus?.transparency ? "✅ ON" : "❌ OFF"}`);
+
+lines.push("\n🔍 Transparent Mix Mode:");
+lines.push(`  • Tone Bias: ${toneBias.gain?.value.toFixed(2) ?? "-"}`);
+lines.push(`  • Clarity Freq: ${clarity.frequency?.value.toFixed(0) ?? "-"}`);
+lines.push(`  • Clarity Q: ${clarity.Q?.value.toFixed(2) ?? "-"}`);
+lines.push(`  • Clarity Gain: ${clarityGain.gain?.value.toFixed(2) ?? "-"}`);
+lines.push(`  • De-Esser: ${deEsser.gain?.value.toFixed(2) ?? "-"}`);
+
+
+// 🧠 AI Mode Flags  
+lines.push(`\n🤖 AI Modes:`);  
+const ai = window.AIModeStatus || {};  
+lines.push(`  • Stereo Motion: ${ai.stereoPan ? "ON" : "OFF"}`);  
+
+lines.push("\n🌀 Stereo:");
+lines.push(`  • Stereo Pan: ${stereoWidener?.pan?.value ?? "-"} (left/right)`);
+    // 🎧 Stereo  
+    if (stereoPanner instanceof StereoPannerNode) {  
+      lines.push(`🎚 Stereo Pan: ${stereoPanner.pan.value.toFixed(2)}`);  
+    }  
+    // 💡 AutoPan (jika ada)  
+    lines.push(`🎚 AutoPan: ${typeof stereoToggleState !== "undefined" ? (stereoToggleState ? "ON" : "OFF") : "-"}`);  
+        lines.push(`🌀 Stereo Toggle: ${typeof stereoToggleState !== "undefined" ? (stereoToggleState ? "ON" : "OFF") : "-"}`);  
+
+lines.push(`  • Pitch Simmer: ${lastPitchFluct.toFixed(2)} Hz`);
+lines.push(`  • Pitch Shimmer: ${ai.shimmer ? "ON" : "OFF"}`);  
+
+  
+    // 🌈 Visualizer & State  
+lines.push(`🌈 Visualizer: ${typeof drawWaveform === "function" ? "ON" : "OFF"}`);
+
+    // 🚀 Gain Chain  
+    lines.push(`🚀 Booster Gain: ${boosterGainNode?.gain?.value?.toFixed(2) ?? "-"}`);  
+    lines.push(`🔊 Output Gain: ${gainNode?.gain?.value?.toFixed(2) ?? "-"}`);  
+     
+    function log(msg) {  
+  console.log(msg);  
+  const div = document.getElementById("statusLog");  
+  if (div) {  
+    const line = document.createElement("div");  
+    line.textContent = msg;  
+    div.appendChild(line);  
+  }  
+}  
+
+lines.push(`✅ 32-bit Render: ${window.lastRender32BitOK ? "OK" : "Belum jalan"}`);
+lines.push(`✅ 24-bit Render: ${window.lastRender32BitOK ? "OK" : "Belum jalan"}`);
+lines.push(`✅ 16-bit Render: ${window.lastRender32BitOK ? "OK" : "Belum jalan"}`);
+  
+    // Final output  
+    out.textContent = lines.join("\n");  
+  }, interval);  
+}  
+  
+window.addEventListener("click", async () => {  
+  await initAudioContext();  
+  superAudioLogger(); // Jangan dijalankan sebelum audio siap  
+});
+
+// ============ 🎚️ PRESETS ============  
+const basicPresets = {  
+  "Flat":  {
+    eq: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+    enhancer: { presence: 0, brilliance: 0, warmth: 0 },
+    compressor: { threshold: -12, ratio: 2, attack: 0.003, release: 0.25 },
+    limiter: { threshold: -3, ratio: 10, attack: 0.002, release: 0.1 },
+    stereoWidth: 1,
+    reverb: 0
+  },
+  "Bass Boost":  {
+    eq: [5, 4, 3, 1, 0, -1, -2, -2, -3, -3, -4, -5],
+    enhancer: { presence: 0.2, brilliance: 0.1, warmth: 0.5 },
+    compressor: { threshold: -10, ratio: 3, attack: 0.004, release: 0.3 },
+    limiter: { threshold: -2, ratio: 8, attack: 0.003, release: 0.2 },
+    stereoWidth: 1.1,
+    reverb: 0.1
+  },
+  "Treble Boost": {
+    eq: [-3, -2, -2, -1, 0, 1, 2, 3, 4, 5, 5, 6],
+    enhancer: { presence: 0.3, brilliance: 0.6, warmth: 0.1 },
+    compressor: { threshold: -11, ratio: 2.8, attack: 0.0025, release: 0.22 },
+    limiter: { threshold: -2.5, ratio: 9, attack: 0.002, release: 0.1 },
+    stereoWidth: 1.05,
+    reverb: 0.05
+  },
+"Rock": {
+  eq: [4.2, 4.0, 3.6, 2.2, 0.3, -1.0, 1.0, 2.6, 3.9, 4.5, 4.2, 3.2],
+  enhancer: { presence: 0.85, brilliance: 0.55, warmth: 0.5 },
+  compressor: { threshold: -11, ratio: 4.0, attack: 4, release: 68 },
+  limiter: { threshold: -3.5, ratio: 10.5, attack: 0.003, release: 0.11 },
+  stereoWidth: 1.3,
+  reverb: 0.21
+},
+"Pop": {
+  eq: [2.5, 2.2, 1.8, 0.8, 0, -0.8, 0.2, 1.2, 2.0, 2.5, 2.2, 1.8],
+  enhancer:   { presence: 0.5, brilliance: 0.3, warmth: 0.6 },
+  compressor: { threshold: -15, ratio: 2.8, attack: 5, release: 70 },
+  limiter:    { threshold: -6,  ratio: 7, attack: 0.005, release: 0.17 },
+  stereoWidth: 1.0,
+  reverb: 0.22
+},
+"Jazz": {
+  eq: [1.5, 1.2, 1, 0.5, 0.2, 0, 0.3, 0.5, 1, 1.3, 1.1, 1],
+  enhancer: { presence: 0.4, brilliance: 0.2, warmth: 0.5 },
+  compressor: { threshold: -18, ratio: 2, attack: 12, release: 120 },
+  limiter:    { threshold: -7, ratio: 4, attack: 0.008, release: 0.3 },
+  stereoWidth: 1.0,
+  reverb: 0.15
+},
+"Classic": {
+  eq: [1.2, 1, 0.8, 0.5, 0, -0.5, -0.8, 0.3, 0.6, 1.1, 1, 0.8],
+  enhancer: {
+    presence: 0.15,
+    brilliance: 0.2,
+    warmth: 0.7
+  },
+  compressor: {
+    threshold: -18,
+    ratio: 2.2,
+    attack: 15,
+    release: 180
+  },
+  limiter: {
+    threshold: -8,
+    ratio: 4,
+    attack: 0.005,
+    release: 0.35
+  },
+  stereoWidth: 0.95,   // Sedikit lebih sempit biar fokus ke tengah
+  reverb: 0.6           // Lebih besar, biar ambience ruangan terasa
+},
+"Dance":  {
+  eq: [4.5, 3.5, 2.5, 1.5, 0, -1, 0.5, 1.5, 3, 4, 3.5, 2.5],
+  enhancer: {
+    presence: 0.7,
+    brilliance: 0.5,
+    warmth: 0.6
+  },
+  compressor: {
+    threshold: -11,
+    ratio: 3.5,
+    attack: 4,
+    release: 80
+  },
+  limiter: {
+    threshold: -5,
+    ratio: 9,
+    attack: 0.004,
+    release: 0.15
+  },
+  stereoWidth: 1.15,
+  reverb: 0.08
+},
+"Chill Vibe": {
+  eq: [2.8, 2.4, 2, 1.5, 0.2, -0.7, 0.3, 1.2, 2, 2.5, 2.2, 1.8],
+  enhancer:   { presence: 0.5, brilliance: 0.3, warmth: 0.6 },
+  compressor: { threshold: -13, ratio: 2.7, attack: 5, release: 70 },
+  limiter:    { threshold: -6, ratio: 7, attack: 0.004, release: 0.18 },
+  stereoWidth: 1.1,
+  reverb: 0.25
+},
+"Live Acoustic": {
+  eq: [2.5, 2.2, 1.8, 1, 0, -1.2, -0.5, 0.5, 1.2, 2.2, 2.8, 2.5],
+  enhancer: { presence: 0.5, brilliance: 0.3, warmth: 0.7 },
+  compressor: { threshold: -13, ratio: 2.8, attack: 4, release: 55 },
+  limiter: { threshold: -5, ratio: 6.5, attack: 0.004, release: 0.1 },
+  stereoWidth: 1.05,
+  reverb: 0.22
+},
+"DangdutRemix": {  
+  eq: [4.5, 4.2, 3.5, 2.5, 0.8, -1, 0.8, 2.2, 3.2, 3.8, 3.5, 2.9],  
+  enhancer: { presence: 0.8, brilliance: 0.6, warmth: 0.9 },  
+  compressor: { threshold: -10, ratio: 3.8, attack: 3, release: 55 },  
+  limiter:    { threshold: -3.5, ratio: 9, attack: 0.003, release: 0.12 },  
+  stereoWidth: 1.3,  
+  reverb: 0.15  
+},
+"Bright Mix": {  
+  eq: [2.8, 2.5, 2, 1.2, 0.5, 0, 0.5, 1.5, 2.8, 3, 2.8, 2.4],  
+  enhancer:   { presence: 0.7, brilliance: 0.8, warmth: 0.3 },  
+  compressor: { threshold: -14, ratio: 2.5, attack: 3.5, release: 80 },  
+  limiter:    { threshold: -4, ratio: 7, attack: 0.004, release: 0.18 },  
+  stereoWidth: 1.25,  
+  reverb: 0.09  
+},  
+"Ballad Soft": {
+  "eq": [1.5, 1.2, 0.8, 0.3, -0.5, -1, -0.3, 0.5, 1, 1.8, 2, 2.2],
+  "enhancer": { "presence": 0.4, "brilliance": 0.2, "warmth": 0.6 },
+  "compressor": { "threshold": -14, "ratio": 2.5, "attack": 10, "release": 120 },
+  "limiter": { "threshold": -7, "ratio": 5, "attack": 0.005, "release": 0.25 },
+  "stereoWidth": 1.05,
+  "reverb": 0.18
+},
+"EDM Festival": {
+  eq: [6.5, 5.5, 4.5, 2.5, 0.8, -2, 0, 3, 5.5, 6, 5.2, 4.5],
+  enhancer: {
+    presence: 1.0,
+    brilliance: 0.8,
+    warmth: 0.5
+  },
+  compressor: {
+    threshold: -6,
+    ratio: 6,
+    attack: 3,
+    release: 60
+  },
+  limiter: {
+    threshold: -2.5,
+    ratio: 10,
+    attack: 0.001,
+    release: 0.1
+  },
+  stereoWidth: 1.4,
+  reverb: 0.12
+},
+  "R&B":  {
+  eq: [3.2, 2.8, 2.4, 1.6, 0.2, -0.6, 0.4, 1.8, 2.6, 3.2, 3.4, 3],
+  enhancer:   { presence: 0.85, brilliance: 0.65, warmth: 0.7 },
+  compressor: { threshold: -11, ratio: 3.2, attack: 4.5, release: 58 },
+  limiter:    { threshold: -3.8, ratio: 8.5, attack: 0.003, release: 0.12 },
+  stereoWidth: 1.35,
+  reverb: 0.14
+},
+"Orchestra": {
+  eq: [2.5, 2, 1.5, 1, 0, -0.5, 0.3, 1.2, 2, 2.8, 3, 2.2],
+  enhancer:   { presence: 0.5, brilliance: 0.4, warmth: 0.6 },
+  compressor: { threshold: -16, ratio: 2.5, attack: 6, release: 90 },
+  limiter:    { threshold: -6, ratio: 6.5, attack: 0.005, release: 0.25 },
+  stereoWidth: 1.05,
+  reverb: 0.3
+},
+  "Reggae Vibe": {
+    eq: [3, 2.8, 2.2, 1.2, 0, -1, 0.6, 1.5, 2.8, 3.5, 3.2, 2.5],
+    enhancer:   { presence: 0.6, brilliance: 0.3, warmth: 0.7 },
+    compressor: { threshold: -14, ratio: 3, attack: 4, release: 60 },
+    limiter:    { threshold: -5, ratio: 7, attack: 0.004, release: 0.2 },
+    stereoWidth: 1.1,
+    reverb: 0.17
+  },
+  "Metal Attack": {
+    eq: [5.5, 5, 4.2, 2.5, 0, -2, 1.8, 3.2, 4.5, 5.2, 5, 4],
+    enhancer:   { presence: 1, brilliance: 0.6, warmth: 0.3 },
+    compressor: { threshold: -9, ratio: 4.5, attack: 2, release: 50 },
+    limiter:    { threshold: -3, ratio: 10, attack: 0.003, release: 0.15 },
+    stereoWidth: 1.15,
+    reverb: 0.12
+  },
+"Shape": {  
+  eq: [2.5, 2, 1.5, 0.5, 0, -1, -0.5, 0.2, 1.2, 2, 2.5, 2.2],  
+  enhancer:   { presence: 0.6, brilliance: 0.4, warmth: 0.7 },  
+  compressor: { threshold: -12, ratio: 3.3, attack: 6, release: 70 },  
+  limiter:    { threshold: -4.5, ratio: 8.8, attack: 0.004, release: 0.14 },  
+  stereoWidth: 1.1,  
+  reverb: 0.1  
+},  
+  "Podcast Clarity": {
+    eq: [1.5, 1.2, 1, 0.5, 0, -0.2, 0.3, 0.8, 1.2, 1.5, 1.2, 1],
+    enhancer:   { presence: 0.7, brilliance: 0.6, warmth: 0.2 },
+    compressor: { threshold: -18, ratio: 2.2, attack: 4, release: 85 },
+    limiter:    { threshold: -4, ratio: 8, attack: 0.004, release: 0.18 },
+    stereoWidth: 1,
+    reverb: 0.05
+  },
+  "Surround Deep": {
+  eq: [2, 1.8, 1.5, 1, -1.2, -1.5, -1.2, 0.5, 2.5, 3, 2.8, 2.2],
+  enhancer: { presence: 0.5, brilliance: 0.4, warmth: 0.6 },
+  compressor: { threshold: -13, ratio: 3.5, attack: 4, release: 65 },
+  limiter: { threshold: -5.5, ratio: 9, attack: 0.004, release: 0.12 },
+  stereoWidth: 1.8,
+  reverb: 0.4,
+  reflections: { delayL: 11, delayR: 17, feedback: 0.2, wet: 0.25 },
+  crossfeed: 0.22
+}
+};
+
+const advancePresets = {
+  "Advance Off/Flat":  {
+    eq: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+    enhancer: { presence: 0, brilliance: 0, warmth: 0 },
+    compressor: { threshold: -12, ratio: 2, attack: 0.003, release: 0.25 },
+    limiter: { threshold: -3, ratio: 10, attack: 0.002, release: 0.1 },
+    stereoWidth: 1,
+    reverb: 0
+  },
+"Sub Bass Lift": {
+  eq: [5, 4.5, 3.8, 2.2, 0.5, -1, -1.5, -2, -1.2, -0.5, 0.2, 1],
+  enhancer:   { presence: 0.4, brilliance: 0.2, warmth: 0.6 },
+  compressor: { threshold: -12, ratio: 3.8, attack: 3, release: 60 },
+  limiter:    { threshold: -5, ratio: 7.5, attack: 0.003, release: 0.12 },
+  stereoWidth: 1.05,
+  reverb: 0.1
+},
+"Vocal Airy Bright": {
+  "eq": [0, 0.5, 1, 1.8, 2.4, 3.2, 3.5, 3, 2, 1, 0.5, 0],
+  "enhancer": { "presence": 0.9, "brilliance": 0.85, "warmth": 0.2 },
+  "compressor": { "threshold": -18, "ratio": 2.8, "attack": 3, "release": 60 },
+  "limiter": { "threshold": -5.5, "ratio": 7, "attack": 0.003, "release": 0.18 },
+  "stereoWidth": 1.15,
+  "reverb": 0.12
+},
+"Treble Sparkle": {
+  eq: [-2, -1.5, -1, 0, 0.5, 1, 2.5, 3.5, 4.2, 4.5, 4.2, 3.8],
+  enhancer:   { presence: 0.6, brilliance: 0.85, warmth: 0.2 },
+  compressor: { threshold: -14, ratio: 2.8, attack: 3, release: 65 },
+  limiter:    { threshold: -5, ratio: 7, attack: 0.0035, release: 0.15 },
+  stereoWidth: 1.15,
+  reverb: 0.1
+},
+"Hi-Fi Wide Range": {
+  eq: [3, 2.8, 2.5, 2, 1.5, 0, -0.2, 1, 2, 2.8, 3.2, 3.5],
+  enhancer:   { presence: 0.75, brilliance: 0.65, warmth: 0.5 },
+  compressor: { threshold: -13, ratio: 3, attack: 3.5, release: 80 },
+  limiter:    { threshold: -4.5, ratio: 8.5, attack: 0.003, release: 0.18 },
+  stereoWidth: 1.25,
+  reverb: 0.14
+},
+"Warm & Wide": {
+  eq: [2.5, 2.2, 1.8, 1.5, 1, 0, 0.5, 1.2, 2.5, 2.8, 2.5, 2],
+  enhancer:   { presence: 0.5, brilliance: 0.4, warmth: 0.85 },
+  compressor: { threshold: -15, ratio: 2.6, attack: 4.5, release: 85 },
+  limiter:    { threshold: -5.5, ratio: 7.5, attack: 0.004, release: 0.2 },
+  stereoWidth: 1.3,
+  reverb: 0.2
+},
+"Clarity Focus": {
+  eq: [1.8, 1.5, 1.2, 0.8, 0, -0.3, 0.4, 0.9, 1.5, 2.2, 2, 1.6],
+  enhancer:   { presence: 0.8, brilliance: 0.6, warmth: 0.3 },
+  compressor: { threshold: -17, ratio: 2.5, attack: 4, release: 90 },
+  limiter:    { threshold: -5, ratio: 7.5, attack: 0.003, release: 0.15 },
+  stereoWidth: 1.2,
+  reverb: 0.08
+},
+"Funky": {
+  eq: [3.8, 3, 2.2, 1.2, 0, -0.8, 0.3, 1.5, 2.5, 3, 3.2, 2.5],
+  enhancer:   { presence: 0.7, brilliance: 0.6, warmth: 0.7 },
+  compressor: { threshold: -9.5, ratio: 3.5, attack: 4, release: 68 },
+  limiter:    { threshold: -3.5, ratio: 9, attack: 0.003, release: 0.12 },
+  stereoWidth: 1.2,
+  reverb: 0.16
+},
+"Scoopy Smile": {
+  eq: [5.5, 4.2, 2, -2.8, -4.5, -6, -4, -1.5, 1.5, 3.5, 4.8, 5.5],
+  enhancer: { presence: 0.4, brilliance: 0.7, warmth: 0.3 },
+  compressor: { threshold: -16, ratio: 3.2, attack: 5, release: 75 },
+  stereoWidth: 1.4
+},
+"AmbientSpace": {
+  eq: [1.2, 0.8, 0.4, 0, -0.2, -0.6, 0.3, 1.5, 2.4, 3.0, 3.5, 3.0],
+  enhancer:   { presence: 0.4, brilliance: 0.6, warmth: 0.2 },
+  compressor: { threshold: -18, ratio: 2.0, attack: 4, release: 100 },
+  limiter:    { threshold: -6, ratio: 7.0, attack: 0.005, release: 0.3 },
+  stereoWidth: 1.6,
+  reverb: 0.35
+},
+"Bassy Theater": {
+  eq: [3.5, 3.2, 3, 2.5, 1.5, 0.5, -0.5, -1, -1.2, -0.8, -0.5, 0],
+  enhancer:   { presence: 0.4, brilliance: 0.2, warmth: 0.7 },
+  compressor: { threshold: -12, ratio: 3.2, attack: 6, release: 100 },
+  limiter:    { threshold: -4, ratio: 8, attack: 0.0035, release: 0.25 },
+  stereoWidth: 1.1,
+  reverb: 0.18
+},
+"Bright Vocal": {
+  eq: [3, 2.8, 2.2, 1.5, 0, -0.5, 0.5, 2.5, 3.2, 3.8, 4.2, 4.5],
+  enhancer:   { presence: 0.9, brilliance: 0.7, warmth: 0.3 },
+  compressor: { threshold: -12, ratio: 3, attack: 5, release: 55 },
+  limiter:    { threshold: -5, ratio: 8, attack: 0.003, release: 0.16 },
+  stereoWidth: 1.15,
+  reverb: 0.18
+},
+  "StudioPro": {  
+  eq: [1.5, 1.2, 1, 0.5, 0, 0, 0.5, 1.2, 2.5, 3.2, 3.5, 3.8],  
+  enhancer:   { presence: 0.6, brilliance: 0.55, warmth: 0.6 },  
+  compressor: { threshold: -13.5, ratio: 3, attack: 3, release: 75 },  
+  limiter:    { threshold: -5.2, ratio: 7.5, attack: 0.004, release: 0.2 },  
+  stereoWidth: 1.4,  
+  reverb: 0.2  
+},  
+"Funky Shape": {
+  eq: [3.5, 3, 2.5, 0.5, -1, -2.5, -1, 0.8, 2.2, 3.2, 3.5, 2.8],
+  enhancer: { presence: 0.6, brilliance: 0.4, warmth: 0.6 },
+  compressor: { threshold: -11, ratio: 3.3, attack: 4, release: 60 },
+  limiter: { threshold: -4, ratio: 8.5, attack: 0.004, release: 0.16 },
+  stereoWidth: 1.1,
+  reverb: 0.1
+},
+"AmbientNature": {
+  eq: [0.5, 0.3, 0, -0.2, -0.4, -0.5, 0.1, 0.7, 1.2, 1.8, 2.0, 1.5],
+  enhancer:   { presence: 0.5, brilliance: 0.5, warmth: 0.6 },
+  compressor: { threshold: -20, ratio: 1.8, attack: 3, release: 120 },
+  limiter:    { threshold: -7, ratio: 6.0, attack: 0.006, release: 0.25 },
+  stereoWidth: 1.5,
+  reverb: 0.28
+},
+"Clean Dialog": {
+  eq: [1.2, 1, 0.8, 0.5, 0.2, 0, 0.1, 0.8, 1.2, 1.5, 1.7, 1.5],
+  enhancer:   { presence: 0.8, brilliance: 0.5, warmth: 0.3 },
+  compressor: { threshold: -16, ratio: 2.3, attack: 3.8, release: 85 },
+  limiter:    { threshold: -4.5, ratio: 7.2, attack: 0.004, release: 0.18 },
+  stereoWidth: 1,
+  reverb: 0.05
+},
+  "CinematicWide": {  
+  eq: [2.5, 2.2, 1.8, 1.2, 0.5, 0, 0.8, 1.6, 3.2, 3.8, 4, 4.3],  
+  enhancer:   { presence: 0.65, brilliance: 0.6, warmth: 0.75 },  
+  compressor: { threshold: -12.5, ratio: 3.2, attack: 2.5, release: 90 },  
+  limiter:    { threshold: -4.5, ratio: 7.8, attack: 0.004, release: 0.22 },  
+  stereoWidth: 1.55,  
+  reverb: 0.32  
+},  
+"Gaming FPS Focus": {
+  eq: [2.5, 2.2, 1.8, 1, 0.5, 0, -0.2, 0.5, 1.5, 2.8, 3, 2.6],
+  enhancer:   { presence: 0.9, brilliance: 0.6, warmth: 0.3 },
+  compressor: { threshold: -11.5, ratio: 3, attack: 2.5, release: 65 },
+  limiter:    { threshold: -4, ratio: 9, attack: 0.0035, release: 0.17 },
+  stereoWidth: 1.35,
+  reverb: 0.1
+},
+"Vortex Mode": {
+  eq: [0, -2, 2.5, -1.5, 3, -3.5, 2.5, -2, 3, -2, 2.5, -1],
+  enhancer: { presence: 0.6, brilliance: 0.6, warmth: 0.6 },
+  compressor: { threshold: -13, ratio: 3, attack: 7, release: 65 },
+  stereoWidth: 1.5,
+  reverb: 0.2
+},
+"Punchy": {
+  eq: [4, 3.5, 2.8, 1.5, 0.5, -0.5, 0.2, 1.5, 2.8, 3.2, 3.5, 3],
+  enhancer:   { presence: 0.85, brilliance: 0.5, warmth: 0.5 },
+  compressor: { threshold: -10, ratio: 4, attack: 3, release: 60 },
+  limiter:    { threshold: -2.5, ratio: 10.5, attack: 0.003, release: 0.11 },
+  stereoWidth: 1.2,
+  reverb: 0.09
+},
+"Boom Room": {  
+  eq: [3.5, 3, 2.5, 1.5, 0.5, -0.2, 0.4, 1, 1.8, 2.5, 3, 3.2],  
+  enhancer:   { presence: 0.5, brilliance: 0.3, warmth: 0.75 },  
+  compressor: { threshold: -13, ratio: 3.2, attack: 3, release: 75 },  
+  limiter:    { threshold: -3.8, ratio: 8, attack: 0.0035, release: 0.17 },  
+  stereoWidth: 1.1,  
+  reverb: 0.18  
+},  
+"MidCut": {
+  eq: [2, 2, 2.5, -1.5, -3.5, -4.5, -3.5, -1.5, 2, 3.2, 3.5, 3],
+  enhancer:   { presence: 0.5, brilliance: 0.5, warmth: 0.4 },
+  compressor: { threshold: -10, ratio: 2.8, attack: 5, release: 65 },
+  limiter:    { threshold: -3.5, ratio: 8, attack: 0.003, release: 0.12 },
+  stereoWidth: 1.3,
+  reverb: 0.08
+},
+"Hardcore Punch": {  
+  eq: [3.2, 2.8, 2.5, 1.8, 1, 0, -0.5, 0.2, 1.2, 2.5, 2.8, 2.2],  
+  enhancer:   { presence: 0.8, brilliance: 0.5, warmth: 0.6 },  
+  compressor: { threshold: -10, ratio: 3.8, attack: 3, release: 65 },  
+  limiter:    { threshold: -3.5, ratio: 9, attack: 0.003, release: 0.15 },  
+  stereoWidth: 1.2,  
+  reverb: 0.07  
+},  
+   "Movie": {
+  eq: [2.2, 2, 1.8, 1.2, 0.5, 0, 0.5, 1.5, 2.8, 3.2, 3.4, 3.5],
+  enhancer:   { presence: 0.5, brilliance: 0.4, warmth: 0.7 },
+  compressor: { threshold: -14, ratio: 2.8, attack: 3.5, release: 85 },
+  limiter:    { threshold: -5, ratio: 7, attack: 0.004, release: 0.19 },
+  stereoWidth: 1.4,
+  reverb: 0.2
+},
+  "ClubNight": {  
+  eq: [4, 3.5, 3, 2, 1, 0, -1, 0.5, 2, 3.5, 4, 4.2],  
+  enhancer:   { presence: 0.85, brilliance: 0.7, warmth: 0.65 },  
+  compressor: { threshold: -10, ratio: 4.2, attack: 2.8, release: 70 },  
+  limiter:    { threshold: -3, ratio: 9, attack: 0.002, release: 0.16 },  
+  stereoWidth: 1.5,  
+  reverb: 0.3  
+},  
+  "Dolby Atmos Style": {  
+  eq: [2.8, 2.5, 2.2, 1.5, 1, 0, 0.5, 1.2, 2.5, 3, 3.5, 3.8],  
+  enhancer:   { presence: 0.7, brilliance: 0.6, warmth: 0.75 },  
+  compressor: { threshold: -12, ratio: 3.5, attack: 2.5, release: 80 },  
+  limiter:    { threshold: -4, ratio: 8, attack: 0.003, release: 0.18 },  
+  stereoWidth: 1.5,  
+  reverb: 0.25  
+},  
+"LoFi Mode": {
+  eq: [1.5, 0.8, 0.2, -0.5, -1.5, -2.5, -2, -1.2, -0.5, 0.5, 1, 1.5],
+  enhancer: {
+    presence: 0.3,
+    brilliance: 0.2,
+    warmth: 0.7
+  },
+  compressor: {
+    threshold: -16,
+    ratio: 2.5,
+    attack: 10,
+    release: 120
+  },
+  limiter: {
+    threshold: -6,
+    ratio: 6,
+    attack: 0.005,
+    release: 0.2
+  },
+  stereoWidth: 0.9,
+  reverb: 0.25
+},
+};
+
+// === 🎧 PRESET EQ DEFINITION  
+const volumeBoostPresets = {
+  "Auto Volume Boost": {
+    eq: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+    enhancer: 2.4,
+    compressor: -11,
+    filters: (ctx) => {
+      const lowLift = ctx.createBiquadFilter();
+      lowLift.type = "lowshelf";
+      lowLift.frequency.value = 90;
+      lowLift.gain.value = 1.8;
+
+      const highLift = ctx.createBiquadFilter();
+      highLift.type = "highshelf";
+      highLift.frequency.value = 9500;
+      highLift.gain.value = 2.5;
+
+      return [lowLift, highLift];
+    }
+  },
+  "Volume++": {
+  eq: [0.5, 0.5, 1, 1, 1, 1, 1, 1, 1, 0.5, 0, -0.5],
+  enhancer: 3.8,
+  compressor: -10,
+  filters: (ctx) => {
+    const lowPunch = ctx.createBiquadFilter();
+    lowPunch.type = "peaking";
+    lowPunch.frequency.value = 150;
+    lowPunch.Q.value = 0.9;
+    lowPunch.gain.value = 2.8;
+
+    const highDetail = ctx.createBiquadFilter();
+    highDetail.type = "peaking";
+    highDetail.frequency.value = 4500;
+    highDetail.Q.value = 1.5;
+    highDetail.gain.value = 2.5;
+
+    return [lowPunch, highDetail];
+  }
+},
+};
+
+// Gabung semua preset
+const allPresets = {
+  ...basicPresets,
+  ...advancePresets,
+  ...volumeBoostPresets
+};
+
+// === EQ PRESET UTAMA  
+function applyFullPreset(name, preset) {  
+  const sliders = document.querySelectorAll('.slider');  
+  if (!preset || !preset.eq || !sliders.length) {  
+    console.warn(`❌ Preset "${name}" not applied - data missing`);  
+    return;  
+  }  
+  
+  isUpdatingSlider = true;  
+  
+  preset.eq.forEach((db, i) => {  
+    const slider = sliders[i];  
+    if (!slider) return;  
+    slider.value = 50 + db * 5;  
+    if (eqNodes[i]) eqNodes[i].gain.value = db;  
+  });  
+  
+  isUpdatingSlider = false;  
+  
+  // === Enhancer & Compressor  
+  const presenceNode = audioCtx.createGain();
+const brillianceNode = audioCtx.createGain();
+const warmthNode = audioCtx.createGain();
+
+if (presenceNode && typeof presenceNode.gain?.value === 'number') {
+  presenceNode.gain.value = preset.enhancer.presence ?? 0;
+} else {
+  console.warn('Presence node is not defined or not valid');
+}
+
+try {
+  if (preset.enhancer && typeof preset.enhancer === 'object') {
+    presenceNode?.gain && (presenceNode.gain.value = preset.enhancer.presence ?? 0);
+    brillianceNode?.gain && (brillianceNode.gain.value = preset.enhancer.brilliance ?? 0);
+    warmthNode?.gain && (warmthNode.gain.value = preset.enhancer.warmth ?? 0);
+  }
+
+  if (preset.compressor && typeof preset.compressor === 'object') {
+    if (compressor) {
+      compressor.threshold.value = preset.compressor.threshold ?? compressor.threshold.value;
+      compressor.ratio.value = preset.compressor.ratio ?? compressor.ratio.value;
+    }
+  }
+} catch (e) {
+  console.warn("Enhancer/compressor apply error:", e);
+}
+  
+if (preset.enhancer && typeof preset.enhancer === 'object') {
+  if (presenceNode && preset.enhancer.presence !== undefined)
+    presenceNode.gain.value = preset.enhancer.presence;
+
+  if (brillianceNode && preset.enhancer.brilliance !== undefined)
+    brillianceNode.gain.value = preset.enhancer.brilliance;
+
+  if (warmthNode && preset.enhancer.warmth !== undefined)
+    warmthNode.gain.value = preset.enhancer.warmth;
+}
+
+if (preset.compressor && typeof preset.compressor === 'object') {
+  if (preset.compressor.threshold !== undefined)
+    compressor.threshold.value = preset.compressor.threshold;
+
+  if (preset.compressor.ratio !== undefined)
+    compressor.ratio.value = preset.compressor.ratio;
+}
+  
+  // === Custom logic: Flat Mode  
+  if (name === "Flat") {  
+    if (clarity) clarity.gain.value = 2.5;  
+    if (clarity) clarity.frequency.value = 4200;  
+    if (clarityGain) clarityGain.gain.value = 0.75;  
+    if (toneBias) toneBias.gain.value = 1.3;  
+    if (deEsser) deEsser.gain.value = -4;  
+    console.log("🎧 Flat preset applied");  
+  }  
+  
+  // === Custom logic: Volume++ Mode  
+  if (name === "Volume++") {  
+    if (masterGain) masterGain.gain.value = 1.7;  
+  
+    if (clarity) clarity.gain.value = 2.8;  
+    if (clarity) clarity.frequency.value = 4300;  
+    if (clarityGain) clarityGain.gain.value = 0.75;  
+    if (toneBias) toneBias.gain.value = 1.4;  
+    if (enhancer) enhancer.gain.value = 3.5;  
+    if (deEsser) deEsser.gain.value = -5;  
+  
+    if (stereoPanner) stereoPanner.pan.value = 0;  
+  
+    if (softLimiter) {  
+      softLimiter.threshold.value = -5;  
+      softLimiter.knee.value = 10;  
+      softLimiter.ratio.value = 12;  
+      softLimiter.attack.value = 0.003;  
+      softLimiter.release.value = 0.2;  
+    }  
+  
+    if (smartLimiter) {  
+      smartLimiter.threshold.value = -3;  
+      smartLimiter.ratio.value = 15;  
+    }  
+  
+    console.log("🔥 Volume++ preset aktif: full power!");  
+  }  
+  
+  lastManualPreset = name;  
+  console.log(`✅ Applied: ${name} | Enhancer: ${preset.enhancer} | Compressor: ${preset.compressor}`);  
+}  
+    
+function applyPresetSmart(name, source = "basic") {
+  if (!audioCtx || !sourceNode) initAudioContext();
+
+  console.log(`👉 applyPresetSmart called: name=${name}, source=${source}`);
+
+  if (audio.paused) {
+    console.warn(`⏳ Audio belum diputar. EQ '${name}' + Auto Volume Boost disimpan...`);
+    pendingEQPreset = name; // diganti, bukan pendingPreset biasa
+  } else {
+    applyPresetCombined(name, "Auto Volume Boost"); // ✅ inject auto
+  }
+
+  if (source === "basic") lastBasicPreset = name;
+  else lastAdvancePreset = name;
+
+  lastManualPreset = name;
+  console.log(`✅ lastManualPreset set to: ${lastManualPreset}`);
+}
+  
+  function saveLastPreset(eq, vol) {
+  localStorage.setItem("lastEQ", eq);
+  localStorage.setItem("lastVol", vol);
+  console.log(`💾 Preset disimpan: EQ='${eq}' | Vol='${vol}'`);
+}
+  
+let pendingPreset = null; // Optional  
+const { eq, vol } = loadLastPreset();
+let pendingEQPreset = eq;
+
+let lastEQPreset = eq;
+let defaultVolPreset = vol;
+let lastVolPreset = vol; // ⬅️ ini penting!
+
+// ✅ Kombinasi preset
+function applyPresetCombined(eqName, volName = "Volume++") {
+  if (!eqName) {
+    console.warn("❌ EQ preset kosong, dibatalkan");
+    return;
+  }
+
+  const eqPreset = allPresets[eqName];
+  const volPreset = allPresets[volName] || allPresets["Volume++"];
+
+  if (!eqPreset) {
+    console.warn(`❌ EQ preset '${eqName}' tidak ditemukan`);
+    return;
+  }
+
+  console.log(`🎛️ Combined preset: EQ='${eqName}' + Volume='${volName}'`);
+
+  applyFullPreset(eqName, eqPreset);
+
+  if (volPreset) {
+    if (volPreset.enhancer !== undefined && enhancer)
+      enhancer.gain.value = volPreset.enhancer;
+    if (volPreset.compressor !== undefined && compressor)
+      compressor.threshold.value = volPreset.compressor;
+    console.log(`🔊 Volume preset injected: '${volName}'`);
+  }
+
+  // ✅ SIMPAN YANG TERAKHIR
+  lastEQPreset = eqName;
+  lastVolPreset = volName;
+  saveLastPreset(eqName, volName);
+}
+  
+function saveLastPreset(eq, vol) {
+  localStorage.setItem("lastEQ", eq);
+  localStorage.setItem("lastVol", vol);
+}
+
+function loadLastPreset() {
+  return {
+    eq: localStorage.getItem("lastEQ") || "Flat",
+    vol: localStorage.getItem("lastVol") || "Volume++"
+  };
+}
+
+// ✅ ON LOAD (nunggu DOM + slider siap)
+document.addEventListener("DOMContentLoaded", () => {
+  setTimeout(() => {
+    const sliders = document.querySelectorAll('.slider');
+    if (!allPresets["Flat"] || !Array.isArray(allPresets["Flat"].eq)) return;
+    if (sliders.length < 12) return;
+
+    const eq = lastEQPreset || pendingEQPreset || "Flat";
+    const vol = lastVolPreset || defaultVolPreset || "Volume++";
+
+    applyPresetCombined(eq, vol);
+
+    // ✅ Sinkronkan UI dropdown
+    basicSelect.value = basicPresets[eq] ? eq : "Flat";
+    advanceSelect.value = advancePresets[eq] ? eq : "Advance Off/Flat";
+  }, 300);
+});
+
+// === AUTO APPLY SAAT PLAY  
+window.addEventListener("DOMContentLoaded", async () => {  
+  const player = document.getElementById("audioPlayer");  
+  if (!player) return console.warn("❌ Player tidak ditemukan!");  
+  
+  await initAudioContext();          // 1. Init audioCtx & EQ nodes  
+  createEQSliders();                 // 2. Bikin slider satu kali aja!  
+  
+  loadTrack(currentTrack);           // 3. Load lagu pertama  
+  updateVolume(100);                 // 4. Set volume  
+  
+  // === Saat audio diputar, baru apply pending preset  
+// ✅ CUKUP pake last yang dimuat dari localStorage
+const { eq, vol } = loadLastPreset();
+lastEQPreset = eq;
+lastVolPreset = vol;
+
+// Apply saat play
+if (false) {
+  player.addEventListener("play", () => {
+    const eq = allPresets[lastEQPreset];
+    const vol = allPresets[defaultVolPreset] || allPresets["Volume++"];
+
+    applyPresetCombined(lastEQPreset, defaultVolPreset);
+    console.log(`▶️ Player play → applyPresetCombined('${lastEQPreset}', '${defaultVolPreset}')`);
+
+    pendingPreset = null;
+  });
+}
+
+  // === Saat data lagu siap, apply preset terakhir  
+audio.addEventListener("loadeddata", () => {
+  if (lastEQPreset && lastVolPreset) {
+    applyPresetCombined(lastEQPreset, lastVolPreset);
+    console.log(`🎯 Preset aktif: '${lastEQPreset}' + '${lastVolPreset}'`);
+  }
+});
+  
+  // Tombol-tombol kontrol  
+  playBtn.addEventListener("click", togglePlay);  
+  // nextBtn, prevBtn, muteBtn, volUp, volDown, dll  
+});  
+  
+// === Reset Preset ke Flat  
+function resetToFlat(type) {  
+  const isBasic = type === "basic";  
+  const select = isBasic ? basicSelect : advanceSelect;  
+  const presets = isBasic ? basicPresets : advancePresets;  
+  const flatKey = isBasic ? "Flat" : "Advance Off/Flat";  
+  
+  select.value = flatKey; // 🟡 update dropdown UI  
+  applyFullPreset(flatKey, presets[flatKey]);  
+  
+  if (isBasic) {  
+    lastBasicPreset = flatKey;  
+    lastManualPreset = flatKey; // ✅ buat logger  
+  } else {  
+    lastAdvancePreset = flatKey;  
+    lastManualPreset = flatKey; // ✅ juga  
+  }  
+  
+  console.log("🔁 Reset ke preset flat:", flatKey);  
+}  
+
+// === basic&advance
+
+basicSelect.addEventListener("change", () => {  
+  resetBooster(); // ⬅️ Penting: booster off dulu
+  eqBeforeBooster = [];  
+
+  const selected = basicSelect.value;  
+
+  if (selected === "Flat") {  
+    resetToFlat("basic");  
+    saveLastPreset("Flat", defaultVolPreset);  
+    return;  
+  }  
+
+  if (advanceSelect.value !== "Advance Off/Flat") {  
+    resetToFlat("advance");  
+  }  
+
+  applyFullPreset(selected, basicPresets[selected]);  
+  lastBasicPreset = selected;  
+  lastEQPreset = selected; // ✅ update global state  
+  saveLastPreset(selected, defaultVolPreset);  
+});
+
+
+advanceSelect.addEventListener("change", () => {  
+  const selected = advanceSelect.value;  
+
+  if (selected === "Advance Off/Flat") {  
+    resetToFlat("advance");  
+    saveLastPreset(lastBasicPreset, defaultVolPreset); // ✅ SIMPAN juga!
+    return;  
+  }  
+
+  if (basicSelect.value !== "Flat") {  
+    resetToFlat("basic");  
+  }  
+
+  applyFullPreset(selected, advancePresets[selected]);  
+lastAdvancePreset = selected;
+lastEQPreset = selected; // ✅ Biar play() tau terakhir apa
+  
+  // ✅ SIMPAN PILIHAN ADVANCE + VOLUME
+  saveLastPreset(selected, defaultVolPreset);  
+});
+
+
+// === Saat Pilih Basic  
+basicSelect.addEventListener("change", () => {  
+  const selected = basicSelect.value;  
+  
+  if (selected === "Flat") {  
+    resetToFlat("basic");  
+    return;  
+  }  
+  
+  if (advanceSelect.value !== "Advance Off/Flat") {  
+    resetToFlat("advance"); // 🟥 Off by accident  
+  }  
+  
+  applyFullPreset(selected, basicPresets[selected]);  
+  lastBasicPreset = selected;  
+});  
+  
+// === Saat Pilih Advance  
+advanceSelect.addEventListener("change", () => {  
+  const selected = advanceSelect.value;  
+  
+  if (selected === "Advance Off/Flat") {  
+    resetToFlat("advance");  
+    return;  
+  }  
+  
+  if (basicSelect.value !== "Flat") {  
+    resetToFlat("basic"); // 🟥 Off by accident  
+  }  
+  
+  applyFullPreset(selected, advancePresets[selected]);  
+  lastAdvancePreset = selected;  
+});  
+
+
+advanceSelect.addEventListener("change", () => {  
+  resetBooster(); // ✅ Reset tombol booster
+  eqBeforeBooster = [];  
+
+  const selected = advanceSelect.value;  
+
+  if (selected === "Advance Off/Flat") {  
+    resetToFlat("advance");  
+    saveLastPreset(lastBasicPreset, defaultVolPreset); // ✅ Tetap simpan EQ + Vol terakhir  
+    return;  
+  }  
+
+  if (basicSelect.value !== "Flat") {  
+    resetToFlat("basic"); // 🟥 Off by accident: matikan basic kalau masih aktif  
+  }  
+
+  applyFullPreset(selected, advancePresets[selected]);  
+  lastAdvancePreset = selected;  
+  lastEQPreset = selected; // ✅ Ini penting buat auto-play  
+  saveLastPreset(selected, defaultVolPreset);  
+});
+  
+// === Load Default Flat Saat Awal  
+audio.addEventListener("loadeddata", () => {  
+  if (basicPresets[lastBasicPreset]) {  
+    applyFullPreset(lastBasicPreset, basicPresets[lastBasicPreset]);  
+    lastManualPreset = lastBasicPreset;  
+  } else if (advancePresets[lastAdvancePreset]) {  
+    applyFullPreset(lastAdvancePreset, advancePresets[lastAdvancePreset]);  
+    lastManualPreset = lastAdvancePreset;  
+  } else {  
+    console.warn("❌ Preset terakhir tidak ditemukan");  
+    lastManualPreset = "default";  
+  }  
+});  
+  
+// ============ ▶️ PLAYER CONTROL ============  
+function formatTime(seconds) {  
+  const m = Math.floor(seconds / 60);  
+  const s = Math.floor(seconds % 60);  
+  return `${m}:${s.toString().padStart(2, '0')}`;  
+}  
+function updateTimer() {  
+  timerText.textContent = `${formatTime(audio.currentTime)} / ${formatTime(audio.duration || 0)}`;  
+}  
+function updatePlayIcon() {  
+  playIcon.innerHTML = audio.paused  
+    ? '<path d="M8 5v14l11-7z"/>'  
+    : '<path d="M6 5h4v14H6zM14 5h4v14h-4z"/>';  
+}  
+function loadTrack(index) {  
+  const track = playlist[index];  
+  if (!track) return;  
+  
+  audio.src = track.src;  
+  audio.load();  
+  audio.pause();  
+  
+  trackTitle.textContent = track.title || '';  
+  progress.style.width = "0%";  
+  timerText.textContent = "0:00 / 0:00";  
+  updatePlayIcon();  
+}  
+function togglePlay() {  
+  initAudioContext();  
+  audio.paused ? audio.play() : audio.pause();  
+  updatePlayIcon();  
+}  
+function updateVolume(val) {  
+  val = Math.max(0, Math.min(100, val));  
+  audio.volume = val / 100;  
+  volVal.textContent = Math.round(val);  
+  audio.muted = (val === 0);  
+  muteIcon.innerHTML = audio.muted  
+    ? '<path d="M16.5 12l4.5 4.5-1.5 1.5L15 13.5l-4 4V6l4 4 5.5-5.5 1.5 1.5L16.5 12z"/>'  
+    : '<path d="M5 9v6h4l5 5V4l-5 5H5z"/>';  
+}  
+function startVolumeChange(delta) {  
+  if (volInterval) clearInterval(volInterval);  
+  volInterval = setInterval(() => {  
+    let newVol = Math.round(audio.volume * 100 * 10) / 10 + delta;  
+    updateVolume(newVol);  
+  }, 50);  
+}  
+function stopVolumeChange() {  
+  clearInterval(volInterval);  
+}  
+  
+// ============ 📌 EVENT ============  
+document.addEventListener("DOMContentLoaded", () => {  
+  createEQSliders();  
+  loadTrack(currentTrack);  
+  updateVolume(100);  
+  
+  playBtn.addEventListener("click", togglePlay);  
+  prevBtn.addEventListener("click", () => {  
+    currentTrack = (currentTrack - 1 + playlist.length) % playlist.length;  
+    loadTrack(currentTrack);  
+  });  
+  nextBtn.addEventListener("click", () => {  
+    currentTrack = (currentTrack + 1) % playlist.length;  
+    loadTrack(currentTrack);  
+  });  
+  
+  repeatBtn.addEventListener("click", () => {  
+    isRepeat = !isRepeat;  
+    repeatBtn.querySelector("svg").style.fill = isRepeat ? "#00ffa2" : "white";  
+    repeatLabel.style.display = isRepeat ? "block" : "none";  
+    repeatIconPath.setAttribute("d", isRepeat  
+      ? "M17 1l4 4-4 4V6H7v4H5V5a2 2 0 012-2h10V1zM7 23l-4-4 4-4v3h10v-4h2v5a2 2 0 01-2 2H7v3z"  
+      : "M7 7h10v2H7v3l-4-4 4-4v3zM17 17H7v-2h10v-3l4 4-4 4v-3z"  
+    );  
+  });  
+  
+muteBtn.addEventListener("click", () => {  
+  const wasMuted = audio.muted;  
+  if (wasMuted) {  
+    audio.muted = false;  
+    updateVolume(audio.volume * 100 || 100); // fallback ke 100 kalau volume 0  
+  } else {  
+    audio.muted = true;  
+    updateVolume(0);  
+  }  
+});  
+  
+  volUp.addEventListener('mousedown', () => startVolumeChange(0.5));  
+  volUp.addEventListener('mouseup', stopVolumeChange);  
+  volUp.addEventListener('mouseleave', stopVolumeChange);  
+  volUp.addEventListener('touchstart', () => startVolumeChange(0.5));  
+  volUp.addEventListener('touchend', stopVolumeChange);  
+  
+  volDown.addEventListener('mousedown', () => startVolumeChange(-0.5));  
+  volDown.addEventListener('mouseup', stopVolumeChange);  
+  volDown.addEventListener('mouseleave', stopVolumeChange);  
+  volDown.addEventListener('touchstart', () => startVolumeChange(-0.5));  
+  volDown.addEventListener('touchend', stopVolumeChange);  
+  
+  audio.addEventListener('timeupdate', () => {  
+    const percent = (audio.currentTime / audio.duration) * 100;  
+    progress.style.width = percent + '%';  
+    updateTimer();  
+  });  
+  audio.addEventListener('loadedmetadata', updateTimer);  
+  audio.addEventListener('ended', () => {  
+    isRepeat ? (audio.currentTime = 0, audio.play()) : nextBtn.click();  
+  });  
+  
+  progressContainer.addEventListener('click', (e) => {  
+    const rect = progressContainer.getBoundingClientRect();  
+    const percent = (e.clientX - rect.left) / rect.width;  
+    audio.currentTime = percent * audio.duration;  
+  });  
+  
+  const basicSelect = document.getElementById("presetBasicSelect");  
+  if (basicSelect) {  
+    basicSelect.addEventListener("change", e => {  
+      const val = e.target.value;  
+      if (basicPresets[val]) applyFullPreset(val, basicPresets[val]);  
+    });  
+  }  
+  const advSelect = document.getElementById("presetAdvanceSelect");  
+  if (advSelect) {  
+    advSelect.addEventListener("change", e => {  
+      const val = e.target.value;  
+      if (advancePresets[val]) applyFullPreset(val, advancePresets[val]);  
+    });  
+  }  
+});  
+
+// ============ 📁 FOLDER PICKER ============  
+const folderPicker = document.getElementById("folderPicker");  
+  
+folderPicker.addEventListener('change', (e) => {  
+  const files = Array.from(e.target.files).filter(f => f.type.startsWith('audio/'));  
+  if (!files.length) {  
+    alert("Tidak ada file audio di folder.");  
+    return;  
+  }  
+  
+  playlist.length = 0;  
+  currentTrack = 0;  
+  
+  files.forEach(file => {  
+    const url = URL.createObjectURL(file);  
+    playlist.push({  
+      src: url,  
+      title: file.name.replace(/\.[^/.]+$/, ''),  
+      file: file  
+    });  
+  });  
+  
+  loadTrack(currentTrack);  
+  updatePlayIcon();  
+  
+  
+  if (playlist.length && playlist[currentTrack]?.file) {  
+    audio.src = playlist[currentTrack].src;  
+    audio.play();  
+  }  
+});  
+
+// ========== 🎧 STEREO PAN FINAL ==========  
+// ========== 🎧 STEREO PAN FINAL ==========
+let stereoEnabled = false;
+let panTimer = null;
+let panPos = 0;
+let panDir = 1;
+
+let swingTimer = null;
+let isStereoOn = false;
+let autoPan = false;
+
+let stereoAnalyser;
+
+function applyStereoRouting() {
+  if (!audioCtx || !eqNodes.length) return;
+
+  // Disconnect semua dulu
+  eqNodes[eqNodes.length - 1].disconnect();
+  stereoPanner?.disconnect();
+  stereoGain?.disconnect();
+  crossfeed?.disconnect();
+  stereoAnalyser?.disconnect();
+
+  isStereoOn = !isStereoOn;
+
+  const finalNode = eqNodes[eqNodes.length - 1];
+
+  // Crossfeed SELALU AKTIF
+  crossfeed = audioCtx.createGain();
+  crossfeed.gain.value = 0.05;
+  finalNode.connect(crossfeed);
+  crossfeed.connect(audioCtx.destination);
+
+  if (stereoEnabled) {
+    stereoPanner = audioCtx.createStereoPanner();
+    stereoGain = audioCtx.createGain();
+    stereoGain.gain.value = 0.9;
+
+    // 🔊 Buat analyser stereo
+    stereoAnalyser = audioCtx.createAnalyser();
+    stereoAnalyser.fftSize = 256;
+
+    // Rantai: FinalNode → StereoPanner → Gain → Destination + Analyser
+    finalNode.connect(stereoPanner);
+    stereoPanner.connect(stereoGain);
+    stereoGain.connect(audioCtx.destination);
+    stereoGain.connect(stereoAnalyser); // <= Kirim ke analyser
+
+    startSlowPan();
+  } else {
+    finalNode.connect(audioCtx.destination);
+    stopSlowPan();
+  }
+
+  updateStereoBtnUI();
+}
+
+function startSlowPan() {
+  stopSlowPan();
+  panPos = 0;
+  panDir = 1;
+
+  panTimer = setInterval(() => {
+    if (!stereoPanner) return;
+    panPos += panDir * 0.002;
+    if (panPos >= 0.8 || panPos <= -0.8) panDir *= -1;
+    stereoPanner.pan.setValueAtTime(panPos, audioCtx.currentTime);
+    drawStereoPanVisual(); // 🎨 Update visual
+  }, 30);
+}
+
+function stopSlowPan() {
+  clearInterval(panTimer);
+  panTimer = null;
+}
+
+function updateStereoBtnUI() {
+  const btn = document.getElementById("stereoToggleBtn");
+  if (btn) {
+    btn.textContent = stereoEnabled ? "Stereo ON" : "Stereo OFF";
+    btn.classList.toggle("on", stereoEnabled);
+    btn.classList.toggle("off", !stereoEnabled);
+  }
+}
+
+
+// ========== 🎛️ DRAW PEAK/WAVE DARI STEREO ==========
+function drawStereoPeak(canvasId) {
+  const canvas = document.getElementById(canvasId);
+  if (!canvas || !stereoAnalyser) return;
+  const ctx = canvas.getContext("2d");
+  const data = new Uint8Array(stereoAnalyser.frequencyBinCount);
+
+  function loop() {
+    requestAnimationFrame(loop);
+    stereoAnalyser.getByteTimeDomainData(data);
+
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    ctx.beginPath();
+    ctx.lineWidth = 2;
+    ctx.strokeStyle = "#00f"; // biru
+    const slice = canvas.width / data.length;
+
+    for (let i = 0; i < data.length; i++) {
+      const y = (data[i] / 255.0) * canvas.height;
+      const x = i * slice;
+      ctx.lineTo(x, y);
+    }
+
+    ctx.stroke();
+  }
+
+  loop();
+}
+
+// === DOM Handler
+document.addEventListener("DOMContentLoaded", () => {
+  const btn = document.getElementById("stereoToggleBtn");
+  if (btn) {
+    btn.addEventListener("click", () => {
+      stereoEnabled = !stereoEnabled;
+      applyStereoRouting();
+    });
+  }
+
+  // ⛳ Jalankan saat awal agar routing benar
+  applyStereoRouting();
+
+  // 🖼️ Gambar stereo peak ke canvas
+  drawStereoPeak("stereoCanvas"); // <- canvas ID di HTML
+});
+  
+// ========== 🔀 BLEND PRESET + SURVIVAL ==========  
+  
+function updateBlendUI() {  
+  blendValueLabel.textContent = (blendRatio.toFixed(2) + "x");  
+  blendRatioSlider.value = blendRatio;  
+}  
+  
+function applyBlendPreset() {  
+  const presetA = basicPresets[presetASelect.value] || basicPresets["Flat"];  
+  const presetB = advancePresets[presetBSelect.value] || advancePresets["Advance Off/Flat"];  
+  
+  const blendedEQ = presetA.eq.map((val, i) =>  
+    (val * (1 - blendRatio)) + (presetB.eq[i] * blendRatio)  
+  );  
+  
+  const sliders = document.querySelectorAll(".slider");  
+  blendedEQ.forEach((db, i) => {  
+    if (!sliders[i]) return;  
+    sliders[i].value = 50 + db * 5;  
+    if (eqNodes[i]) eqNodes[i].gain.value = db;  
+  });  
+  
+  console.log(`🔀 Blend: ${presetASelect.value} + ${presetBSelect.value} @ ${blendRatio}`);  
+}  
+  
+function setBlendState(active) {  
+  blendActive = active;  
+  blendToggleBtn.textContent = active ? "ON" : "OFF";  
+  
+  if (active) {  
+    // 🔐 Simpan root preset sebelum blend aktif  
+    if (basicSelect.value !== "Flat") {  
+      lastRootType = "basic";  
+      lastRootPreset = basicSelect.value;  
+    } else if (advanceSelect.value !== "Advance Off/Flat") {  
+      lastRootType = "advance";  
+      lastRootPreset = advanceSelect.value;  
+    }  
+  
+    // ⛔ Matikan root preset saat blend aktif  
+    basicSelect.value = "Flat";  
+    advanceSelect.value = "Advance Off/Flat";  
+    applyBlendPreset();  
+  
+  } else {  
+    // 🔁 Balikin root preset sebelumnya  
+    if (lastRootType && lastRootPreset) {  
+      if (lastRootType === "basic") {  
+        basicSelect.value = lastRootPreset;  
+        applyFullPreset(lastRootPreset, basicPresets[lastRootPreset]);  
+      } else {  
+        advanceSelect.value = lastRootPreset;  
+        applyFullPreset(lastRootPreset, advancePresets[lastRootPreset]);  
+      }  
+    } else {  
+      // Gagal? Balikin ke Flat  
+      resetToFlat("basic");  
+    }  
+  }  
+}  
+  
+// === Event Binding Blend  
+blendToggleBtn.addEventListener("click", () => {  
+  setBlendState(!blendActive);  
+});  
+  
+blendRatioSlider.addEventListener("input", () => {  
+  blendRatio = parseFloat(blendRatioSlider.value);  
+  updateBlendUI();  
+  if (blendActive) applyBlendPreset();  
+});  
+  
+blendMinus.addEventListener("click", () => {  
+  blendRatio = Math.max(0, blendRatio - 0.05);  
+  updateBlendUI();  
+  if (blendActive) applyBlendPreset();  
+});  
+  
+blendPlus.addEventListener("click", () => {  
+  blendRatio = Math.min(1, blendRatio + 0.05);  
+  updateBlendUI();  
+  if (blendActive) applyBlendPreset();  
+});  
+  
+presetASelect.addEventListener("change", () => {  
+  if (blendActive) applyBlendPreset();  
+});  
+  
+presetBSelect.addEventListener("change", () => {  
+  if (blendActive) applyBlendPreset();  
+});  
+  
+// === Root Manual Select — simpan state survival  
+basicSelect.addEventListener("change", () => {  
+  if (!blendActive) {  
+    lastRootType = "basic";  
+    lastRootPreset = basicSelect.value;  
+  }  
+});  
+  
+advanceSelect.addEventListener("change", () => {  
+  if (!blendActive) {  
+    lastRootType = "advance";  
+    lastRootPreset = advanceSelect.value;  
+  }  
+});  
+  
+window.addEventListener("DOMContentLoaded", () => {  
+  updateBlendUI();  
+  setBlendState(false);  
+});  
+  
+// ============ ⚡ BOOSTER EQ ============  
+const boosterPresets = {
+  Off: 0,
+  Soft: 2,
+  Normal: 4,
+  Hard: 6,
+  Extreme: 8
+};
+
+const bandMap = {
+  LOW:  [0, 1, 2, 3],
+  MID:  [4, 5, 6, 7],
+  HIGH: [8, 9, 10, 11]
+};
+
+const boosterBtns = {
+  LOW: document.getElementById("boostLow"),
+  MID: document.getElementById("boostMid"),
+  HIGH: document.getElementById("boostHigh")
+};
+
+// ✅ BOOSTER UTAMA
+function applyBooster() {
+  if (!eqNodes || eqNodes.length < 12) return;
+
+  const sliders = document.querySelectorAll(".slider");
+  const amount = boosterPresets[boosterMode];
+
+  if (boosterMode === "Off" || !boosterBand) {
+    // Restore EQ sebelumnya
+    if (eqBeforeBooster.length === eqNodes.length) {
+      eqBeforeBooster.forEach((val, i) => {
+        eqNodes[i].gain.value = val;
+        if (sliders[i]) sliders[i].value = 50 + val * 5;
+      });
+      console.log("↩️ Restore EQ sebelum booster");
+    }
+    eqBeforeBooster = [];
+    updateBoosterUI();
+    return;
+  }
+
+  // Simpan nilai EQ awal jika belum
+  if (eqBeforeBooster.length !== eqNodes.length) {
+    eqBeforeBooster = eqNodes.map(node => node.gain.value);
+    console.log("💾 Simpan EQ sebelum booster:", eqBeforeBooster);
+  }
+
+  // Apply booster
+  eqBeforeBooster.forEach((val, i) => {
+    const isTarget = bandMap[boosterBand]?.includes(i);
+    const finalGain = isTarget ? val + amount : val;
+    eqNodes[i].gain.value = finalGain;
+    if (sliders[i]) sliders[i].value = 50 + finalGain * 5;
+  });
+
+  console.log(`⚡ BOOST: ${boosterBand} @ ${amount} dB`);
+  updateBoosterUI();
+}
+
+// ✅ Highlight UI
+function updateBoosterUI() {
+  Object.entries(boosterBtns).forEach(([band, btn]) => {
+    btn.classList.toggle("active", band === boosterBand);
+    btn.classList.toggle("inactive", boosterMode === "Off");
+  });
+}
+
+// ✅ Pasang tombol boost
+Object.entries(boosterBtns).forEach(([band, btn]) => {
+  btn.addEventListener("click", () => {
+    if (boosterMode === "Off") {
+      console.warn("⚠️ Booster masih OFF");
+      return;
+    }
+    boosterBand = boosterBand === band ? null : band;
+    applyBooster();
+  });
+});
+
+// ✅ Mode Booster select
+presetSelect.addEventListener("change", e => {
+  boosterMode = e.target.value;
+  boosterBand = null;
+  eqBeforeBooster = [];
+  applyBooster();
+});
+  
+// === RESET BOOSTER SAAT GANTI PRESET BASIC / ADVANCE  
+basicSelect.addEventListener("change", () => {  
+  eqBeforeBooster = [];  
+  const selected = basicSelect.value;  
+  
+  if (selected === "Flat") {  
+    resetToFlat("basic");  
+    return;  
+  }  
+  
+  if (advanceSelect.value !== "Advance Off/Flat") {  
+    resetToFlat("advance");  
+  }  
+  
+  applyFullPreset(selected, basicPresets[selected]);  
+  lastBasicPreset = selected;  
+});  
+  
+advanceSelect.addEventListener("change", () => {  
+  eqBeforeBooster = [];  
+  const selected = advanceSelect.value;  
+  
+  if (selected === "Advance Off/Flat") {  
+    resetToFlat("advance");  
+    return;  
+  }  
+  
+  if (basicSelect.value !== "Flat") {  
+    resetToFlat("basic");  
+  }  
+  
+  applyFullPreset(selected, advancePresets[selected]);  
+  lastAdvancePreset = selected;  
+});  
+
+
+function resetBooster() {
+  boosterMode = "Off";
+  boosterBand = null;
+  eqBeforeBooster = [];
+  document.getElementById("presetSelect").value = "Off";
+  applyBooster();
+  console.log("🔁 Booster reset (off by accident)");
+}
+  
+  
+// ============ 🕒 EVENT ============  
+function updateDigitalClock() {  
+  const el = document.getElementById("digitalClock");  
+  if (!el) return;  
+  
+  const now = new Date();  
+  const days = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];  
+  const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];  
+  
+  let hour = now.getHours();  
+  const minute = now.getMinutes().toString().padStart(2, "0");  
+  const ampm = hour >= 12 ? "PM" : "AM";  
+  hour = hour % 12 || 12;  
+  
+  const timeStr = `${hour}:${minute} ${ampm}`;  
+  const dateStr = `${days[now.getDay()]}, ${now.getDate()} ${months[now.getMonth()]} ${now.getFullYear()}`;  
+  
+  const holidays = {  
+    "2025-08-17": "Hari Kemerdekaan RI 🇮🇩",  
+    "2025-12-25": "Hari Natal 🎄",  
+    "2025-02-14": "Valentine 💖",  
+    "2025-04-18": "Wafat Isa Almasih ✝️",  
+    "2025-05-01": "Hari Buruh 🛠️",  
+    "2025-05-29": "Kenaikan Isa Almasih ⛪",  
+    "2025-06-06": "Idul Adha 🕋",  
+    "2025-07-17": "Tahun Baru Islam 🕌",  
+    "2025-01-01": "Tahun Baru 🎉"  
+  };  
+  
+  const upcoming = Object.keys(holidays)  
+    .map(date => {  
+      const target = new Date(date);  
+      const diff = Math.ceil((target - now) / (1000 * 60 * 60 * 24));  
+      return { date, name: holidays[date], daysLeft: diff };  
+    })  
+    .filter(item => item.daysLeft >= 0)  
+    .sort((a, b) => a.daysLeft - b.daysLeft)[0];  
+  
+  let liburInfo = "";  
+  if (upcoming && showFullClock) {  
+    const [_, m, d] = upcoming.date.split("-");  
+    liburInfo = `\n?? Next: ${d} ${months[parseInt(m) - 1]} • ${upcoming.daysLeft} day${upcoming.daysLeft > 1 ? "s" : ""}\n${upcoming.name}`;  
+  }  
+  
+  el.textContent = `🕒 ${timeStr} • ${dateStr}${liburInfo}`;  
+}  
+  
+// ============ 🔌 CEK ONLINE BULANAN ============  
+function cekOnlineSebulanSekali() {  
+  const now = new Date();  
+  const bulanIni = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;  
+  const lastOnline = localStorage.getItem("lastOnlineCheck");  
+  
+  if (lastOnline === bulanIni) return;  
+  
+  if (navigator.onLine) {  
+    localStorage.setItem("lastOnlineCheck", bulanIni);  
+  
+    const info = document.createElement("div");  
+    info.textContent = "🟢 ONLINE CHECK: " + bulanIni;  
+    Object.assign(info.style, {  
+      position: "fixed",  
+      bottom: "12px",  
+      right: "12px",  
+      fontSize: "11px",  
+      background: "rgba(0,180,0,0.4)",  
+      color: "white",  
+      padding: "4px 10px",  
+      borderRadius: "8px",  
+      fontFamily: "monospace",  
+      zIndex: 9999  
+    });  
+  
+    document.body.appendChild(info);  
+    setTimeout(() => info.remove(), 5000);  
+  }  
+}  
+  
+// ============ 🌐 KONEKSI STATUS (Global Use) ============  
+function getKoneksiStatus() {  
+  return {  
+    online: navigator.onLine,  
+    dataSaver: navigator.connection?.saveData ?? false  
+  };  
+}  
+  
+function logKoneksiSekarang() {  
+  const { online, dataSaver } = getKoneksiStatus();  
+  if (online) {  
+    console.log(dataSaver ? "🟢 ONLINE (Data Saver)" : "🟢 ONLINE");  
+  } else {  
+    console.log("🔴 OFFLINE");  
+  }  
+}  
+  
+// ============ 🚀 INISIALISASI ============  
+document.addEventListener("DOMContentLoaded", () => {  
+  const el = document.getElementById("digitalClock");  
+  if (el) {  
+    el.addEventListener("click", () => {  
+      showFullClock = !showFullClock;  
+      updateDigitalClock();  
+    });  
+  }  
+  
+  updateDigitalClock();  
+  setInterval(updateDigitalClock, 1000);  
+  
+  cekOnlineSebulanSekali();  
+  // Optional listener koneksi kalau ada pemakaian  
+  window.addEventListener("online", () => logKoneksiSekarang());  
+  window.addEventListener("offline", () => logKoneksiSekarang());  
+});  
+  
+document.getElementById("resetBtn").addEventListener("click", function () {  
+  // 1. Clear localStorage dan sessionStorage  
+  localStorage.clear();  
+  sessionStorage.clear();  
+  
+  // 2. Reset semua input (form/input/slider)  
+  document.querySelectorAll("input").forEach(input => {  
+    if (["range", "text", "number"].includes(input.type)) {  
+      input.value = input.defaultValue || 50;  
+    }  
+  });  
+  
+  // 3. Reset EQ Sliders (nilai visual dan node gain)  
+  if (eqNodes?.length) {  
+    eqNodes.forEach((node, i) => {  
+      if (node && typeof node.gain.value === "number") node.gain.value = 0;  
+      const slider = document.querySelectorAll(".slider")[i];  
+      if (slider) slider.value = 50;  
+    });  
+  }  
+  
+  // 4. Reset volume ke default  
+  if (typeof gainNode !== 'undefined' && audioCtx) {  
+    gainNode.gain.setTargetAtTime(1, audioCtx.currentTime, 0.02); // volume default 1  
+  }  
+  
+  // 5. Reset visual style  
+  document.body.classList.remove("dark-mode");  
+  document.body.style.fontSize = "16px";  
+  
+  // 6. Reset preset secara programatik  
+  resetToFlat("basic");  
+  resetToFlat("advance");  
+  
+  // 7. Reset logger preset  
+  lastManualPreset = "Flat"; // ⬅️ agar logger konsisten saat reload  
+  
+  // 8. Reload pakai timestamp agar file fresh  
+  const url = window.location.pathname + '?reset=' + Date.now();  
+  window.location.replace(url);  
+});  
+
+const lockBtn = document.getElementById("screenLockBtn");
+const lockOverlay = document.getElementById("screenLockOverlay");
+
+let isLocked = false;
+
+lockBtn.addEventListener("click", () => {
+  isLocked = !isLocked;
+
+  if (isLocked) {
+    // Aktifkan layar terkunci
+    lockOverlay.style.display = "block";
+    lockBtn.textContent = "🔓"; // Icon terbuka
+    lockBtn.title = "Buka kunci";
+  } else {
+    // Matikan layar terkunci
+    lockOverlay.style.display = "none";
+    lockBtn.textContent = "🔒"; // Icon terkunci
+    lockBtn.title = "Kunci layar";
+  }
+});
+
+document.addEventListener("DOMContentLoaded", () => {
+  const logToggleBtn = document.getElementById("logToggleBtn");
+  const logIcon = document.getElementById("logIcon");
+  const testLog = document.getElementById("testLog");
+
+  if (!logToggleBtn || !logIcon || !testLog) {
+    console.warn("❌ Salah satu elemen log tidak ditemukan");
+    return;
+  }
+
+  let logOpen = false;
+
+  logToggleBtn.addEventListener("click", () => {
+    logOpen = !logOpen;
+    testLog.style.display = logOpen ? "block" : "none";
+    logIcon.style.transform = logOpen ? "rotate(180deg)" : "rotate(0deg)";
+  });
+});
+
+
+function logToPanel(msg) {
+  const testLog = document.getElementById("testLog");
+  if (testLog) {
+    testLog.innerText += `\n${msg}`;
+    testLog.scrollTop = testLog.scrollHeight;
+  }
+}
+
+   function enterFullscreenOnce() {
+      const docElm = document.documentElement;
+      if (docElm.requestFullscreen) docElm.requestFullscreen();
+      else if (docElm.webkitRequestFullscreen) docElm.webkitRequestFullscreen();
+      else if (docElm.mozRequestFullScreen) docElm.mozRequestFullScreen();
+      else if (docElm.msRequestFullscreen) docElm.msRequestFullscreen();
+    }
+
+    // Jaga tetap fullscreen
+    document.addEventListener("fullscreenchange", () => {
+      if (!document.fullscreenElement) {
+        setTimeout(() => {
+          enterFullscreenOnce();
+        }, 300);
+      }
+    });
+
+    // Hanya aktif saat interaksi
+    document.addEventListener("click", () => {
+      enterFullscreenOnce();
+    }, { once: true });
+
+  if ('serviceWorker' in navigator) {    
+    navigator.serviceWorker.register('sw.js')    
+      .then(reg => console.log('✅ Service Worker registered:', reg.scope))    
+      .catch(err => console.error('❌ Service Worker registration failed:', err));    
+  }    
+
+
+window.addEventListener("DOMContentLoaded", () => {
+  console.log("📦 DOM Loaded");
+
+  const player = document.getElementById("audioPlayer");
+  if (!player) return console.warn("❌ #audioPlayer tidak ditemukan!");
+
+  const kickstart = async () => {
+    if (!audioCtx) {
+      audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      sourceNode = audioCtx.createMediaElementSource(player);
+      console.log("🚀 AudioContext & SourceNode dibuat");
+
+      try {
+        // ⏳ Inject PowerAmp dulu
+        await injectPowerAmpV2();
+
+        // 🔥 Baru lanjut init chain FX
+        await initAudioContext();
+
+        console.log("✅ Audio Engine aktif, tinggal tekan Play");
+      } catch (err) {
+        console.warn("❌ initAudioContext atau PowerAmp error:", err);
+      }
+    }
+
+    // Remove listener biar tidak ngulang
+    window.removeEventListener("click", kickstart);
+  };
+
+  // 💡 Hanya perlu 1x klik user untuk trigger
+  window.addEventListener("click", kickstart);
+});
+
+
+console.log("✅ Script Loaded");  
+</script>  
+</body>  
+</html>  
+
+
+
+
+
+
+
+
