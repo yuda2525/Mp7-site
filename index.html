@@ -765,20 +765,17 @@ background: transparent;
   <!-- 🎵 Input File Audio -->
   <label for="fileInput" style="cursor: pointer; font-weight: bold;">
   </label>
-  <input type="file" id="fileInput" accept="audio/*" style="display: none;" />
-<!-- 📁 Folder Picker -->
-<label for="folderPicker" style="cursor: pointer; font-weight: bold; color: cyan;">
-  📁 
-</label>
-<input
-  type="file"
-  id="folderPicker"
-  webkitdirectory
-  multiple
-  accept="audio/*"
-  hidden
-/>
-</div>  
+  <!-- 📁 Folder Picker -->
+  <button id="folderButton" style="cursor: pointer; font-weight: bold; color: cyan;">📁</button>
+  <input
+    type="file"
+    id="folderPicker"
+    webkitdirectory
+    multiple
+    accept="audio/*"
+    hidden
+  />
+</div>
 
   
 <!-- Tombol Reset: Nuclear Style -->  
@@ -3829,36 +3826,45 @@ muteBtn.addEventListener("click", () => {
 });  
 
 // ============ 📁 FOLDER PICKER ============  
-const folderPicker = document.getElementById("folderPicker");  
-  
-folderPicker.addEventListener('change', (e) => {  
-  const files = Array.from(e.target.files).filter(f => f.type.startsWith('audio/'));  
-  if (!files.length) {  
-    alert("Tidak ada file audio di folder.");  
-    return;  
-  }  
-  
-  playlist.length = 0;  
-  currentTrack = 0;  
-  
-  files.forEach(file => {  
-    const url = URL.createObjectURL(file);  
-    playlist.push({  
-      src: url,  
-      title: file.name.replace(/\.[^/.]+$/, ''),  
-      file: file  
-    });  
-  });  
-  
-  loadTrack(currentTrack);  
-  updatePlayIcon();  
-  
-  
-  if (playlist.length && playlist[currentTrack]?.file) {  
-    audio.src = playlist[currentTrack].src;  
-    audio.play();  
-  }  
-});  
+const folderPicker = document.getElementById("folderPicker");
+const playlist = [];
+let currentTrack = 0;
+
+folderPicker.addEventListener("change", (e) => {
+  const files = Array.from(e.target.files).filter(f => f.type.startsWith("audio/"));
+  if (!files.length) {
+    alert("Tidak ada file audio di folder.");
+    return;
+  }
+
+  playlist.length = 0;
+  currentTrack = 0;
+
+  files.forEach(file => {
+    const url = URL.createObjectURL(file);
+    playlist.push({
+      src: url,
+      title: file.name.replace(/\.[^/.]+$/, ''),
+      file: file
+    });
+  });
+
+  loadTrack(currentTrack);
+  updatePlayIcon();
+
+  if (playlist[currentTrack]?.file) {
+    audio.src = playlist[currentTrack].src;
+    audio.play();
+  }
+});
+
+document.getElementById('fileButton').addEventListener('click', () => {
+  document.getElementById('fileInput').click();
+});
+
+document.getElementById('folderButton').addEventListener('click', () => {
+  document.getElementById('folderPicker').click();
+});
 
 // ========== 🎧 STEREO PAN FINAL ==========  
 // ========== 🎧 STEREO PAN FINAL ==========
