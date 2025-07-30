@@ -876,16 +876,16 @@ background: transparent;
   ☢️  
 </button>  
 
-<!-- File Picker (Mobile) -->
-<input type="file" id="fileInput" multiple accept="audio/*" hidden />
-<label id="fileLabel" for="fileInput" style="cursor: pointer; font-size: 28px; color: cyan; position: absolute; top: 12px; left: 12px;">
-  🎵
+<!-- Label untuk pilih file -->
+<label id="fileLabel">
+  <input type="file" id="fileInput" accept="audio/*" multiple hidden />
+  🎵 Pilih File
 </label>
 
-<!-- Folder Picker (Desktop) -->
-<input type="file" id="folderPicker" webkitdirectory multiple accept="audio/*" hidden />
-<label id="folderLabel" for="folderPicker" style="cursor: pointer; font-size: 28px; color: cyan; position: absolute; top: 12px; left: 12px;">
-  📂
+<!-- Label untuk pilih folder -->
+<label id="folderLabel">
+  <input type="file" id="folderPicker" accept="audio/*" webkitdirectory multiple hidden />
+  📁 
 </label>
 </div>
 
@@ -3931,10 +3931,9 @@ const folderInput = document.getElementById("folderPicker");
 const fileLabel = document.getElementById("fileLabel");
 const folderLabel = document.getElementById("folderLabel");
 
-// Deteksi support folder
 const folderSupported = 'webkitdirectory' in document.createElement('input');
-folderLabel.style.display = folderSupported ? 'inline' : 'none';
-fileLabel.style.display = folderSupported ? 'none' : 'inline';
+folderLabel.style.display = folderSupported ? 'inline-block' : 'none';
+fileLabel.style.display = folderSupported ? 'none' : 'inline-block';
 
 function handleAudioFiles(files) {
   const audioFiles = Array.from(files).filter(f => f.type.startsWith('audio/'));
@@ -3957,11 +3956,11 @@ function handleAudioFiles(files) {
 
   if (playlist[currentTrack]?.src) {
     audio.src = playlist[currentTrack].src;
-    // audio.play(); // autoplay dimatikan
   }
 
-  // 🎵 icon (file picker) hilang total, gak muncul lagi
+  // Sembunyikan ikon 🎵/📁 setelah dipilih
   fileLabel.style.display = 'none';
+  folderLabel.style.display = 'none';
 }
 
 fileInput.addEventListener('change', (e) => handleAudioFiles(e.target.files));
