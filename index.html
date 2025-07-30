@@ -28,7 +28,6 @@
   <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-  <style>
   <title> Audio Player Final</title>
   <style>
 :root {
@@ -784,7 +783,8 @@ background: transparent;
     animation: scrollText 15s linear infinite;
   ">-</span>
 </div>
-    
+
+
     <div class="controls">  
       <button class="btn" id="prevBtn">  
         <svg viewBox="0 0 24 24"><path d="M6 19V5h2v14H6zm3.5-7L18 5v14l-8.5-7z"/></svg>  
@@ -857,20 +857,6 @@ background: transparent;
   <!-- 🎵 Input File Audio -->
   <label for="fileInput" style="cursor: pointer; font-weight: bold;">
   </label>
-  <input type="file" id="fileInput" accept="audio/*" style="display: none;" />
-<!-- 📁 Folder Picker -->
-<label for="folderPicker" style="cursor: pointer; font-weight: bold; color: cyan;">
-  📁 
-</label>
-<input
-  type="file"
-  id="folderPicker"
-  webkitdirectory
-  multiple
-  accept="audio/*"
-  hidden
-/>
-</div>  
 
   
 <!-- Tombol Reset: Nuclear Style -->  
@@ -890,6 +876,18 @@ background: transparent;
   ☢️  
 </button>  
 
+<!-- File Picker (Mobile) -->
+<input type="file" id="fileInput" multiple accept="audio/*" hidden />
+<label id="fileLabel" for="fileInput" style="cursor: pointer; font-size: 28px; color: cyan; position: absolute; top: 12px; left: 12px;">
+  🎵
+</label>
+
+<!-- Folder Picker (Desktop) -->
+<input type="file" id="folderPicker" webkitdirectory multiple accept="audio/*" hidden />
+<label id="folderLabel" for="folderPicker" style="cursor: pointer; font-size: 28px; color: cyan; position: absolute; top: 12px; left: 12px;">
+  📂
+</label>
+</div>
 
 
 <!-- === TOOLS Dropdown All-in-One === -->
@@ -3920,36 +3918,51 @@ muteBtn.addEventListener("click", () => {
 });  
 
 // ============ 📁 FOLDER PICKER ============  
-const folderPicker = document.getElementById("folderPicker");  
-  
-folderPicker.addEventListener('change', (e) => {  
-  const files = Array.from(e.target.files).filter(f => f.type.startsWith('audio/'));  
-  if (!files.length) {  
-    alert("Tidak ada file audio di folder.");  
-    return;  
-  }  
-  
-  playlist.length = 0;  
-  currentTrack = 0;  
-  
-  files.forEach(file => {  
-    const url = URL.createObjectURL(file);  
-    playlist.push({  
-      src: url,  
-      title: file.name.replace(/\.[^/.]+$/, ''),  
-      file: file  
-    });  
-  });  
-  
-  loadTrack(currentTrack);  
-  updatePlayIcon();  
-  
-  
-  if (playlist.length && playlist[currentTrack]?.file) {  
-    audio.src = playlist[currentTrack].src;  
-    audio.play();  
-  }  
-});  
+const fileInput = document.getElementById("fileInput");
+const folderInput = document.getElementById("folderPicker");
+const fileLabel = document.getElementById("fileLabel");
+const folderLabel = document.getElementById("folderLabel");
+
+// Auto deteksi support folder
+const folderSupported = 'webkitdirectory' in document.createElement('input');
+
+folderLabel.style.display = folderSupported ? 'inline' : 'none';
+fileLabel.style.display = folderSupported ? 'none' : 'inline';
+
+// Handler utama (file atau folder)
+function handleAudioFiles(files) {
+  const audioFiles = Array.from(files).filter(f => f.type.startsWith('audio/'));
+  if (!audioFiles.length) return alert("Tidak ada file audio valid.");
+
+  playlist.length = 0;
+  currentTrack = 0;
+
+  audioFiles.forEach(file => {
+    const url = URL.createObjectURL(file);
+    playlist.push({
+      src: url,
+      title: file.name.replace(/\.[^/.]+$/, ''),
+      file: file
+    });
+  });
+
+  loadTrack(currentTrack);
+  updatePlayIcon();
+
+// Jangan autoplay, cukup load track saja
+if (playlist[currentTrack]?.src) {
+  audio.src = playlist[currentTrack].src;
+  // audio.play();
+}
+
+  // Sembunyikan ikon setelah dipilih
+  fileLabel.style.display = 'none';
+  folderLabel.style.display = 'none';
+}
+
+// Listener file
+fileInput.addEventListener('change', (e) => handleAudioFiles(e.target.files));
+folderInput.addEventListener('change', (e) => handleAudioFiles(e.target.files));
 
 // ========== 🎧 STEREO PAN FINAL ==========
 let stereoEnabled = false;
