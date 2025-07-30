@@ -3931,13 +3931,11 @@ const folderInput = document.getElementById("folderPicker");
 const fileLabel = document.getElementById("fileLabel");
 const folderLabel = document.getElementById("folderLabel");
 
-// Auto deteksi support folder
+// Deteksi support folder
 const folderSupported = 'webkitdirectory' in document.createElement('input');
-
 folderLabel.style.display = folderSupported ? 'inline' : 'none';
 fileLabel.style.display = folderSupported ? 'none' : 'inline';
 
-// Handler utama (file atau folder)
 function handleAudioFiles(files) {
   const audioFiles = Array.from(files).filter(f => f.type.startsWith('audio/'));
   if (!audioFiles.length) return alert("Tidak ada file audio valid.");
@@ -3957,18 +3955,15 @@ function handleAudioFiles(files) {
   loadTrack(currentTrack);
   updatePlayIcon();
 
-// Jangan autoplay, cukup load track saja
-if (playlist[currentTrack]?.src) {
-  audio.src = playlist[currentTrack].src;
-  // audio.play();
-}
+  if (playlist[currentTrack]?.src) {
+    audio.src = playlist[currentTrack].src;
+    // audio.play(); // autoplay dimatikan
+  }
 
-  // Sembunyikan ikon setelah dipilih
+  // 🎵 icon (file picker) hilang total, gak muncul lagi
   fileLabel.style.display = 'none';
-  folderLabel.style.display = 'none';
 }
 
-// Listener file
 fileInput.addEventListener('change', (e) => handleAudioFiles(e.target.files));
 folderInput.addEventListener('change', (e) => handleAudioFiles(e.target.files));
 
