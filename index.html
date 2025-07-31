@@ -723,7 +723,16 @@ background: transparent;
 <body onclick="enterFullscreenOnce()">
 	
   <div class="container">  
+  	
     <div class="header">  
+
+  <!-- File Picker (Mobile) -->
+	<input type="file" id="fileInput" accept="audio/*,video/*" style="display:none;">
+<button id="manualPickBtn" title="Pilih Lagu" style="background:none;border:none;cursor:pointer;">
+  <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" fill="#ff66cc" viewBox="0 0 24 24">
+    <path d="M10 4H2v16h20V6H12l-2-2zM13 10v4.5a2.5 2.5 0 1 0 1 2.45V11h3v-1h-4z"/>
+  </svg>
+</button>
 
         	  <!-- VIDEO BACKGROUND -->
 <!--
@@ -747,6 +756,7 @@ background: transparent;
 </div>
 -->
 
+
  <div class="logo"></div>    
     </div> <div class="logo-background">  
   <canvas id="logoCanvas" width="300" height="300"></canvas>  
@@ -758,6 +768,7 @@ background: transparent;
       
     <!--  Cuma satu elemen jam -->  
 <div id="digitalClock">Loading Clock...</div>
+
 
 <!-- ✅ Now Playing -->
 <div id="nowPlayingBox" style="
@@ -856,14 +867,7 @@ background: transparent;
   <label for="fileInput" style="cursor: pointer; font-weight: bold;">
   </label>
 
-<!-- File Picker (Mobile) -->
-	<input type="file" id="fileInput" accept="audio/*,video/*" style="display:none;">
-<button id="manualPickBtn" title="Pilih Lagu" style="background:none;border:none;cursor:pointer;">
-  <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" fill="#ff66cc" viewBox="0 0 24 24">
-    <path d="M10 4H2v16h20V6H12l-2-2zM13 10v4.5a2.5 2.5 0 1 0 1 2.45V11h3v-1h-4z"/>
-  </svg>
-</button>
-</div>
+
   
 <!-- Tombol Reset: Nuclear Style -->  
 <button id="resetBtn" title="Reset Semua" style="  
@@ -882,7 +886,7 @@ background: transparent;
   ☢️  
 </button>  
 
-
+</div>
 <!-- === TOOLS Dropdown All-in-One === -->
 <div id="toolsPanel" style="
   display: inline-block;
@@ -1083,6 +1087,8 @@ Log mesin belum dijalankan...
 </pre>
 
 <canvas id="waveformCanvas" width="320" height="100"></canvas>
+  </div>
+  
   </div>
           <footer class="footer-animated">  
       © 2025 <span class="brand">Y&Z Studio</span> · Powered by AI & Human Creativity  
