@@ -321,17 +321,8 @@ background: transparent;
 .trackname {
   display: block;
   max-width: 100%;
-  overflow: hidden;
-      overflow-x: hidden; /* ⛔ cegah geser kanan */
-  white-space: nowrap;
   border-radius: 10px;
   font-weight: 600;
-  color: transparent;
-  background: linear-gradient(90deg, #00faff, #ff00e0, #00ff91, #ffd500, #ff00e0, #00faff);
-  background-clip: text;
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  animation: scrollText 15s linear infinite;
 }
   
 @keyframes scrollText {
@@ -557,7 +548,7 @@ label[for="folderPicker"] {
 }  
   
 footer.footer-animated {  
-	  position: fixed;
+	  position: absolute;
   bottom: 30;
   left: 57;
   text-align: center;  
@@ -733,9 +724,7 @@ background: transparent;
 </div>
 -->
 	
-	
-	
-<div class="video-bg">
+	<div class="video-bg">
   <video autoplay muted loop playsinline>
     <source src="assets/Background19.mp4" type="video/mp4">
     Your browser does not support the video tag.
@@ -770,7 +759,7 @@ background: transparent;
   <span id="trackTitle" style="
     display: inline-block;
     font-weight: bold;
-    font-size: 16px;
+    font-size: 14px;
     background: linear-gradient(90deg, 
       #00faff, #ff00e0, #00ff91, #ffd500, #ff00e0, #00faff);
     background-size: 300% auto;
@@ -857,6 +846,17 @@ background: transparent;
   <label for="fileInput" style="cursor: pointer; font-weight: bold;">
   </label>
 
+<!-- File Picker (Mobile) -->
+<input type="file" id="fileInput" multiple accept="audio/*" hidden />
+<label id="fileLabel" for="fileInput" style="cursor: pointer; font-size: 28px; color: cyan; position: absolute; top: 12px; left: 12px;">
+  🎵
+</label>
+<!-- Folder Picker (Desktop) -->
+<input type="file" id="folderPicker" webkitdirectory multiple accept="audio/*" hidden />
+<label id="folderLabel" for="folderPicker" style="cursor: pointer; font-size: 28px; color: cyan; position: absolute; top: 12px; left: 12px;">
+  📂
+</label>
+</div>
   
 <!-- Tombol Reset: Nuclear Style -->  
 <button id="resetBtn" title="Reset Semua" style="  
@@ -874,19 +874,6 @@ background: transparent;
 " onclick="location.reload()">  
   ☢️  
 </button>  
-
-<!-- File Picker (Mobile) -->
-<input type="file" id="fileInput" multiple accept="audio/*" hidden />
-<label id="fileLabel" for="fileInput" style="cursor: pointer; font-size: 28px; color: cyan; position: absolute; top: 12px; left: 12px;">
-  🎵
-</label>
-
-<!-- Folder Picker (Desktop) -->
-<input type="file" id="folderPicker" webkitdirectory multiple accept="audio/*" hidden />
-<label id="folderLabel" for="folderPicker" style="cursor: pointer; font-size: 28px; color: cyan; position: absolute; top: 12px; left: 12px;">
-  📂
-</label>
-</div>
 
 
 <!-- === TOOLS Dropdown All-in-One === -->
@@ -1136,7 +1123,7 @@ const boostLowBtn = document.getElementById("boostLow");
 const boostMidBtn = document.getElementById("boostMid");
 const boostHighBtn = document.getElementById("boostHigh");
 
-const bands = [10, 32, 64, 125, 250, 500, 1000, 2000, 4000, 10000, 16000, 20000];
+bands = [10, 32, 64, 125, 250, 500, 1000, 2000, 4000, 10000, 16000, 20000];
 const playlist = [
   { src: 'lagu1.mp3', title: 'My attitude depends on who you are' },
   { src: 'lagu2.mp3', title: 'Lagu 2' }
