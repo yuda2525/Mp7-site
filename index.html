@@ -716,12 +716,11 @@ background: transparent;
   background: radial-gradient(circle at center, #111 10%, #000 100%);
 }
 
-
   </style>  
 <link href="https://fonts.googleapis.com/css2?family=Saira+Stencil+One&display=swap" rel="stylesheet">
 </head>  
 <body onclick="enterFullscreenOnce()">
-	<body style="display: flex; flex-direction: column; min-height: 100vh;">
+	
   <div class="container">  
     <div class="header">  
 
@@ -876,16 +875,16 @@ background: transparent;
   ☢️  
 </button>  
 
-<!-- Label untuk pilih file -->
-<label id="fileLabel">
-  <input type="file" id="fileInput" accept="audio/*" multiple hidden />
-  🎵 Pilih File
+<!-- File Picker (Mobile) -->
+<input type="file" id="fileInput" multiple accept="audio/*" hidden />
+<label id="fileLabel" for="fileInput" style="cursor: pointer; font-size: 28px; color: cyan; position: absolute; top: 12px; left: 12px;">
+  🎵
 </label>
 
-<!-- Label untuk pilih folder -->
-<label id="folderLabel">
-  <input type="file" id="folderPicker" accept="audio/*" webkitdirectory multiple hidden />
-  📁 
+<!-- Folder Picker (Desktop) -->
+<input type="file" id="folderPicker" webkitdirectory multiple accept="audio/*" hidden />
+<label id="folderLabel" for="folderPicker" style="cursor: pointer; font-size: 28px; color: cyan; position: absolute; top: 12px; left: 12px;">
+  📂
 </label>
 </div>
 
@@ -1091,19 +1090,11 @@ Log mesin belum dijalankan...
 
 <canvas id="waveformCanvas" width="320" height="100"></canvas>
   </div>
-  
-  
-
-  <!-- Footer tetap di bawah -->
-  <footer class="footer-animated" style="
-    text-align: center;
-    padding: 12px;
-    border-top: 1px;
-  ">
-    © 2025 <span class="brand">Y&Z Studio</span> · Powered by AI & Human Creativity  
-    <br>  
-    <a href="mailto:yudabastard84@gmail.com" class="brand" style="color: cyan;">yudabastard84@gmail.com</a>  
-  </footer>
+          <footer class="footer-animated">  
+      © 2025 <span class="brand">Y&Z Studio</span> · Powered by AI & Human Creativity  
+      <br>  
+      <a href="mailto:yudabastard84@gmail.com" class="brand">yudabastard84@gmail.com</a>  
+    </footer>  
 
 <div class="retina-glass">
 	<div id="visualMode" class="content-overlay visual-mode-all">
@@ -3377,25 +3368,71 @@ const volumeBoostPresets = {
     }
   },
   "Volume++": {
-  eq: [0.5, 0.5, 1, 1, 1, 1, 1, 1, 1, 0.5, 0, -0.5],
-  enhancer: 3.8,
-  compressor: -10,
-  filters: (ctx) => {
-    const lowPunch = ctx.createBiquadFilter();
-    lowPunch.type = "peaking";
-    lowPunch.frequency.value = 150;
-    lowPunch.Q.value = 0.9;
-    lowPunch.gain.value = 2.8;
+    eq: [2, 1.5, 1.2, 0.8, 0, 1, 1.8, 2.2, 2.8, 3.5, 3, 2],
+    enhancer: 1.4,
+    compressor: -13.5,
+    limiter: {
+      enabled: true,
+      threshold: -2.8
+    },
+    stereoWidth: 1.08,
+    reverb: {
+      enabled: false
+    },
+    filters: (ctx) => {
+      const lowShelf = ctx.createBiquadFilter();
+      lowShelf.type = "lowshelf";
+      lowShelf.frequency.value = 55;
+      lowShelf.gain.value = 0.3; // Halusin bass lebih soft
 
-    const highDetail = ctx.createBiquadFilter();
-    highDetail.type = "peaking";
-    highDetail.frequency.value = 4500;
-    highDetail.Q.value = 1.5;
-    highDetail.gain.value = 2.5;
+      const subDip = ctx.createBiquadFilter();
+      subDip.type = "peaking";
+      subDip.frequency.value = 90;
+      subDip.Q.value = 1.2;
+      subDip.gain.value = -1.5; // Tambah dip-nya
 
-    return [lowPunch, highDetail];
-  }
-},
+      const lowMidCut = ctx.createBiquadFilter();
+      lowMidCut.type = "peaking";
+      lowMidCut.frequency.value = 280; // Dari 320 → 280
+      lowMidCut.Q.value = 1.2;          // Sedikit lebih sempit
+      lowMidCut.gain.value = -1.6;      // Cut lebih dalam
+
+      const midBody = ctx.createBiquadFilter();
+      midBody.type = "peaking";
+      midBody.frequency.value = 1150;
+      midBody.Q.value = 1.3;
+      midBody.gain.value = 1.2;
+
+const clarity = ctx.createBiquadFilter();
+clarity.type = "peaking";
+clarity.frequency.value = 3800;
+clarity.Q.value = 1.1;
+clarity.gain.value = 0.7;
+
+const highShelf = ctx.createBiquadFilter();
+highShelf.type = "highshelf";
+highShelf.frequency.value = 9000;
+highShelf.gain.value = 0.4;
+
+const air = ctx.createBiquadFilter();
+air.type = "highshelf";
+air.frequency.value = 17000;
+air.gain.value = 0.25;
+
+const harshTamer = ctx.createBiquadFilter();
+harshTamer.type = "peaking";
+harshTamer.frequency.value = 5300;
+harshTamer.Q.value = 4.2;
+harshTamer.gain.value = -1.4;
+
+const shimmer = ctx.createBiquadFilter();
+shimmer.type = "highshelf";
+shimmer.frequency.value = 16000;
+shimmer.gain.value = 0.1;
+
+return [lowShelf, subDip, lowMidCut, midBody, clarity, harshTamer, highShelf, air, shimmer];
+    }
+  },
 };
 
 // Gabung semua preset
@@ -3931,9 +3968,10 @@ const folderInput = document.getElementById("folderPicker");
 const fileLabel = document.getElementById("fileLabel");
 const folderLabel = document.getElementById("folderLabel");
 
+// Deteksi support folder
 const folderSupported = 'webkitdirectory' in document.createElement('input');
-folderLabel.style.display = folderSupported ? 'inline-block' : 'none';
-fileLabel.style.display = folderSupported ? 'none' : 'inline-block';
+folderLabel.style.display = folderSupported ? 'inline' : 'none';
+fileLabel.style.display = folderSupported ? 'none' : 'inline';
 
 function handleAudioFiles(files) {
   const audioFiles = Array.from(files).filter(f => f.type.startsWith('audio/'));
@@ -3956,11 +3994,11 @@ function handleAudioFiles(files) {
 
   if (playlist[currentTrack]?.src) {
     audio.src = playlist[currentTrack].src;
+    // audio.play(); // autoplay dimatikan
   }
 
-  // Sembunyikan ikon 🎵/📁 setelah dipilih
+  // 🎵 icon (file picker) hilang total, gak muncul lagi
   fileLabel.style.display = 'none';
-  folderLabel.style.display = 'none';
 }
 
 fileInput.addEventListener('change', (e) => handleAudioFiles(e.target.files));
