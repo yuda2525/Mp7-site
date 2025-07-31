@@ -52,6 +52,10 @@ body {
   font-family: 'Poppins', sans-serif;
   filter: contrast(105%) saturate(115%) brightness(1.03);
   margin: 0;
+  aspect-ratio: 9 / 16;
+  width: 100vw;
+  height: 100vh;
+  object-fit: cover;
 }
 
 /* Retina Glass Card */
@@ -108,22 +112,6 @@ body {
   padding: 0;  
   box-sizing: border-box;  
 }  
-  
-body {  
-  font-family: var(--font-main);  
-  background: linear-gradient(135deg, var(--bg-start), var(--bg-end));  
-  color: var(--accent-color);  
-  display: flex;  
-  justify-content: center;  
-  padding: 20px;  
-    width: 100vw;  
-  height: 100vh;  
-  overflow: hidden;
-}  
-
-body, html {
-  height: 100%;
-}
 
 /* Fullscreen video background */
 .video-background {
@@ -156,7 +144,7 @@ body, html {
   top: 0;
   left: 0;
   width: 100%;
-  height: 100vh;        /* Full tinggi layar */
+  height: 100%;        /* Full tinggi layar */
   z-index: -1;          /* Di belakang konten */
   overflow: hidden;
   pointer-events: none; /* Biar nggak ganggu klik */
@@ -181,6 +169,36 @@ body, html {
   background: rgba(0, 0, 0, 0.4);
   margin: 2rem;
   border-radius: 20px;
+}
+
+html, body {
+  font-family: var(--font-main);  
+  background: linear-gradient(135deg, var(--bg-start), var(--bg-end));  
+  color: var(--accent-color);  
+  display: flex;  
+  justify-content: center;  
+  padding: 20px;  
+  height: 100%;         /* penting */
+  width: 100%;
+  overflow: hidden;
+    flex-direction: column;
+      margin: 0;  
+  padding: 0;  
+}  
+
+
+.player-container {  
+  transition: all 0.3s ease-in-out;  
+  max-width: 960px;
+  margin: 0 auto;
+  padding: 0 16px;
+}
+
+.wrapper {
+	  height: 100vh; /* viewport height, 100%
+  flex: 1;
+  display: flex;
+  flex-direction: column;
 }
 
 .container {  
@@ -521,36 +539,11 @@ background: transparent;
       color:  #ffffff;  
        text-align: center;
     }
-   
-#folderPicker {  
-  position: absolute;  
-  top: 12px;  
-  left: 12px;  
-  opacity: 0;  
-  width: 36px;  
-  height: 36px;  
-  z-index: 10;  
-}  
-  
-label[for="folderPicker"] {  
-  position: absolute;  
-  top: 105px;  
-  left: 30px;  
-  width: 36px;  
-  height: 36px;  
-  display: flex;  
-  justify-content: center;  
-  align-items: center;  
-  font-size: 18px;  
-  color: #0ff;  
-  cursor: pointer;  
-  z-index: 5;  
-}  
   
 footer.footer-animated {  
-	  position: absolute;
+	  position: relative;
   bottom: 10;
-  left: 69;
+  left: 0;
   text-align: center;  
   padding: 18px 12px;  
   font-size: 0.80rem;  
@@ -559,7 +552,6 @@ footer.footer-animated {
   border-top: 1px solid rgba(255, 255, 255, 0.04);  
     font-family: sans-serif;
       -webkit-backdrop-filter: blur(10px);
-        z-index: 0;  
 }  
 
 footer .brand {  
@@ -683,10 +675,6 @@ body.locked {
 background: transparent;
 }
 
-.player-container {  
-  transition: all 0.3s ease-in-out;  
-}  
-
     canvas {
       border: none;
       background: none;
@@ -712,6 +700,7 @@ background: transparent;
 </head>  
 <body onclick="enterFullscreenOnce()">
 	
+	  <div class="wrapper">
   <div class="container">  
   	
     <div class="header">  
@@ -1081,18 +1070,21 @@ background: transparent;
 Log mesin belum dijalankan...
 </pre>
 
+
 <canvas id="waveformCanvas" width="320" height="100"></canvas>
   </div>
   
-  </div>
+    </div>
           <footer class="footer-animated">  
       © 2025 <span class="brand">Y&Z Studio</span> · Powered by AI & Human Creativity  
       <br>  
       <a href="mailto:yudabastard84@gmail.com" class="brand">yudabastard84@gmail.com</a>  
     </footer>  
+    
 
 <div class="retina-glass">
 	<div id="visualMode" class="content-overlay visual-mode-all">
+		
 <body>  
 <script>
 window.addEventListener("error", e => console.error("❌ Global Error:", e.message));
