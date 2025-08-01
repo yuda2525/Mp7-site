@@ -231,35 +231,6 @@ html, body {
   100% { color: #ff0055; text-shadow: 0 0 15px #ff0055aa; }  
 }  
 
-#fileInput {
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100vw;
-  height: 100vh;
-  opacity: 0;
-  z-index: 999;
-  cursor: pointer;
-}
-
-#fileTapZone {
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100vw;
-  height: 100vh;
-  z-index: 998;
-}
-
-#fileTapZone.clicked {
-  animation: tapEffect 0.3s ease;
-}
-
-@keyframes tapEffect {
-  0%   { background-color: rgba(255,255,255,0.05); }
-  100% { background-color: transparent; }
-}
-  
 .logo-background {  
   position: fixed;  
   top: 70%;  
@@ -725,57 +696,39 @@ background: transparent;
 </head>  
 <body onclick="enterFullscreenOnce()">
 	
-	  <div class="wrapper">
-  <div class="container">  
-  	
-    <div class="header">
-    	
-<!-- Input background -->
-<input type="file" id="bgFileInput" accept="video/*,image/*" />
+	<!-- Tombol Reset: Nuclear Style -->  
+<button id="resetBtn" title="Reset Semua" style="  
+  font-size: 24px;  
+  background: none;  
+  border: none;  
+  cursor: pointer;  
+  color: #ffffff;  
+  text-shadow: 0 0 6px #ffffff, 0 0 12px #bbbbbb, 0 0 24px #ffffff;  
+  position: absolute;  
+  top: 12px;  
+  right: 12px;  
+  z-index: 99;  
+  transition: transform 0.2s ease;  
+" onclick="location.reload()">  
+  ☢️  
+</button>  
 
-<!-- Container -->
-<div class="video-bg" id="bgContainer">
-  <video autoplay muted loop playsinline id="videoBg" style="display:none"></video>
-  <img id="imgBg" style="display:none; width:100%; height:100%; object-fit:cover;" />
+<div style="display: flex; align-items: center; gap: 10px; margin-top: 10px;">
+  <!-- 🎵 Input File Audio -->
+  <label for="fileInput" style="cursor: pointer; font-weight: bold;">
+  </label>
+<input type="file" id="fileInput" accept="audio/*">
 </div>
-
- <div class="logo"></div>    
-    </div> <div class="logo-background">  
-  <canvas id="logoCanvas" width="300" height="300"></canvas>  
-  <svg class="logo-shape" viewBox="0 0 100 100">  
-    <circle cx="50" cy="50" r="45" stroke-width="8" />  
-    <text x="50%" y="55%" text-anchor="middle" dy=".3em">Y&Z</text>  
-  </svg>  
-</div>  
-      
-    <!--  Cuma satu elemen jam -->  
+	
+	  	  <div class="wrapper">
+	  <div class="container">  
+		
+  	    <div class="header">
+  	    	    <!--  Cuma satu elemen jam -->  
 <div id="digitalClock">Loading Clock...</div>
 
 
-<!-- ✅ Now Playing -->
-<div id="nowPlayingBox" style="
-  width: 100%;
-  overflow: hidden;
-  text-align: center;
-  padding: 4px 0;
-">
-  <span id="trackTitle" style="
-    display: inline-block;
-    font-weight: bold;
-    font-size: 12px;
-    background: linear-gradient(90deg, 
-      #00faff, #ff00e0, #00ff91, #ffd500, #ff00e0, #00faff);
-    background-size: 300% auto;
-    color: transparent;
-    background-clip: text;
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    white-space: nowrap;
-    animation: scrollText 15s linear infinite;
-  ">-</span>
 </div>
-
-
     <div class="controls">  
       <button class="btn" id="prevBtn">  
         <svg viewBox="0 0 24 24"><path d="M6 19V5h2v14H6zm3.5-7L18 5v14l-8.5-7z"/></svg>  
@@ -813,63 +766,40 @@ background: transparent;
       <input type="range" id="volumeRange" min="0" max="2.5" value="1" step="0.01" />
   <span id="gain-info"></span>
 </div>
+
   
   <div class="eq-wrapper">
     <div class="eq-container" id="eqContainer"></div>
   </div>
 <audio id="audioPlayer" src="audio/lagu1.mp3"></audio>
     </div>  
-<!-- Tombol Lock/Unlock -->
-<button id="screenLockBtn" title="Kunci layar" style="  
-  font-size: 28px;
-  background: none;
-  border: none;
-  color: #fff;
-  position: absolute;
-  bottom: 12px;
-  right: 12px;
-  cursor: pointer;
-  z-index: 100;
-  transition: transform 0.2s ease;
-">🔒</button>
-
-<!-- Layar lock overlay -->
-<div id="screenLockOverlay" style="  
-  display: none;
-  position: fixed;
-  top: 0; left: 0; right: 0; bottom: 0;
-  background: rgba(0,0,0,0.1);
-  z-index: 99;
-  pointer-events: all;
-"></div>
-
-
-<!-- Tombol Reset: Nuclear Style -->  
-<button id="resetBtn" title="Reset Semua" style="  
-  font-size: 24px;  
-  background: none;  
-  border: none;  
-  cursor: pointer;  
-  color: #ffffff;  
-  text-shadow: 0 0 6px #ffffff, 0 0 12px #bbbbbb, 0 0 24px #ffffff;  
-  position: absolute;  
-  top: 12px;  
-  right: 12px;  
-  z-index: 99;  
-  transition: transform 0.2s ease;  
-" onclick="location.reload()">  
-  ☢️  
-</button>  
-
-<div style="display: flex; align-items: center; gap: 10px; margin-top: 10px;">
-  <!-- 🎵 Input File Audio -->
-  <label for="fileInput" style="cursor: pointer; font-weight: bold;">
-  </label>
-<div id="fileTapZone"></div>
-<input type="file" id="fileInput" />
-
-
+    
+      	
+<!-- ✅ Now Playing -->
+<div id="nowPlayingBox" style="
+  width: 100%;
+  overflow: hidden;
+  text-align: center;
+  padding: 4px 0;
+">
+  <span id="trackTitle" style="
+    display: inline-block;
+    font-weight: bold;
+    font-size: 12px;
+    background: linear-gradient(90deg, 
+      #00faff, #ff00e0, #00ff91, #ffd500, #ff00e0, #00faff);
+    background-size: 300% auto;
+    color: transparent;
+    background-clip: text;
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    white-space: nowrap;
+    animation: scrollText 15s linear infinite;
+  ">-</span>
 </div>
+
+
+
 <!-- === TOOLS Dropdown All-in-One === -->
 <div id="toolsPanel" style="
   display: inline-block;
@@ -1083,7 +1013,29 @@ Log mesin belum dijalankan...
 
 <div class="retina-glass">
 	<div id="visualMode" class="content-overlay visual-mode-all">
-		
+		<!-- Tombol Lock/Unlock -->
+<button id="screenLockBtn" title="Kunci layar" style="  
+  font-size: 28px;
+  background: none;
+  border: none;
+  color: #fff;
+  position: absolute;
+  bottom: 12px;
+  right: 12px;
+  cursor: pointer;
+  z-index: 100;
+  transition: transform 0.2s ease;
+">🔒</button>
+
+<!-- Layar lock overlay -->
+<div id="screenLockOverlay" style="  
+  display: none;
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: rgba(0,0,0,0.1);
+  z-index: 99;
+  pointer-events: all;
+"></div>
 <body>  
 <script>
 window.addEventListener("error", e => console.error("❌ Global Error:", e.message));
@@ -3940,55 +3892,20 @@ muteBtn.addEventListener("click", () => {
 });  
 
 // ============ 📁 FOLDER PICKER ============    
+
+const fileInput = document.getElementById("fileInput");
+const fileLabel = document.getElementById("fileLabel");
+
+function toggleFileLabel(show) {
+  fileLabel.style.display = show ? "inline-block" : "none";
+}
+
 fileInput.addEventListener("change", (e) => {
   const files = e.target.files;
   if (!files.length) return alert("Tidak ada file yang dipilih.");
 
   const audioFiles = Array.from(files).filter(f => f.type.startsWith("audio/"));
-  const videoFiles = Array.from(files).filter(f => f.type.startsWith("video/"));
-  const imageFiles = Array.from(files).filter(f => f.type.startsWith("image/"));
-
-  // === CASE: Ganti background VIDEO ===
-  if (videoFiles.length) {
-    const videoURL = URL.createObjectURL(videoFiles[0]);
-    const bgVideo = document.querySelector(".video-bg video");
-    if (bgVideo) {
-      bgVideo.src = videoURL;
-      bgVideo.load();
-      bgVideo.play().catch(() => {}); // jaga-jaga kalau autoplay gagal
-      log("🎥 Background video diganti");
-    }
-    toggleFileLabel(false);
-    return;
-  }
-
-  // === CASE: Ganti background GAMBAR ===
-  if (imageFiles.length) {
-    const imageURL = URL.createObjectURL(imageFiles[0]);
-    
-    // Hide video, show img
-    document.querySelector(".video-bg").style.display = "none";
-
-    let bgImg = document.querySelector(".bg-media img");
-    if (!bgImg) {
-      const container = document.createElement("div");
-      container.className = "bg-media";
-      const img = document.createElement("img");
-      img.alt = "Background image";
-      container.appendChild(img);
-      document.body.prepend(container); // atau posisi yang sesuai
-      bgImg = img;
-    }
-    bgImg.src = imageURL;
-    bgImg.parentElement.style.display = "block";
-    log("🖼️ Background image diganti");
-    
-    toggleFileLabel(false);
-    return;
-  }
-
-  // === CASE: AUDIO ===
-  if (!audioFiles.length) return alert("File bukan audio, gambar, atau video.");
+  if (!audioFiles.length) return alert("File bukan audio semua.");
 
   playlist.length = 0;
   currentTrack = 0;
@@ -4003,7 +3920,6 @@ fileInput.addEventListener("change", (e) => {
   });
 
   audio.pause();
-  audio.currentTime = 0;
 
   if (playlist[currentTrack]?.src) {
     audio.src = playlist[currentTrack].src;
@@ -4011,15 +3927,13 @@ fileInput.addEventListener("change", (e) => {
 
   loadTrack(currentTrack);
   updatePlayIcon();
+
   toggleFileLabel(false);
 });
 
-const tapZone = document.getElementById("fileTapZone");
-tapZone.addEventListener("click", () => {
-  tapZone.classList.add("clicked");
-  setTimeout(() => tapZone.classList.remove("clicked"), 300);
+audio.addEventListener("ended", () => {
+  toggleFileLabel(true);
 });
-
 
 
 // ========== 🎧 STEREO PAN FINAL ==========
