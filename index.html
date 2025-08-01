@@ -51,7 +51,6 @@ body {
   color: white;
   font-family: 'Poppins', sans-serif;
   filter: contrast(105%) saturate(115%) brightness(1.03);
-  margin: 0;
   aspect-ratio: 9 / 16;
   width: 100vw;
   height: 100vh;
@@ -186,30 +185,27 @@ html, body {
   padding: 0;  
 }  
 
-
 .player-container {  
   transition: all 0.3s ease-in-out;  
-  max-width: 960px;
+  max-width: 480px;
   margin: 0 auto;
   padding: 0 16px;
 }
 
 .wrapper {
-	  height: 100vh; /* viewport height, 100%
+  height: 100vh;
   flex: 1;
   display: flex;
   flex-direction: column;
 }
 
 .container {  
-  max-width: 100%;  
-  background: var(--dark);  
+  height: 100%; 
   padding: 20px;  
   border-radius: 16px;  
-  box-shadow: 0 0 20px #000a;  
     overflow-x: hidden; /* ⛔ cegah geser kanan */
       overflow-y: auto; 
-        justify-content: center;  
+          justify-content: space-between;
 }  
   
 .header {  
@@ -234,6 +230,35 @@ html, body {
   75%  { color: #ffd500; text-shadow: 0 0 15px #ffd500bb; }  
   100% { color: #ff0055; text-shadow: 0 0 15px #ff0055aa; }  
 }  
+
+#fileInput {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  opacity: 0;
+  z-index: 999;
+  cursor: pointer;
+}
+
+#fileTapZone {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  z-index: 998;
+}
+
+#fileTapZone.clicked {
+  animation: tapEffect 0.3s ease;
+}
+
+@keyframes tapEffect {
+  0%   { background-color: rgba(255,255,255,0.05); }
+  100% { background-color: transparent; }
+}
   
 .logo-background {  
   position: fixed;  
@@ -703,30 +728,16 @@ background: transparent;
 	  <div class="wrapper">
   <div class="container">  
   	
-    <div class="header">  
+    <div class="header">
+    	
+<!-- Input background -->
+<input type="file" id="bgFileInput" accept="video/*,image/*" />
 
-
-        	  <!-- VIDEO BACKGROUND -->
-<!--
-<div class="video-background">
-  <video autoplay muted loop playsinline id="bgVideo">
-    <source src="https://raw.githubusercontent.com/yuda2525/YZ01-site/main/istockphoto-461913676-640_adpp_is.mp4" type="video/mp4">
-  </video>
+<!-- Container -->
+<div class="video-bg" id="bgContainer">
+  <video autoplay muted loop playsinline id="videoBg" style="display:none"></video>
+  <img id="imgBg" style="display:none; width:100%; height:100%; object-fit:cover;" />
 </div>
--->
-	
-	<div class="video-bg">
-  <video autoplay muted loop playsinline>
-    <source src="assets/Background19.mp4" type="video/mp4">
-    Your browser does not support the video tag.
-  </video>
-</div>
-
-<!--
-<div class="bg-media">
-  <img src="assets/Background14.jpeg" alt="" />
-</div>
--->
 
  <div class="logo"></div>    
     </div> <div class="logo-background">  
@@ -854,8 +865,9 @@ background: transparent;
   <!-- 🎵 Input File Audio -->
   <label for="fileInput" style="cursor: pointer; font-weight: bold;">
   </label>
-<!-- File Picker (Mobile) -->  
-<input type="file" id="fileInput" accept="audio/*">
+<div id="fileTapZone"></div>
+<input type="file" id="fileInput" />
+
 
 </div>
 <!-- === TOOLS Dropdown All-in-One === -->
@@ -3928,19 +3940,55 @@ muteBtn.addEventListener("click", () => {
 });  
 
 // ============ 📁 FOLDER PICKER ============    
-const fileInput = document.getElementById("fileInput");
-const fileLabel = document.getElementById("fileLabel");
-
-function toggleFileLabel(show) {
-  fileLabel.style.display = show ? "inline-block" : "none";
-}
-
 fileInput.addEventListener("change", (e) => {
   const files = e.target.files;
   if (!files.length) return alert("Tidak ada file yang dipilih.");
 
   const audioFiles = Array.from(files).filter(f => f.type.startsWith("audio/"));
-  if (!audioFiles.length) return alert("File bukan audio semua.");
+  const videoFiles = Array.from(files).filter(f => f.type.startsWith("video/"));
+  const imageFiles = Array.from(files).filter(f => f.type.startsWith("image/"));
+
+  // === CASE: Ganti background VIDEO ===
+  if (videoFiles.length) {
+    const videoURL = URL.createObjectURL(videoFiles[0]);
+    const bgVideo = document.querySelector(".video-bg video");
+    if (bgVideo) {
+      bgVideo.src = videoURL;
+      bgVideo.load();
+      bgVideo.play().catch(() => {}); // jaga-jaga kalau autoplay gagal
+      log("🎥 Background video diganti");
+    }
+    toggleFileLabel(false);
+    return;
+  }
+
+  // === CASE: Ganti background GAMBAR ===
+  if (imageFiles.length) {
+    const imageURL = URL.createObjectURL(imageFiles[0]);
+    
+    // Hide video, show img
+    document.querySelector(".video-bg").style.display = "none";
+
+    let bgImg = document.querySelector(".bg-media img");
+    if (!bgImg) {
+      const container = document.createElement("div");
+      container.className = "bg-media";
+      const img = document.createElement("img");
+      img.alt = "Background image";
+      container.appendChild(img);
+      document.body.prepend(container); // atau posisi yang sesuai
+      bgImg = img;
+    }
+    bgImg.src = imageURL;
+    bgImg.parentElement.style.display = "block";
+    log("🖼️ Background image diganti");
+    
+    toggleFileLabel(false);
+    return;
+  }
+
+  // === CASE: AUDIO ===
+  if (!audioFiles.length) return alert("File bukan audio, gambar, atau video.");
 
   playlist.length = 0;
   currentTrack = 0;
@@ -3954,20 +4002,25 @@ fileInput.addEventListener("change", (e) => {
     });
   });
 
-  audio.pause();        // stop dulu audio lama
+  audio.pause();
   audio.currentTime = 0;
 
   if (playlist[currentTrack]?.src) {
     audio.src = playlist[currentTrack].src;
   }
 
-  // **Jangan panggil audio.play() di sini sama sekali!**
-
-  loadTrack(currentTrack); // pastikan loadTrack gak ada audio.play()
+  loadTrack(currentTrack);
   updatePlayIcon();
-
   toggleFileLabel(false);
 });
+
+const tapZone = document.getElementById("fileTapZone");
+tapZone.addEventListener("click", () => {
+  tapZone.classList.add("clicked");
+  setTimeout(() => tapZone.classList.remove("clicked"), 300);
+});
+
+
 
 // ========== 🎧 STEREO PAN FINAL ==========
 let stereoEnabled = false;
