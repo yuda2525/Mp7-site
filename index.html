@@ -706,18 +706,6 @@ background: transparent;
     <div class="header">  
 
 
-<!-- File Picker (Mobile) -->  
-<input type="file" id="fileInput" multiple accept="audio/*" hidden />  
-<label id="fileLabel" for="fileInput" style="cursor: pointer; font-size: 28px; color: cyan; position: absolute; top: 12px; left: 12px;">  
-  🎵  
-</label>  
-<!-- Folder Picker (Desktop) -->  
-<input type="file" id="folderPicker" webkitdirectory multiple accept="audio/*" hidden />  
-<label id="folderLabel" for="folderPicker" style="cursor: pointer; font-size: 28px; color: cyan; position: absolute; top: 12px; left: 12px;">  
-  📂  
-</label>  
-
-
         	  <!-- VIDEO BACKGROUND -->
 <!--
 <div class="video-background">
@@ -739,7 +727,6 @@ background: transparent;
   <img src="assets/Background14.jpeg" alt="" />
 </div>
 -->
-
 
  <div class="logo"></div>    
     </div> <div class="logo-background">  
@@ -846,13 +833,6 @@ background: transparent;
 "></div>
 
 
-<div style="display: flex; align-items: center; gap: 10px; margin-top: 10px;">
-  <!-- 🎵 Input File Audio -->
-  <label for="fileInput" style="cursor: pointer; font-weight: bold;">
-  </label>
-
-
-  
 <!-- Tombol Reset: Nuclear Style -->  
 <button id="resetBtn" title="Reset Semua" style="  
   font-size: 24px;  
@@ -869,6 +849,13 @@ background: transparent;
 " onclick="location.reload()">  
   ☢️  
 </button>  
+
+<div style="display: flex; align-items: center; gap: 10px; margin-top: 10px;">
+  <!-- 🎵 Input File Audio -->
+  <label for="fileInput" style="cursor: pointer; font-weight: bold;">
+  </label>
+<!-- File Picker (Mobile) -->  
+<input type="file" id="fileInput" accept="audio/*">
 
 </div>
 <!-- === TOOLS Dropdown All-in-One === -->
@@ -2382,34 +2369,27 @@ document.getElementById("fileInput").addEventListener("change", async e => {
   audioCtx.decodeAudioData(arrayBuffer).then(decoded => {
     myDecodedBuffer = decoded;
     window.lastRenderedBuffer = decoded;
-    log("✅ Audio lokal berhasil didecode");
+    console.log("✅ Audio lokal berhasil didecode");
 
-    playDecodedAudio(decoded);
-    autoRenderOnReady();
-  }).catch(err => log("❌ Gagal decode file: " + err.message));
+    // Kalau mau play preview (optional)
+    // playDecodedAudio(decoded);
+
+    // AUTO render langsung ke 16bit + 32bit
+    renderAndDownloadAllFormats(decoded.duration || 10);
+  }).catch(err => console.log("❌ Gagal decode file:", err.message));
 });
 
+// (Optional) preview audio
 function playDecodedAudio(buffer) {
   const source = audioCtx.createBufferSource();
   source.buffer = buffer;
   source.connect(audioCtx.destination);
   source.start();
-  log("▶️ Audio diputar");
+  console.log("▶️ Audio diputar");
 }
 
-// === Auto render jika buffer siap
-function autoRenderOnReady() {
-  const checkReady = setInterval(() => {
-    if (window.lastRenderedBuffer instanceof AudioBuffer) {
-      clearInterval(checkReady);
-      log("✅ Buffer siap, mulai render...");
-      render32bitAudio(10).catch(err => log("❌ Gagal render: " + err.message));
-    }
-  }, 500);
-}
-
-// === Render dan auto-download 16-bit + 32-bit WAV
-async function render32bitAudio(durationInSec = 10) {
+// 🛠️ AUTO render ke 16bit & 32bit + langsung download
+async function renderAndDownloadAllFormats(durationInSec = 10) {
   const sampleRate = audioCtx?.sampleRate || 44100;
   const srcBuffer = window.lastRenderedBuffer;
   if (!srcBuffer) return log("❌ Buffer tidak ditemukan");
@@ -2418,7 +2398,6 @@ async function render32bitAudio(durationInSec = 10) {
   const source = offlineCtx.createBufferSource();
   source.buffer = srcBuffer;
 
-  // FX Chain
   const snap = offlineCtx.createBiquadFilter();
   snap.type = "peaking"; snap.frequency.value = 2100; snap.gain.value = 4; snap.Q.value = 1.2;
 
@@ -3645,7 +3624,6 @@ window.addEventListener("DOMContentLoaded", async () => {
   loadTrack(currentTrack);           // 3. Load lagu pertama  
   updateVolume(100);                 // 4. Set volume  
   
-  // === Saat audio diputar, baru apply pending preset  
 // ✅ CUKUP pake last yang dimuat dari localStorage
 const { eq, vol } = loadLastPreset();
 lastEQPreset = eq;
@@ -3950,47 +3928,47 @@ muteBtn.addEventListener("click", () => {
 });  
 
 // ============ 📁 FOLDER PICKER ============    
-const fileInput = document.getElementById("fileInput");  
-const folderInput = document.getElementById("folderPicker");  
-const fileLabel = document.getElementById("fileLabel");  
-const folderLabel = document.getElementById("folderLabel");  
-  
-// Deteksi support folder  
-const folderSupported = 'webkitdirectory' in document.createElement('input');  
-folderLabel.style.display = folderSupported ? 'inline' : 'none';  
-fileLabel.style.display = folderSupported ? 'none' : 'inline';  
-  
-function handleAudioFiles(files) {  
-  const audioFiles = Array.from(files).filter(f => f.type.startsWith('audio/'));  
-  if (!audioFiles.length) return alert("Tidak ada file audio valid.");  
-  
-  playlist.length = 0;  
-  currentTrack = 0;  
-  
-  audioFiles.forEach(file => {  
-    const url = URL.createObjectURL(file);  
-    playlist.push({  
-      src: url,  
-      title: file.name.replace(/\.[^/.]+$/, ''),  
-      file: file  
-    });  
-  });  
-  
-  loadTrack(currentTrack);  
-  updatePlayIcon();  
-  
-  if (playlist[currentTrack]?.src) {  
-    audio.src = playlist[currentTrack].src;  
-    // audio.play(); // autoplay dimatikan  
-  }  
-  
-  // 🎵 icon (file picker) hilang total, gak muncul lagi  
-  fileLabel.style.display = 'none';  
-}  
-  
-fileInput.addEventListener('change', (e) => handleAudioFiles(e.target.files));  
-folderInput.addEventListener('change', (e) => handleAudioFiles(e.target.files));  
-  
+const fileInput = document.getElementById("fileInput");
+const fileLabel = document.getElementById("fileLabel");
+
+function toggleFileLabel(show) {
+  fileLabel.style.display = show ? "inline-block" : "none";
+}
+
+fileInput.addEventListener("change", (e) => {
+  const files = e.target.files;
+  if (!files.length) return alert("Tidak ada file yang dipilih.");
+
+  const audioFiles = Array.from(files).filter(f => f.type.startsWith("audio/"));
+  if (!audioFiles.length) return alert("File bukan audio semua.");
+
+  playlist.length = 0;
+  currentTrack = 0;
+
+  audioFiles.forEach(file => {
+    const url = URL.createObjectURL(file);
+    playlist.push({
+      src: url,
+      title: file.name.replace(/\.[^/.]+$/, ""),
+      file: file
+    });
+  });
+
+  audio.pause();        // stop dulu audio lama
+  audio.currentTime = 0;
+
+  if (playlist[currentTrack]?.src) {
+    audio.src = playlist[currentTrack].src;
+  }
+
+  // **Jangan panggil audio.play() di sini sama sekali!**
+
+  loadTrack(currentTrack); // pastikan loadTrack gak ada audio.play()
+  updatePlayIcon();
+
+  toggleFileLabel(false);
+});
+
 // ========== 🎧 STEREO PAN FINAL ==========
 let stereoEnabled = false;
 let panTimer = null;
