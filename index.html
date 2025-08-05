@@ -720,44 +720,31 @@ background: transparent;
   ☢️  
 </button>  
 
-<div style="display: flex; align-items: center; gap: 10px; margin-top: 10px;">
-  <!-- 🎵 Input File Audio -->
-  <label for="fileInput" style="cursor: pointer; font-weight: bold;">
-  </label>
-
-<!-- File Picker (Mobile) -->
-	<input type="file" id="fileInput" accept="audio/*,video/*" style="display:none;">
-<button id="manualPickBtn" title="Pilih Lagu" style="background:none;border:none;cursor:pointer;">
-  <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="#ff66cc" viewBox="0 0 24 24">
-    <path d="M10 4H2v16h20V6H12l-2-2zM13 10v4.5a2.5 2.5 0 1 0 1 2.45V11h3v-1h-4z"/>
-  </svg>
-</button>
-</div>
-
 	  	  <div class="wrapper">
 	  <div class="container">  
 		
-		        	  <!-- VIDEO BACKGROUND -->
-<!--
-<div class="video-background">
-  <video autoplay muted loop playsinline id="bgVideo">
-    <source src="https://raw.githubusercontent.com/yuda2525/YZ01-site/main/istockphoto-461913676-640_adpp_is.mp4" type="video/mp4">
-  </video>
-</div>
--->
-	
-	<div class="video-bg">
-  <video autoplay muted loop playsinline>
-    <source src="assets/Background19.mp4" type="video/mp4">
-    Your browser does not support the video tag.
-  </video>
+		
+<!-- VIDEO BACKGROUND -->
+<div id="bgContainer" style="position:fixed;top:0;left:0;width:100%;height:100%;z-index:-1;overflow:hidden;">
+  <video id="bgVideo" autoplay muted loop playsinline style="width:100%;height:100%;object-fit:cover;"></video>
 </div>
 
-<!--
-<div class="bg-media">
-  <img src="assets/Background14.jpeg" alt="" />
+<!-- CONTROL PANEL -->
+<div style="display:flex;gap:10px;margin-top:10px;">
+  <!-- Tombol pilih lagu -->
+  <button id="manualPickBtn" title="Pilih Lagu 🎵" style="font-size:24px;">🎵</button>
+
+  <!-- Tombol pilih background -->
+  <button id="bgPickBtn" title="Pilih Background 🎬" style="font-size:24px;">🎬</button>
+  
+  <!-- Tambahan: Pilih background image -->
+<button id="imgPickBtn" title="Pilih Gambar 🖼️" style="font-size:24px;">🖼️</button>
+<input type="file" id="imgInput" accept="image/*" style="display:none;">
+
+  <!-- Hidden input -->
+  <input type="file" id="fileInput" accept="audio/*" style="display:none;">
+  <input type="file" id="bgInput" accept="video/mp4,video/ogg" style="display:none;">
 </div>
--->
 		
   	    <div class="header">
   	    	    <!--  Cuma satu elemen jam -->  
@@ -3941,38 +3928,79 @@ muteBtn.addEventListener("click", () => {
 });  
 
 // ============ 📁 FOLDER PICKER ============    
+const audioPlayer = document.getElementById("audioPlayer");
+const bgVideo = document.getElementById("bgVideo");
+
 const manualPickBtn = document.getElementById("manualPickBtn");
+const bgPickBtn = document.getElementById("bgPickBtn");
+
 const fileInput = document.getElementById("fileInput");
-const audioEl = document.getElementById("audioEl");  // Pastikan ada elemen ini
-const mediaEl = document.getElementById("mediaEl");  // Dan ini kalau support video
+const bgInput = document.getElementById("bgInput");
 
-manualPickBtn.addEventListener("click", () => {
-  fileInput.click();
-});
+// PICK LAGU
+manualPickBtn.addEventListener("click", () => fileInput.click());
 
-fileInput.addEventListener("change", e => {
+fileInput.addEventListener("change", (e) => {
   const file = e.target.files[0];
-  if (!file) return;
+  if (file) {
+    const url = URL.createObjectURL(file);
+    audioPlayer.src = url;
+    audioPlayer.style.display = "block";
 
-  const url = URL.createObjectURL(file);
-  const isVideo = file.type.startsWith("video");
-
-  if (isVideo) {
-    if (mediaEl) {
-      mediaEl.src = url;
-      mediaEl.hidden = false;
-    }
-    if (audioEl) audioEl.hidden = true;
-    setupAudioPipeline(mediaEl || audioEl); // fallback kalau mediaEl ga ada
-  } else {
-    if (audioEl) {
-      audioEl.src = url;
-      audioEl.hidden = false;
-    }
-    if (mediaEl) mediaEl.hidden = true;
-    setupAudioPipeline(audioEl);
+    // Update track title
+    document.getElementById("trackTitle").textContent = file.name;
   }
 });
+
+// PICK BACKGROUND (VIDEO or IMAGE)
+bgPickBtn.addEventListener("click", () => bgInput.click());
+
+bgInput.addEventListener("change", (e) => {
+  const file = e.target.files[0];
+  if (file) {
+    const url = URL.createObjectURL(file);
+    const type = file.type;
+
+    if (type.startsWith("video/")) {
+      // Set as video background
+      bgVideo.src = url;
+      bgVideo.style.display = "block";
+      bgVideo.play();
+      bgVideo.style.background = "none"; // Ensure video is visible
+      document.body.style.background = ""; // Reset background image
+    } else if (type.startsWith("image/")) {
+      // Set as image background
+      bgVideo.style.display = "none"; // Hide video
+      document.body.style.background = `url('${url}') no-repeat center center fixed`;
+      document.body.style.backgroundSize = "cover";
+    }
+  }
+});
+
+const imgPickBtn = document.getElementById("imgPickBtn");
+const imgInput = document.getElementById("imgInput");
+
+imgPickBtn.addEventListener("click", () => imgInput.click());
+
+imgInput.addEventListener("change", (e) => {
+  const file = e.target.files[0];
+  if (file && file.type.startsWith("image/")) {
+    const url = URL.createObjectURL(file);
+
+    // Hide video
+    bgVideo.pause();
+    bgVideo.removeAttribute("src");
+    bgVideo.load();
+    bgVideo.style.display = "none";
+
+    // Set background image
+    document.body.style.background = `url('${url}') no-repeat center center fixed`;
+    document.body.style.backgroundSize = "cover";
+  }
+});
+
+
+
 // ========== 🎧 STEREO PAN FINAL ==========
 let stereoEnabled = false;
 let panTimer = null;
