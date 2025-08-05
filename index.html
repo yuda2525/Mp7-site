@@ -2756,14 +2756,6 @@ lines.push(`  • Clarity Gain: ${clarityGain.gain?.value ?? "-"}`);
 lines.push(`  • De-Esser: ${deEsser.gain?.value ?? "-"}`);
 lines.push(`  • Transparency Mode: ${window.AIModeStatus?.transparency ? "✅ ON" : "❌ OFF"}`);
 
-lines.push("\n🔍 Transparent Mix Mode:");
-lines.push(`  • Tone Bias: ${toneBias.gain?.value.toFixed(2) ?? "-"}`);
-lines.push(`  • Clarity Freq: ${clarity.frequency?.value.toFixed(0) ?? "-"}`);
-lines.push(`  • Clarity Q: ${clarity.Q?.value.toFixed(2) ?? "-"}`);
-lines.push(`  • Clarity Gain: ${clarityGain.gain?.value.toFixed(2) ?? "-"}`);
-lines.push(`  • De-Esser: ${deEsser.gain?.value.toFixed(2) ?? "-"}`);
-
-
 // 🧠 AI Mode Flags  
 lines.push(`\n🤖 AI Modes:`);  
 const ai = window.AIModeStatus || {};  
