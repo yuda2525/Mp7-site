@@ -172,11 +172,10 @@ body {
 
 html, body {
   font-family: var(--font-main);  
-  background: linear-gradient(135deg, var(--bg-start), var(--bg-end));  
+  background: transparent;  
   color: var(--accent-color);  
   display: flex;  
   justify-content: center;  
-  padding: 20px;  
   height: 100%;         /* penting */
   width: 100%;
   overflow: hidden;
@@ -199,14 +198,16 @@ html, body {
   flex-direction: column;
 }
 
-.container {  
-  height: 100%; 
-  padding: 20px;  
-  border-radius: 16px;  
-    overflow-x: hidden; /* ⛔ cegah geser kanan */
-      overflow-y: auto; 
-          justify-content: space-between;
-}  
+.container {
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2); 
+  margin: 20px;
+  height: 100%;
+  padding: 20px;
+  border-radius: 25px;
+  overflow-x: hidden;
+  overflow-y: auto;
+  justify-content: space-between;
+}
   
 .header {  
   display: flex;  
