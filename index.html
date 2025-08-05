@@ -1103,10 +1103,7 @@ const boostMidBtn = document.getElementById("boostMid");
 const boostHighBtn = document.getElementById("boostHigh");
 
 bands = [10, 32, 64, 125, 250, 500, 1000, 2000, 4000, 10000, 16000, 20000];
-const playlist = [
-  { src: 'lagu1.mp3', title: 'My attitude depends on who you are' },
-  { src: 'lagu2.mp3', title: 'Lagu 2' }
-];
+let playlist = [];
 let currentTrack = 0;
 let isRepeat = false;
 let sourceNode = [];
@@ -3885,14 +3882,22 @@ manualPickBtn.addEventListener("click", () => fileInput.click());
 fileInput.addEventListener("change", (e) => {
   const files = Array.from(e.target.files);
 
-  if (files.length > 0) {
-    playlist = files.map(file => ({
-      name: file.name,
-      url: URL.createObjectURL(file)
-    }));
-    currentIndex = 0;
-    playTrack(currentIndex);
-  }
+if (files.length > 0) {
+  playlist = files.map(file => ({
+    name: file.name,
+    url: URL.createObjectURL(file)
+  }));
+  currentIndex = 0;
+
+  const track = playlist[currentIndex];
+  audioPlayer.src = track.url;
+  audioPlayer.style.display = "block";
+  document.getElementById("trackTitle").textContent = track.name;
+
+  // Simpan di localStorage
+  localStorage.setItem("lastTrack", track.url);
+  localStorage.setItem("lastTrackTitle", track.name);
+}
 });
 
 function playTrack(index) {
@@ -3919,6 +3924,8 @@ audioPlayer.addEventListener("ended", () => {
   }
 });
 
+
+
 // 🎥 or 🖼️ PICK BACKGROUND
 bgPickBtn.addEventListener("click", () => bgInput.click());
 
@@ -3926,30 +3933,35 @@ bgInput.addEventListener("change", (e) => {
   const file = e.target.files[0];
   if (!file) return;
 
-  const type = file.type;
   const reader = new FileReader();
 
   reader.onload = () => {
     const dataUrl = reader.result;
+    const fileType = file.type;
 
-    if (type.startsWith("video/")) {
+    if (fileType.startsWith("video/")) {
+      // === VIDEO SET ===
       bgVideo.src = dataUrl;
       bgVideo.style.display = "block";
       bgVideo.play();
-      bgVideo.style.background = "none";
-      document.body.style.background = "";
+      document.body.style.backgroundImage = "none";
 
+      // Save to localStorage
       localStorage.setItem("bgType", "video");
       localStorage.setItem("bgData", dataUrl);
-    } else if (type.startsWith("image/")) {
+    } else if (fileType.startsWith("image/")) {
+      // === IMAGE SET ===
       bgVideo.pause();
-      bgVideo.removeAttribute("src");
-      bgVideo.load();
+      bgVideo.src = "";
       bgVideo.style.display = "none";
 
-      document.body.style.background = `url('${dataUrl}') no-repeat center center fixed`;
+      document.body.style.backgroundImage = `url('${dataUrl}')`;
       document.body.style.backgroundSize = "cover";
+      document.body.style.backgroundRepeat = "no-repeat";
+      document.body.style.backgroundAttachment = "fixed";
+      document.body.style.backgroundPosition = "center";
 
+      // Save to localStorage
       localStorage.setItem("bgType", "image");
       localStorage.setItem("bgData", dataUrl);
     }
@@ -3958,25 +3970,31 @@ bgInput.addEventListener("change", (e) => {
   reader.readAsDataURL(file);
 });
 
-// 🔄 RESTORE ON LOAD
+// === RESTORE BACKGROUND ON LOAD ===
 window.addEventListener("DOMContentLoaded", () => {
-  const savedBgType = localStorage.getItem("bgType");
-  const savedBgData = localStorage.getItem("bgData");
+  const bgType = localStorage.getItem("bgType");
+  const bgData = localStorage.getItem("bgData");
 
-  if (savedBgType === "image" && savedBgData) {
-    bgVideo.style.display = "none";
-    document.body.style.background = `url('${savedBgData}') no-repeat center center fixed`;
-    document.body.style.backgroundSize = "cover";
-  }
-
-  if (savedBgType === "video" && savedBgData) {
-    bgVideo.src = savedBgData;
+  if (bgType === "video" && bgData) {
+    bgVideo.src = bgData;
     bgVideo.style.display = "block";
     bgVideo.play();
-    bgVideo.style.background = "none";
-    document.body.style.background = "";
+    document.body.style.backgroundImage = "none";
   }
 
+  if (bgType === "image" && bgData) {
+    bgVideo.pause();
+    bgVideo.src = "";
+    bgVideo.style.display = "none";
+
+    document.body.style.backgroundImage = `url('${bgData}')`;
+    document.body.style.backgroundSize = "cover";
+    document.body.style.backgroundRepeat = "no-repeat";
+    document.body.style.backgroundAttachment = "fixed";
+    document.body.style.backgroundPosition = "center";
+  }
+
+  // Restore last audio
   const lastTrack = localStorage.getItem("lastTrack");
   const lastTrackTitle = localStorage.getItem("lastTrackTitle");
   if (lastTrack) {
@@ -3984,6 +4002,39 @@ window.addEventListener("DOMContentLoaded", () => {
     audioPlayer.style.display = "block";
     document.getElementById("trackTitle").textContent = lastTrackTitle || "Audio Track";
   }
+});
+
+const imgPickBtn = document.getElementById("imgPickBtn");
+const imgInput = document.getElementById("imgInput");
+
+imgPickBtn.addEventListener("click", () => imgInput.click());
+
+imgInput.addEventListener("change", (e) => {
+  const file = e.target.files[0];
+  if (!file) return;
+
+  const reader = new FileReader();
+
+  reader.onload = () => {
+    const dataUrl = reader.result;
+
+    // Set image as background
+    bgVideo.pause();
+    bgVideo.src = "";
+    bgVideo.style.display = "none";
+
+    document.body.style.backgroundImage = `url('${dataUrl}')`;
+    document.body.style.backgroundSize = "cover";
+    document.body.style.backgroundRepeat = "no-repeat";
+    document.body.style.backgroundAttachment = "fixed";
+    document.body.style.backgroundPosition = "center";
+
+    // Save to localStorage
+    localStorage.setItem("bgType", "image");
+    localStorage.setItem("bgData", dataUrl);
+  };
+
+  reader.readAsDataURL(file);
 });
 
 
