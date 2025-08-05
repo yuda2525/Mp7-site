@@ -3905,21 +3905,46 @@ bgPickBtn.addEventListener("click", () => bgInput.click());
 bgInput.addEventListener("change", (e) => {
   const file = e.target.files[0];
   if (file) {
-    const url = URL.createObjectURL(file);
     const type = file.type;
 
     if (type.startsWith("video/")) {
+      const url = URL.createObjectURL(file);
+
       // Set as video background
       bgVideo.src = url;
       bgVideo.style.display = "block";
       bgVideo.play();
       bgVideo.style.background = "none"; // Ensure video is visible
       document.body.style.background = ""; // Reset background image
-    } else if (type.startsWith("image/")) {
-      // Set as image background
-      bgVideo.style.display = "none"; // Hide video
-      document.body.style.background = `url('${url}') no-repeat center center fixed`;
-      document.body.style.backgroundSize = "cover";
+
+      // ⛔ Video blob gak bisa disimpan
+      alert("🎥 Video background hanya aktif sementara dan tidak akan tersimpan setelah reload.");
+      
+      // Optional: clear bg data biar ga conflict
+      localStorage.removeItem("bgType");
+      localStorage.removeItem("bgData");
+    }
+
+    else if (type.startsWith("image/")) {
+      const reader = new FileReader();
+      reader.onload = () => {
+        const dataUrl = reader.result;
+
+        // Hide video
+        bgVideo.pause();
+        bgVideo.removeAttribute("src");
+        bgVideo.load();
+        bgVideo.style.display = "none";
+
+        // Set background image
+        document.body.style.background = `url('${dataUrl}') no-repeat center center fixed`;
+        document.body.style.backgroundSize = "cover";
+
+        // ✅ Save to localStorage
+        localStorage.setItem("bgType", "image");
+        localStorage.setItem("bgData", dataUrl);
+      };
+      reader.readAsDataURL(file);
     }
   }
 });
@@ -3931,21 +3956,48 @@ imgPickBtn.addEventListener("click", () => imgInput.click());
 
 imgInput.addEventListener("change", (e) => {
   const file = e.target.files[0];
+
   if (file && file.type.startsWith("image/")) {
-    const url = URL.createObjectURL(file);
+    const reader = new FileReader();
 
-    // Hide video
-    bgVideo.pause();
-    bgVideo.removeAttribute("src");
-    bgVideo.load();
-    bgVideo.style.display = "none";
+    reader.onload = () => {
+      const dataUrl = reader.result;
 
-    // Set background image
-    document.body.style.background = `url('${url}') no-repeat center center fixed`;
-    document.body.style.backgroundSize = "cover";
+      // Hide video background
+      bgVideo.pause();
+      bgVideo.removeAttribute("src");
+      bgVideo.load();
+      bgVideo.style.display = "none";
+
+      // Set background image
+      document.body.style.background = `url('${dataUrl}') no-repeat center center fixed`;
+      document.body.style.backgroundSize = "cover";
+
+      // ✅ Save to localStorage
+      localStorage.setItem("bgType", "image");
+      localStorage.setItem("bgData", dataUrl);
+    };
+
+    reader.readAsDataURL(file);
   }
 });
 
+/// ================== 🔄 RESTORE BACKGROUND ON LOAD + PREPARE ===============
+window.addEventListener("DOMContentLoaded", () => {
+  // Restore image background kalau ada
+  const savedBgType = localStorage.getItem("bgType");
+  const savedBgData = localStorage.getItem("bgData");
+
+  if (savedBgType === "image" && savedBgData) {
+    bgVideo.style.display = "none";
+    document.body.style.background = `url('${savedBgData}') no-repeat center center fixed`;
+    document.body.style.backgroundSize = "cover";
+  }
+
+  // ✅ Pasang event handler untuk tombol
+  bgPickBtn.addEventListener("click", () => bgInput.click());
+  imgPickBtn.addEventListener("click", () => imgInput.click());
+});
 
 // ========== 🎧 STEREO PAN FINAL ==========
 let stereoEnabled = false;
