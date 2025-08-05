@@ -2342,43 +2342,13 @@ function reconnectNodesToStereo() {
 let audioCtx;
 let myDecodedBuffer;
 
-function ensureAudioContext() {
-  if (!audioCtx || audioCtx.state === "closed") {
-    audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-  }
-}
+let renderedVariants = {
+  pcm16: null,
+  pcm24: null,
+  float32: null
+};
 
-document.getElementById("fileInput").addEventListener("change", async e => {
-  const file = e.target.files[0];
-  if (!file) return;
-
-  ensureAudioContext();
-  const arrayBuffer = await file.arrayBuffer();
-
-  audioCtx.decodeAudioData(arrayBuffer).then(decoded => {
-    myDecodedBuffer = decoded;
-    window.lastRenderedBuffer = decoded;
-    console.log("✅ Audio lokal berhasil didecode");
-
-    // Kalau mau play preview (optional)
-    // playDecodedAudio(decoded);
-
-    // AUTO render langsung ke 16bit + 32bit
-    renderAndDownloadAllFormats(decoded.duration || 10);
-  }).catch(err => console.log("❌ Gagal decode file:", err.message));
-});
-
-// (Optional) preview audio
-function playDecodedAudio(buffer) {
-  const source = audioCtx.createBufferSource();
-  source.buffer = buffer;
-  source.connect(audioCtx.destination);
-  source.start();
-  console.log("▶️ Audio diputar");
-}
-
-// 🛠️ AUTO render ke 16bit & 32bit + langsung download
-async function renderAndDownloadAllFormats(durationInSec = 10) {
+async function renderAudioVariants(durationInSec = 10) {
   const sampleRate = audioCtx?.sampleRate || 44100;
   const srcBuffer = window.lastRenderedBuffer;
   if (!srcBuffer) return log("❌ Buffer tidak ditemukan");
@@ -2387,6 +2357,7 @@ async function renderAndDownloadAllFormats(durationInSec = 10) {
   const source = offlineCtx.createBufferSource();
   source.buffer = srcBuffer;
 
+  // Optional efek
   const snap = offlineCtx.createBiquadFilter();
   snap.type = "peaking"; snap.frequency.value = 2100; snap.gain.value = 4; snap.Q.value = 1.2;
 
@@ -2399,29 +2370,15 @@ async function renderAndDownloadAllFormats(durationInSec = 10) {
   source.connect(snap).connect(clarity).connect(boost).connect(offlineCtx.destination);
   source.start();
 
-  log("🎛️ [Render] Mulai render...");
+  log("🎧 [Render] Memproses audio...");
   const renderedBuffer = await offlineCtx.startRendering();
 
-  const wav16 = encodeWAV16bit(renderedBuffer);
-  const wav32 = encodeWAVFloat32(renderedBuffer);
+  // Encode hasil ke memori (tanpa download)
+  renderedVariants.pcm16 = encodeWAV16bit(renderedBuffer);
+  renderedVariants.pcm24 = encodeWAV24bit(renderedBuffer);
+  renderedVariants.float32 = encodeWAVFloat32(renderedBuffer);
 
-  autoDownload(wav16, "rendered-16bit.wav");
-  autoDownload(wav32, "rendered-32bit-float.wav");
-
-  log("✅ Render dan download selesai");
-}
-
-function autoDownload(blob, filename) {
-  const a = document.createElement("a");
-  a.href = URL.createObjectURL(blob);
-  a.download = filename;
-  a.style.display = "none";
-  document.body.appendChild(a);
-  a.click();
-  setTimeout(() => {
-    URL.revokeObjectURL(a.href);
-    document.body.removeChild(a);
-  }, 1000);
+  log("✅ Render selesai & disimpan ke memori 🎉");
 }
 
 // === Encode WAV 16-bit PCM
