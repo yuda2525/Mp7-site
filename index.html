@@ -735,6 +735,8 @@ background: transparent;
 <input type="file" id="fileInput" accept="audio/*" multiple style="display:none;">
   <input type="file" id="bgInput" accept="video/mp4,video/ogg" style="display:none;">  
 </div>
+
+
 				
   	    <div class="header">
   	    	    <!--  Cuma satu elemen jam -->  
@@ -3867,116 +3869,97 @@ muteBtn.addEventListener("click", () => {
 });  
 
 // ============ 📁 FOLDER PICKER ============    
+
 const audioPlayer = document.getElementById("audioPlayer");
 const bgVideo = document.getElementById("bgVideo");
-
 const manualPickBtn = document.getElementById("manualPickBtn");
 const bgPickBtn = document.getElementById("bgPickBtn");
-
 const fileInput = document.getElementById("fileInput");
 const bgInput = document.getElementById("bgInput");
 
-// PICK LAGU
+let currentIndex = 0;
+
+// 🎵 PICK AUDIO (multiple files as playlist)
 manualPickBtn.addEventListener("click", () => fileInput.click());
 
 fileInput.addEventListener("change", (e) => {
-  const file = e.target.files[0];
-  if (file) {
-    const url = URL.createObjectURL(file);
-    audioPlayer.src = url;
-    audioPlayer.style.display = "block";
+  const files = Array.from(e.target.files);
 
-    // Update track title
-    document.getElementById("trackTitle").textContent = file.name;
+  if (files.length > 0) {
+    playlist = files.map(file => ({
+      name: file.name,
+      url: URL.createObjectURL(file)
+    }));
+    currentIndex = 0;
+    playTrack(currentIndex);
   }
 });
 
-// PICK BACKGROUND (VIDEO or IMAGE)
+function playTrack(index) {
+  if (!playlist[index]) return;
+
+  const track = playlist[index];
+  audioPlayer.src = track.url;
+  audioPlayer.play();
+  audioPlayer.style.display = "block";
+  document.getElementById("trackTitle").textContent = track.name;
+
+  // Simpan di localStorage
+  localStorage.setItem("lastTrack", track.url);
+  localStorage.setItem("lastTrackTitle", track.name);
+}
+
+// Autoplay next track
+audioPlayer.addEventListener("ended", () => {
+  currentIndex++;
+  if (currentIndex < playlist.length) {
+    playTrack(currentIndex);
+  } else {
+    currentIndex = 0;
+  }
+});
+
+// 🎥 or 🖼️ PICK BACKGROUND
 bgPickBtn.addEventListener("click", () => bgInput.click());
 
 bgInput.addEventListener("change", (e) => {
   const file = e.target.files[0];
-  if (file) {
-    const type = file.type;
+  if (!file) return;
+
+  const type = file.type;
+  const reader = new FileReader();
+
+  reader.onload = () => {
+    const dataUrl = reader.result;
 
     if (type.startsWith("video/")) {
-      const url = URL.createObjectURL(file);
-
-      // Set as video background
-      bgVideo.src = url;
+      bgVideo.src = dataUrl;
       bgVideo.style.display = "block";
       bgVideo.play();
-      bgVideo.style.background = "none"; // Ensure video is visible
-      document.body.style.background = ""; // Reset background image
+      bgVideo.style.background = "none";
+      document.body.style.background = "";
 
-      // ⛔ Video blob gak bisa disimpan
-      alert("🎥 Video background hanya aktif sementara dan tidak akan tersimpan setelah reload.");
-      
-      // Optional: clear bg data biar ga conflict
-      localStorage.removeItem("bgType");
-      localStorage.removeItem("bgData");
-    }
-
-    else if (type.startsWith("image/")) {
-      const reader = new FileReader();
-      reader.onload = () => {
-        const dataUrl = reader.result;
-
-        // Hide video
-        bgVideo.pause();
-        bgVideo.removeAttribute("src");
-        bgVideo.load();
-        bgVideo.style.display = "none";
-
-        // Set background image
-        document.body.style.background = `url('${dataUrl}') no-repeat center center fixed`;
-        document.body.style.backgroundSize = "cover";
-
-        // ✅ Save to localStorage
-        localStorage.setItem("bgType", "image");
-        localStorage.setItem("bgData", dataUrl);
-      };
-      reader.readAsDataURL(file);
-    }
-  }
-});
-
-const imgPickBtn = document.getElementById("imgPickBtn");
-const imgInput = document.getElementById("imgInput");
-
-imgPickBtn.addEventListener("click", () => imgInput.click());
-
-imgInput.addEventListener("change", (e) => {
-  const file = e.target.files[0];
-
-  if (file && file.type.startsWith("image/")) {
-    const reader = new FileReader();
-
-    reader.onload = () => {
-      const dataUrl = reader.result;
-
-      // Hide video background
+      localStorage.setItem("bgType", "video");
+      localStorage.setItem("bgData", dataUrl);
+    } else if (type.startsWith("image/")) {
       bgVideo.pause();
       bgVideo.removeAttribute("src");
       bgVideo.load();
       bgVideo.style.display = "none";
 
-      // Set background image
       document.body.style.background = `url('${dataUrl}') no-repeat center center fixed`;
       document.body.style.backgroundSize = "cover";
 
-      // ✅ Save to localStorage
       localStorage.setItem("bgType", "image");
       localStorage.setItem("bgData", dataUrl);
-    };
+    }
+  };
 
-    reader.readAsDataURL(file);
-  }
+  reader.readAsDataURL(file);
 });
 
-/// ================== 🔄 RESTORE BACKGROUND ON LOAD + PREPARE ===============
+// 🔄 RESTORE ON LOAD
 window.addEventListener("DOMContentLoaded", () => {
-  // Restore image background kalau ada
   const savedBgType = localStorage.getItem("bgType");
   const savedBgData = localStorage.getItem("bgData");
 
@@ -3986,10 +3969,23 @@ window.addEventListener("DOMContentLoaded", () => {
     document.body.style.backgroundSize = "cover";
   }
 
-  // ✅ Pasang event handler untuk tombol
-  bgPickBtn.addEventListener("click", () => bgInput.click());
-  imgPickBtn.addEventListener("click", () => imgInput.click());
+  if (savedBgType === "video" && savedBgData) {
+    bgVideo.src = savedBgData;
+    bgVideo.style.display = "block";
+    bgVideo.play();
+    bgVideo.style.background = "none";
+    document.body.style.background = "";
+  }
+
+  const lastTrack = localStorage.getItem("lastTrack");
+  const lastTrackTitle = localStorage.getItem("lastTrackTitle");
+  if (lastTrack) {
+    audioPlayer.src = lastTrack;
+    audioPlayer.style.display = "block";
+    document.getElementById("trackTitle").textContent = lastTrackTitle || "Audio Track";
+  }
 });
+
 
 // ========== 🎧 STEREO PAN FINAL ==========
 let stereoEnabled = false;
