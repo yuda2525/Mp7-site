@@ -692,11 +692,16 @@ background: transparent;
   transition: all 1s ease-in-out;
   background: radial-gradient(circle at center, #111 10%, #000 100%);
 }
+
+#manualPickBtn svg:hover {
+  filter: drop-shadow(0 0 5px #00ffcc);
+  transform: scale(1.1);
+  transition: 0.2s ease;
+}
     
   </style>  
 <link href="https://fonts.googleapis.com/css2?family=Saira+Stencil+One&display=swap" rel="stylesheet">
 </head>  
-<body onclick="enterFullscreenOnce()">
 	
 	<!-- Tombol Reset: Nuclear Style -->  
 <button id="resetBtn" title="Reset Semua" style="  
@@ -719,7 +724,14 @@ background: transparent;
   <!-- 🎵 Input File Audio -->
   <label for="fileInput" style="cursor: pointer; font-weight: bold;">
   </label>
-<input type="file" id="fileInput" accept="audio/*">
+
+<!-- File Picker (Mobile) -->
+	<input type="file" id="fileInput" accept="audio/*,video/*" style="display:none;">
+<button id="manualPickBtn" title="Pilih Lagu" style="background:none;border:none;cursor:pointer;">
+  <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="#ff66cc" viewBox="0 0 24 24">
+    <path d="M10 4H2v16h20V6H12l-2-2zM13 10v4.5a2.5 2.5 0 1 0 1 2.45V11h3v-1h-4z"/>
+  </svg>
+</button>
 </div>
 
 	  	  <div class="wrapper">
@@ -3929,50 +3941,38 @@ muteBtn.addEventListener("click", () => {
 });  
 
 // ============ 📁 FOLDER PICKER ============    
-
+const manualPickBtn = document.getElementById("manualPickBtn");
 const fileInput = document.getElementById("fileInput");
-const fileLabel = document.getElementById("fileLabel");
+const audioEl = document.getElementById("audioEl");  // Pastikan ada elemen ini
+const mediaEl = document.getElementById("mediaEl");  // Dan ini kalau support video
 
-function toggleFileLabel(show) {
-  fileLabel.style.display = show ? "inline-block" : "none";
-}
+manualPickBtn.addEventListener("click", () => {
+  fileInput.click();
+});
 
-fileInput.addEventListener("change", (e) => {
-  const files = e.target.files;
-  if (!files.length) return alert("Tidak ada file yang dipilih.");
+fileInput.addEventListener("change", e => {
+  const file = e.target.files[0];
+  if (!file) return;
 
-  const audioFiles = Array.from(files).filter(f => f.type.startsWith("audio/"));
-  if (!audioFiles.length) return alert("File bukan audio semua.");
+  const url = URL.createObjectURL(file);
+  const isVideo = file.type.startsWith("video");
 
-  playlist.length = 0;
-  currentTrack = 0;
-
-  audioFiles.forEach(file => {
-    const url = URL.createObjectURL(file);
-    playlist.push({
-      src: url,
-      title: file.name.replace(/\.[^/.]+$/, ""),
-      file: file
-    });
-  });
-
-  audio.pause();
-
-  if (playlist[currentTrack]?.src) {
-    audio.src = playlist[currentTrack].src;
+  if (isVideo) {
+    if (mediaEl) {
+      mediaEl.src = url;
+      mediaEl.hidden = false;
+    }
+    if (audioEl) audioEl.hidden = true;
+    setupAudioPipeline(mediaEl || audioEl); // fallback kalau mediaEl ga ada
+  } else {
+    if (audioEl) {
+      audioEl.src = url;
+      audioEl.hidden = false;
+    }
+    if (mediaEl) mediaEl.hidden = true;
+    setupAudioPipeline(audioEl);
   }
-
-  loadTrack(currentTrack);
-  updatePlayIcon();
-
-  toggleFileLabel(false);
 });
-
-audio.addEventListener("ended", () => {
-  toggleFileLabel(true);
-});
-
-
 // ========== 🎧 STEREO PAN FINAL ==========
 let stereoEnabled = false;
 let panTimer = null;
@@ -4555,27 +4555,7 @@ function logToPanel(msg) {
   }
 }
 
-   function enterFullscreenOnce() {
-      const docElm = document.documentElement;
-      if (docElm.requestFullscreen) docElm.requestFullscreen();
-      else if (docElm.webkitRequestFullscreen) docElm.webkitRequestFullscreen();
-      else if (docElm.mozRequestFullScreen) docElm.mozRequestFullScreen();
-      else if (docElm.msRequestFullscreen) docElm.msRequestFullscreen();
-    }
 
-    // Jaga tetap fullscreen
-    document.addEventListener("fullscreenchange", () => {
-      if (!document.fullscreenElement) {
-        setTimeout(() => {
-          enterFullscreenOnce();
-        }, 300);
-      }
-    });
-
-    // Hanya aktif saat interaksi
-    document.addEventListener("click", () => {
-      enterFullscreenOnce();
-    }, { once: true });
     
       window.addEventListener('DOMContentLoaded', () => {
   const el = document.getElementById("visualMode");
