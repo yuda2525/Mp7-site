@@ -3630,63 +3630,62 @@ let currentIndex = 0;
 let playlist = []; 
 let currentTrack = 0;
 
-const audioPlayer = document.getElementById("audioPlayer");
-const bgVideo = document.getElementById("bgVideo");
-const manualPickBtn = document.getElementById("manualPickBtn");
-const bgPickBtn = document.getElementById("bgPickBtn");
-const fileInput = document.getElementById("fileInput");
-const bgInput = document.getElementById("bgInput");
-
-// 🎵 PICK AUDIO (multiple files as playlist)
-manualPickBtn.addEventListener("click", () => fileInput.click());
-
-fileInput.addEventListener("change", (e) => {
-  const files = Array.from(e.target.files);
-
-if (files.length > 0) {
-  playlist = files.map(file => ({
-    name: file.name,
-    url: URL.createObjectURL(file)
-  }));
-  currentIndex = 0;
-
-  const track = playlist[currentIndex];
-  audioPlayer.src = track.url;
-  audioPlayer.style.display = "block";
-  document.getElementById("trackTitle").textContent = track.name;
-
-  // Simpan di localStorage
-  localStorage.setItem("lastTrack", track.url);
-  localStorage.setItem("lastTrackTitle", track.name);
-}
-});
-
-function playTrack(index) {
-  if (!playlist[index]) return;
-
-  const track = playlist[index];
-  audioPlayer.src = track.url;
-  audioPlayer.play();
-  audioPlayer.style.display = "block";
-  document.getElementById("trackTitle").textContent = track.name;
-
-  // Simpan di localStorage
-  localStorage.setItem("lastTrack", track.url);
-  localStorage.setItem("lastTrackTitle", track.name);
-}
-
-// Autoplay next track
-audioPlayer.addEventListener("ended", () => {
-  currentIndex++;
-  if (currentIndex < playlist.length) {
-    playTrack(currentIndex);
-  } else {
-    currentIndex = 0;
-  }
-});
-
-
-// ============ PLAYLIST VIEW ============    
+const audioPlayer = document.getElementById("audioPlayer");  
+const bgVideo = document.getElementById("bgVideo");  
+const manualPickBtn = document.getElementById("manualPickBtn");  
+const bgPickBtn = document.getElementById("bgPickBtn");  
+const fileInput = document.getElementById("fileInput");  
+const bgInput = document.getElementById("bgInput");  
+  
+// 🎵 PICK AUDIO (multiple files as playlist)  
+manualPickBtn.addEventListener("click", () => fileInput.click());  
+  
+fileInput.addEventListener("change", (e) => {  
+  const files = Array.from(e.target.files);  
+  
+if (files.length > 0) {  
+  playlist = files.map(file => ({  
+    name: file.name,  
+    url: URL.createObjectURL(file)  
+  }));  
+  currentIndex = 0;  
+  
+  const track = playlist[currentIndex];  
+  audioPlayer.src = track.url;  
+  audioPlayer.style.display = "block";  
+  document.getElementById("trackTitle").textContent = track.name;  
+  
+  // Simpan di localStorage  
+  localStorage.setItem("lastTrack", track.url);  
+  localStorage.setItem("lastTrackTitle", track.name);  
+}  
+});  
+  
+function playTrack(index) {  
+  if (!playlist[index]) return;  
+  
+  const track = playlist[index];  
+  audioPlayer.src = track.url;  
+  audioPlayer.play();  
+  audioPlayer.style.display = "block";  
+  document.getElementById("trackTitle").textContent = track.name;  
+  
+  // Simpan di localStorage  
+  localStorage.setItem("lastTrack", track.url);  
+  localStorage.setItem("lastTrackTitle", track.name);  
+}  
+  
+// Autoplay next track  
+audioPlayer.addEventListener("ended", () => {  
+  currentIndex++;  
+  if (currentIndex < playlist.length) {  
+    playTrack(currentIndex);  
+  } else {  
+    currentIndex = 0;  
+  }  
+});  
+  
+  // ============ PLAYLIST ============    
 document.addEventListener("DOMContentLoaded", () => {  
   const toggleBtn = document.getElementById("logToggleBtn");  
   const logView = document.getElementById("testLog");  
@@ -3702,13 +3701,19 @@ document.addEventListener("DOMContentLoaded", () => {
   
 function renderPlaylist() {  
   const logView = document.getElementById("testLog");  
-  if (!playlist || playlist.length === 0) {  
+  if (playlist.length === 0) {  
     logView.textContent = "🎵 Belum ada playlist.\nSilakan pilih file dari file picker.";  
     return;  
   }  
   
   const output = playlist.map((track, i) => `#${i + 1} 🎶 ${track.name || 'Tanpa Nama'}`).join("\n");  
   logView.textContent = `📂 Playlist Aktif:\n${output}`;  
+}  
+  
+// 🎯 Fungsi ini kamu panggil setelah user pilih file/folder via file picker  
+function updatePlaylistFromPicker(files) {  
+  playlist = Array.from(files);  
+  renderPlaylist();  
 }
 
 // 🎥 or 🖼️ PICK BACKGROUND
