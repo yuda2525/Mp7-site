@@ -692,6 +692,18 @@ background: transparent;
   background: radial-gradient(circle at center, #111 10%, #000 100%);
 }
 
+  .playing {
+    animation: pulse 1s infinite;
+    font-weight: bold;
+    color: #0ff;
+  }
+
+  @keyframes pulse {
+    0% { opacity: 1; }
+    50% { opacity: 0.5; }
+    100% { opacity: 1; }
+  }
+
   </style>  
 <link href="https://fonts.googleapis.com/css2?family=Saira+Stencil+One&display=swap" rel="stylesheet">
 </head>  
@@ -1021,7 +1033,7 @@ background: transparent;
   backdrop-filter: transparent;  
   box-shadow: 0 0 8px rgba(0,255,255,0.3);  
 ">  
-Playlist kosong, silakan pilih lagu!  
+Playlist kosong, silakan pilih lagu!
 </pre>
 
 <canvas id="waveformCanvas" width="320" height="100"></canvas>
@@ -3717,6 +3729,23 @@ function updatePlaylistFromPicker(files) {
   renderPlaylist();  
 }
 
+
+  const playlistArray = ["Lagu 1", "Lagu 2", "Lagu 3"];
+
+function updateLog(currentIndex, playlistArray) {
+    const log = document.getElementById("testLog");
+    log.innerHTML = playlistArray
+      .map((item, i) =>
+        i === currentIndex
+          ? `<span style="color:#0ff;font-weight:bold;">▶ ${item}</span>`
+          : `<span>${item}</span>`
+      )
+      .join("\n");
+  }
+
+  updateLog(currentIndex, playlistArray);
+
+
 // 🎥 or 🖼️ PICK BACKGROUND
 bgPickBtn.addEventListener("click", () => bgInput.click());
 
@@ -3827,6 +3856,34 @@ imgInput.addEventListener("change", (e) => {
 
   reader.readAsDataURL(file);
 });
+
+
+document.addEventListener("DOMContentLoaded", () => {  
+  const audioPlayer = document.getElementById("audioPlayer");  
+  const trackTitle = document.getElementById("trackTitle");  
+  const fileInput = document.getElementById("fileInput");  
+  
+  const lastTrackTitle = localStorage.getItem("lastTrackTitle");  
+  const lastTrackIndex = parseInt(localStorage.getItem("lastTrackIndex"), 10);  
+  
+  if (lastTrackTitle) {  
+    trackTitle.textContent = `🎵 ${lastTrackTitle} (silakan pilih ulang untuk diputar)`;  
+  }  
+  
+  fileInput.addEventListener("change", (e) => {  
+    const file = e.target.files[0];  
+    if (!file) return;  
+  
+    const blobURL = URL.createObjectURL(file);  
+    audioPlayer.src = blobURL;  
+    audioPlayer.style.display = "block";  
+    trackTitle.textContent = `${file.name}`;  
+  
+    // Simpan info lagu  
+    localStorage.setItem("lastTrackTitle", file.name);  
+    localStorage.setItem("lastTrackIndex", "0"); // bisa diubah sesuai playlist  
+  });  
+});  
 
 
 // ========== 🎧 STEREO PAN FINAL ==========
