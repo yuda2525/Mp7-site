@@ -692,17 +692,6 @@ background: transparent;
   background: radial-gradient(circle at center, #111 10%, #000 100%);
 }
 
-  .playing {
-    animation: pulse 1s infinite;
-    font-weight: bold;
-    color: #0ff;
-  }
-
-  @keyframes pulse {
-    0% { opacity: 1; }
-    50% { opacity: 0.5; }
-    100% { opacity: 1; }
-  }
 
   </style>  
 <link href="https://fonts.googleapis.com/css2?family=Saira+Stencil+One&display=swap" rel="stylesheet">
@@ -3728,23 +3717,6 @@ function updatePlaylistFromPicker(files) {
   playlist = Array.from(files);  
   renderPlaylist();  
 }
-
-
-  const playlistArray = ["Lagu 1", "Lagu 2", "Lagu 3"];
-
-function updateLog(currentIndex, playlistArray) {
-    const log = document.getElementById("testLog");
-    log.innerHTML = playlistArray
-      .map((item, i) =>
-        i === currentIndex
-          ? `<span style="color:#0ff;font-weight:bold;">▶ ${item}</span>`
-          : `<span>${item}</span>`
-      )
-      .join("\n");
-  }
-
-  updateLog(currentIndex, playlistArray);
-
 
 // 🎥 or 🖼️ PICK BACKGROUND
 bgPickBtn.addEventListener("click", () => bgInput.click());
