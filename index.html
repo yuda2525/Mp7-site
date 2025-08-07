@@ -4456,7 +4456,7 @@ function updateDigitalClock() {
     liburInfo = `\n?? Next: ${d} ${months[parseInt(m) - 1]} • ${upcoming.daysLeft} day${upcoming.daysLeft > 1 ? "s" : ""}\n${upcoming.name}`;  
   }  
   
-  el.textContent = `🕒 ${timeStr} • ${dateStr}${liburInfo}`;  
+  el.textContent = `${timeStr} • ${dateStr}${liburInfo}`;  
 }  
   
 // ============ 🔌 CEK ONLINE BULANAN ============  
