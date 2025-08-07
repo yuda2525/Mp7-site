@@ -3685,6 +3685,37 @@ audioPlayer.addEventListener("ended", () => {
   }  
 });  
 
+  
+  // ============ PLAYLIST ============    
+document.addEventListener("DOMContentLoaded", () => {  
+  const toggleBtn = document.getElementById("logToggleBtn");  
+  const logView = document.getElementById("testLog");  
+  const logIcon = document.getElementById("logIcon");  
+  
+  toggleBtn.addEventListener("click", () => {  
+    const isVisible = logView.style.display === "block";  
+    logView.style.display = isVisible ? "none" : "block";  
+    logIcon.style.transform = isVisible ? "rotate(0deg)" : "rotate(135deg)";  
+    if (!isVisible) renderPlaylist();  
+  });  
+});  
+  
+function renderPlaylist() {  
+  const logView = document.getElementById("testLog");  
+  if (playlist.length === 0) {  
+    logView.textContent = " 🎵  Belum ada playlist.\nSilakan pilih file dari file picker.";  
+    return;  
+  }  
+  
+  const output = playlist.map((track, i) => `${i + 1} 🎧 ${track.name || 'Tanpa Nama'}`).join("\n");  
+  logView.textContent = `📂 Playlist Aktif:\n${output}`;  
+}  
+  
+// 🎯 Fungsi ini kamu panggil setelah user pilih file/folder via file picker  
+function updatePlaylistFromPicker(files) {  
+  playlist = Array.from(files);  
+  renderPlaylist();  
+}
 
 // 🎥 or 🖼️ PICK BACKGROUND
 bgPickBtn.addEventListener("click", () => bgInput.click());
