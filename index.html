@@ -3829,35 +3829,6 @@ imgInput.addEventListener("change", (e) => {
   reader.readAsDataURL(file);
 });
 
-
-document.addEventListener("DOMContentLoaded", () => {  
-  const audioPlayer = document.getElementById("audioPlayer");  
-  const trackTitle = document.getElementById("trackTitle");  
-  const fileInput = document.getElementById("fileInput");  
-  
-  const lastTrackTitle = localStorage.getItem("lastTrackTitle");  
-  const lastTrackIndex = parseInt(localStorage.getItem("lastTrackIndex"), 10);  
-  
-  if (lastTrackTitle) {  
-    trackTitle.textContent = `🎵 ${lastTrackTitle} (silakan pilih ulang untuk diputar)`;  
-  }  
-  
-  fileInput.addEventListener("change", (e) => {  
-    const file = e.target.files[0];  
-    if (!file) return;  
-  
-    const blobURL = URL.createObjectURL(file);  
-    audioPlayer.src = blobURL;  
-    audioPlayer.style.display = "block";  
-    trackTitle.textContent = `${file.name}`;  
-  
-    // Simpan info lagu  
-    localStorage.setItem("lastTrackTitle", file.name);  
-    localStorage.setItem("lastTrackIndex", "0"); // bisa diubah sesuai playlist  
-  });  
-});  
-
-
 // ========== 🎧 STEREO PAN FINAL ==========
 let stereoEnabled = false;
 let panTimer = null;
