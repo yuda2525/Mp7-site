@@ -3677,14 +3677,17 @@ function playTrack(index) {
 }    
     
 // Autoplay next track    
-audioPlayer.addEventListener("ended", () => {    
-  currentIndex++;    
-  if (currentIndex < playlist.length) {    
-    playTrack(currentIndex);    
-  } else {    
-    currentIndex = 0;    
-  }    
-});    
+audioPlayer.addEventListener("ended", () => {
+  currentIndex++;
+  if (currentIndex < playlist.length) {
+    const track = playlist[currentIndex];
+    audioPlayer.src = track.url;
+    document.getElementById("trackTitle").textContent = track.name;
+    audioPlayer.play(); // ✅ Autoplay next
+  } else {
+    currentIndex = 0; // Optional: ulang dari awal
+  }
+});
   
     
   // ============ PLAYLIST ============      
