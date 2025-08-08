@@ -3628,7 +3628,7 @@ muteBtn.addEventListener("click", () => {
 
 // ============ 📁 FOLDER PICKER ============    
 let currentIndex = 0;
-let playlist = []; 
+let playlist = window.playlist || [];
 let currentTrack = 0;
 
 const audioPlayer = document.getElementById("audioPlayer");  
