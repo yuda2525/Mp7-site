@@ -3641,26 +3641,32 @@ const bgInput = document.getElementById("bgInput");
 // 🎵 PICK AUDIO (multiple files as playlist)    
 manualPickBtn.addEventListener("click", () => fileInput.click());    
     
-fileInput.addEventListener("change", (e) => {    
-  const files = Array.from(e.target.files);    
-    
-if (files.length > 0) {    
-  playlist = files.map(file => ({    
-    name: file.name,    
-    url: URL.createObjectURL(file)    
-  }));    
-  currentIndex = 0;    
-    
-  const track = playlist[currentIndex];    
-  audioPlayer.src = track.url;    
-  audioPlayer.style.display = "block";    
-  document.getElementById("trackTitle").textContent = track.name;    
-    
-  // Simpan di localStorage    
-  localStorage.setItem("lastTrack", track.url);    
-  localStorage.setItem("lastTrackTitle", track.name);    
-}    
-});    
+fileInput.addEventListener("change", (e) => {
+  const files = Array.from(e.target.files);
+
+  if (files.length > 0) {
+    const newTracks = files.map(file => ({
+      name: file.name,
+      url: URL.createObjectURL(file)
+    }));
+
+    playlist = [...playlist, ...newTracks];
+
+    // Jika ini pertama kali
+    if (playlist.length === newTracks.length) {
+      currentIndex = 0;
+      const track = playlist[currentIndex];
+      audioPlayer.src = track.url;
+      audioPlayer.style.display = "block";
+      document.getElementById("trackTitle").textContent = track.name;
+
+      localStorage.setItem("lastTrack", track.url);
+      localStorage.setItem("lastTrackTitle", track.name);
+    }
+
+    renderPlaylist(); // <- opsional jika ada
+  }
+});
     
 function playTrack(index) {    
   if (!playlist[index]) return;    
@@ -3677,17 +3683,14 @@ function playTrack(index) {
 }    
     
 // Autoplay next track    
-audioPlayer.addEventListener("ended", () => {
-  currentIndex++;
-  if (currentIndex < playlist.length) {
-    const track = playlist[currentIndex];
-    audioPlayer.src = track.url;
-    document.getElementById("trackTitle").textContent = track.name;
-    audioPlayer.play(); // ✅ Autoplay next
-  } else {
-    currentIndex = 0; // Optional: ulang dari awal
-  }
-});
+audioPlayer.addEventListener("ended", () => {    
+  currentIndex++;    
+  if (currentIndex < playlist.length) {    
+    playTrack(currentIndex);    
+  } else {    
+    currentIndex = 0;    
+  }    
+});    
   
     
   // ============ PLAYLIST ============      
