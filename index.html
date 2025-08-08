@@ -771,15 +771,6 @@ background: transparent;
 </div>  
       <div class="timer" id="timerText">00:00 / 00:00</div>  
     </div>  
-  
-<!-- VOLUME PANEL DIPISAH -->  
-<div class="vol-panel" style="display: none;">
-  <button class="vol-btn" id="volDown">➖</button>
-  <div class="vol-num" id="volVal">100</div>
-  <button class="vol-btn" id="volUp">➕</button>
-      <input type="range" id="volumeRange" min="0" max="2.5" value="1" step="0.01" />
-  <span id="gain-info"></span>
-</div>
 
   <!-- Tombol Lock/Unlock -->
 <button id="screenLockBtn" title="Kunci layar" style="  
@@ -3321,7 +3312,6 @@ window.addEventListener("DOMContentLoaded", async () => {
   createEQSliders();                 // 2. Bikin slider satu kali aja!  
   
   loadTrack(currentTrack);           // 3. Load lagu pertama  
-  updateVolume(100);                 // 4. Set volume  
   
 // ✅ CUKUP pake last yang dimuat dari localStorage
 const { eq, vol } = loadLastPreset();
@@ -3494,141 +3484,165 @@ audio.addEventListener("loadeddata", () => {
 });  
   
 // ============ ▶️ PLAYER CONTROL ============  
-function formatTime(seconds) {  
-  const m = Math.floor(seconds / 60);  
-  const s = Math.floor(seconds % 60);  
-  return `${m}:${s.toString().padStart(2, '0')}`;  
-}  
-function updateTimer() {  
-  timerText.textContent = `${formatTime(audio.currentTime)} / ${formatTime(audio.duration || 0)}`;  
-}  
-function updatePlayIcon() {  
-  playIcon.innerHTML = audio.paused  
-    ? '<path d="M8 5v14l11-7z"/>'  
-    : '<path d="M6 5h4v14H6zM14 5h4v14h-4z"/>';  
-}  
-function loadTrack(index) {  
-  const track = playlist[index];  
-  if (!track) return;  
-  
-  audio.src = track.src;  
-  audio.load();  
-  audio.pause();  
-  
-  trackTitle.textContent = track.title || '';  
-  progress.style.width = "0%";  
-  timerText.textContent = "0:00 / 0:00";  
-  updatePlayIcon();  
-}  
-function togglePlay() {  
-  initAudioContext();  
-  audio.paused ? audio.play() : audio.pause();  
-  updatePlayIcon();  
-}  
-function updateVolume(val) {  
-  val = Math.max(0, Math.min(100, val));  
-  audio.volume = val / 100;  
-  volVal.textContent = Math.round(val);  
-  audio.muted = (val === 0);  
-  muteIcon.innerHTML = audio.muted  
-    ? '<path d="M16.5 12l4.5 4.5-1.5 1.5L15 13.5l-4 4V6l4 4 5.5-5.5 1.5 1.5L16.5 12z"/>'  
-    : '<path d="M5 9v6h4l5 5V4l-5 5H5z"/>';  
-}  
-function startVolumeChange(delta) {  
-  if (volInterval) clearInterval(volInterval);  
-  volInterval = setInterval(() => {  
-    let newVol = Math.round(audio.volume * 100 * 10) / 10 + delta;  
-    updateVolume(newVol);  
-  }, 50);  
-}  
-function stopVolumeChange() {  
-  clearInterval(volInterval);  
-}  
+function formatTime(seconds) {
+  const m = Math.floor(seconds / 60);
+  const s = Math.floor(seconds % 60);
+  return `${m}:${s.toString().padStart(2, '0')}`;
+}
+
+function updateTimer() {
+  timerText.textContent = `${formatTime(audio.currentTime)} / ${formatTime(audio.duration || 0)}`;
+}
+
+function loadTrack(index) {
+  const track = playlist[index];
+  if (!track) return;
+
+  audioPlayer.src = track.url;
+  audioPlayer.load();
+  audioPlayer.pause();
+
+  trackTitle.textContent = track.name || '';
+  progress.style.width = "0%";
+  timerText.textContent = "0:00 / 0:00";
+  updatePlayIcon();
+
+  // Set default volume
+  audioPlayer.volume = 0.8;
+  audioPlayer.muted = false;
+}
+
+audio.addEventListener("play", updatePlayIcon);
+audio.addEventListener("pause", updatePlayIcon);
+
+function togglePlay() {
+  initAudioContext();
+  if (audio.paused) {
+    audio.play();
+  } else {
+    audio.pause();
+  }
+  updatePlayIcon();
+}
+
+
+function updatePlayIcon() {
+  if (!playIcon) return;
+
+  // Cek status audio, lalu ubah PATH di dalam SVG
+  playIcon.innerHTML = audio.paused
+    ? '<path d="M8 5v14l11-7z"/>' // ▶️ ikon play
+    : '<path d="M6 5h4v14H6zM14 5h4v14h-4z"/>'; // ⏸️ ikon pause
+}
+
+
+// Mute toggle only (no volume slider)
+let isMuted = false;
+
+
+muteBtn.addEventListener("click", () => {
+  isMuted = !isMuted;
+  audio.muted = isMuted;
+
+  muteIcon.innerHTML = isMuted
+    ? '<path d="M16.5 12l4.5 4.5-1.5 1.5L15 13.5l-4 4V6l4 4 5.5-5.5 1.5 1.5L16.5 12z"/>'
+    : '<path d="M5 9v6h4l5 5V4l-5 5H5z"/>';
+});
+
   
 // ============ 📌 EVENT ============  
-document.addEventListener("DOMContentLoaded", () => {  
-  createEQSliders();  
-  loadTrack(currentTrack);  
-  updateVolume(100);  
+let repeatMode = "off"; // "off", "all", "one"
+
+document.addEventListener("DOMContentLoaded", () => {
+  createEQSliders();
+  loadTrack(currentTrack);
   
-  playBtn.addEventListener("click", togglePlay);  
-  prevBtn.addEventListener("click", () => {  
-    currentTrack = (currentTrack - 1 + playlist.length) % playlist.length;  
-    loadTrack(currentTrack);  
-  });  
-  nextBtn.addEventListener("click", () => {  
-    currentTrack = (currentTrack + 1) % playlist.length;  
-    loadTrack(currentTrack);  
-  });  
-  
-  repeatBtn.addEventListener("click", () => {  
-    isRepeat = !isRepeat;  
-    repeatBtn.querySelector("svg").style.fill = isRepeat ? "#00ffa2" : "white";  
-    repeatLabel.style.display = isRepeat ? "block" : "none";  
-    repeatIconPath.setAttribute("d", isRepeat  
-      ? "M17 1l4 4-4 4V6H7v4H5V5a2 2 0 012-2h10V1zM7 23l-4-4 4-4v3h10v-4h2v5a2 2 0 01-2 2H7v3z"  
-      : "M7 7h10v2H7v3l-4-4 4-4v3zM17 17H7v-2h10v-3l4 4-4 4v-3z"  
-    );  
-  });  
-  
-muteBtn.addEventListener("click", () => {  
-  const wasMuted = audio.muted;  
-  if (wasMuted) {  
-    audio.muted = false;  
-    updateVolume(audio.volume * 100 || 100); // fallback ke 100 kalau volume 0  
-  } else {  
-    audio.muted = true;  
-    updateVolume(0);  
-  }  
-});  
-  
-  volUp.addEventListener('mousedown', () => startVolumeChange(0.5));  
-  volUp.addEventListener('mouseup', stopVolumeChange);  
-  volUp.addEventListener('mouseleave', stopVolumeChange);  
-  volUp.addEventListener('touchstart', () => startVolumeChange(0.5));  
-  volUp.addEventListener('touchend', stopVolumeChange);  
-  
-  volDown.addEventListener('mousedown', () => startVolumeChange(-0.5));  
-  volDown.addEventListener('mouseup', stopVolumeChange);  
-  volDown.addEventListener('mouseleave', stopVolumeChange);  
-  volDown.addEventListener('touchstart', () => startVolumeChange(-0.5));  
-  volDown.addEventListener('touchend', stopVolumeChange);  
-  
-  audio.addEventListener('timeupdate', () => {  
-    const percent = (audio.currentTime / audio.duration) * 100;  
-    progress.style.width = percent + '%';  
-    updateTimer();  
-  });  
-  audio.addEventListener('loadedmetadata', updateTimer);  
-  audio.addEventListener('ended', () => {  
-    isRepeat ? (audio.currentTime = 0, audio.play()) : nextBtn.click();  
-  });  
-  
-  progressContainer.addEventListener('click', (e) => {  
-    const rect = progressContainer.getBoundingClientRect();  
-    const percent = (e.clientX - rect.left) / rect.width;  
-    audio.currentTime = percent * audio.duration;  
-  });  
-  
-  const basicSelect = document.getElementById("presetBasicSelect");  
-  if (basicSelect) {  
-    basicSelect.addEventListener("change", e => {  
-      const val = e.target.value;  
-      if (basicPresets[val]) applyFullPreset(val, basicPresets[val]);  
-    });  
-  }  
-  const advSelect = document.getElementById("presetAdvanceSelect");  
-  if (advSelect) {  
-    advSelect.addEventListener("change", e => {  
-      const val = e.target.value;  
-      if (advancePresets[val]) applyFullPreset(val, advancePresets[val]);  
-    });  
-  }  
-});  
+    playBtn.addEventListener("click", togglePlay);
+
+  prevBtn.addEventListener("click", () => {
+    currentTrack = (currentTrack - 1 + playlist.length) % playlist.length;
+    loadTrack(currentTrack);
+    audio.play();
+  });
+
+  nextBtn.addEventListener("click", () => {
+    currentTrack = (currentTrack + 1) % playlist.length;
+    loadTrack(currentTrack);
+    audio.play();
+  });
+
+  repeatBtn.addEventListener("click", () => {
+    if (repeatMode === "off") {
+      repeatMode = "all";
+      repeatBtn.querySelector("svg").style.fill = "#00ffa2";
+      repeatLabel.textContent = "ALL";
+      repeatLabel.style.display = "inline";
+      repeatIconPath.setAttribute("d", "M17 1l4 4-4 4V6H7v4H5V5a2 2 0 012-2h10V1zM7 23l-4-4 4-4v3h10v-4h2v5a2 2 0 01-2 2H7v3z");
+    } else if (repeatMode === "all") {
+      repeatMode = "one";
+      repeatBtn.querySelector("svg").style.fill = "#00ffa2";
+      repeatLabel.textContent = "1X";
+      repeatLabel.style.display = "inline";
+      repeatIconPath.setAttribute("d", "M17 1l4 4-4 4V6H7v4H5V5a2 2 0 012-2h10V1zM11 13h1v5h-1v-2h-1v-1h1v-2z");
+    } else {
+      repeatMode = "off";
+      repeatBtn.querySelector("svg").style.fill = "white";
+      repeatLabel.style.display = "none";
+      repeatIconPath.setAttribute("d", "M7 7h10v2H7v3l-4-4 4-4v3zM17 17H7v-2h10v-3l4 4-4 4v-3z");
+    }
+  });
+
+audioPlayer.addEventListener('ended', () => {
+  if (repeatMode === "one") {
+    audioPlayer.currentTime = 0;
+    audioPlayer.play();
+  } else if (repeatMode === "all") {
+    currentTrack = (currentTrack + 1) % playlist.length;
+    loadTrack(currentTrack);
+    audioPlayer.play();
+  } else {
+    if (currentTrack < playlist.length - 1) {
+      currentTrack++;
+      loadTrack(currentTrack);
+      audioPlayer.play();
+    }
+  }
+});
+
+  audio.addEventListener('timeupdate', () => {
+    const percent = (audio.currentTime / audio.duration) * 100;
+    progress.style.width = percent + '%';
+    updateTimer();
+  });
+
+  audio.addEventListener('loadedmetadata', updateTimer);
+
+  progressContainer.addEventListener('click', (e) => {
+    const rect = progressContainer.getBoundingClientRect();
+    const percent = (e.clientX - rect.left) / rect.width;
+    audio.currentTime = percent * audio.duration;
+  });
+
+  const basicSelect = document.getElementById("presetBasicSelect");
+  if (basicSelect) {
+    basicSelect.addEventListener("change", e => {
+      const val = e.target.value;
+      if (basicPresets[val]) applyFullPreset(val, basicPresets[val]);
+    });
+  }
+
+  const advSelect = document.getElementById("presetAdvanceSelect");
+  if (advSelect) {
+    advSelect.addEventListener("change", e => {
+      const val = e.target.value;
+      if (advancePresets[val]) applyFullPreset(val, advancePresets[val]);
+    });
+  }
+});
 
 // ============ 📁 FOLDER PICKER ============      
-let currentIndex = 0;
 let playlist = [];
+let currentIndex = 0;
 let currentTrack = 0;
 
 const audioPlayer = document.getElementById("audioPlayer");
@@ -3690,17 +3704,6 @@ function playTrack(index) {
   renderPlaylist();
 }
 
-// === AUTOPLAY NEXT TRACK ===
-audioPlayer.addEventListener("ended", () => {
-  currentIndex++;
-  if (currentIndex < playlist.length) {
-    playTrack(currentIndex);
-  } else {
-    currentIndex = 0;
-    // Gak autoplay ulang, diam aja
-  }
-});
-
 // === TAMPILKAN PLAYLIST ===
 document.addEventListener("DOMContentLoaded", () => {
   const toggleBtn = document.getElementById("logToggleBtn");
@@ -3718,18 +3721,42 @@ document.addEventListener("DOMContentLoaded", () => {
 function renderPlaylist() {
   const logView = document.getElementById("testLog");
 
-  if (playlist.length === 0) {
-    logView.textContent = " 🎵  Belum ada playlist.\nSilakan pilih file dari file picker.";
+  if (!playlist || playlist.length === 0) {
+    logView.textContent = "🎵 Belum ada playlist.\nSilakan pilih file dari file picker.";
     return;
   }
 
-  const output = playlist.map((track, i) => {
-    const isCurrent = i === currentIndex;
-    return `${isCurrent ? '▶️' : `${i + 1}`} 🎧 ${track.name || 'Tanpa Nama'}`;
-  }).join("\n");
-
-  logView.textContent = `📂 Playlist Aktif:\n${output}`;
+  updatePlaylistText(); // ini akan render ke canvas
 }
+
+// Pastikan ini hanya 1x didefinisikan
+function updatePlaylistText() {
+  const playlistTextElement = document.getElementById("playlistText");
+  const logView = document.getElementById("testLog");
+
+  if (!playlist || playlist.length === 0) return;
+
+const output = playlist.map((track, i) => {
+  const prefix = `${i + 1} ${i === currentIndex ? "" : ""}`;
+  return `${prefix} ${track.name || "Tanpa Nama"}`;
+}).join("\n");
+  
+
+  if (playlistTextElement) {
+    playlistTextElement.textContent = output;
+
+    // Tambah animasi hanya untuk track yang sedang diputar
+    if (audio && !audio.paused) {
+      playlistTextElement.classList.add("playing-animation");
+    } else {
+      playlistTextElement.classList.remove("playing-animation");
+    }
+  }
+
+  if (logView) logView.textContent = `📂 Playlist Aktif:\n${output}`;
+}
+
+
 
 // 🎥 or 🖼️ PICK BACKGROUND
 bgPickBtn.addEventListener("click", () => bgInput.click());
