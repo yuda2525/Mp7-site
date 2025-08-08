@@ -3843,6 +3843,78 @@ window.addEventListener("DOMContentLoaded", () => {
   }
 });
 
+// --- Save state function (playlist + current track + EQ) ---
+function saveState() {
+  // Simpan playlist lengkap
+  localStorage.setItem("playlist", JSON.stringify(playlist));
+  
+  // Simpan index track yang sedang diputar
+  localStorage.setItem("currentTrack", currentTrack);
+  
+  // Simpan last track URL & judul (optional, kalau kamu pakai)
+  localStorage.setItem("lastTrack", audioPlayer.src || "");
+  localStorage.setItem("lastTrackTitle", document.getElementById("trackTitle").textContent || "");
+  
+  // Simpan nilai EQ sliders
+  const sliders = document.querySelectorAll(".slider");
+  const eqValues = Array.from(sliders).map(s => s.value);
+  localStorage.setItem("eqValues", JSON.stringify(eqValues));
+  
+  console.log("🔖 Full state saved");
+}
+
+// --- Restore state function (playlist + current track + EQ) ---
+function restoreState() {
+  // Restore playlist
+  const savedPlaylist = localStorage.getItem("playlist");
+  if (savedPlaylist) {
+    playlist = JSON.parse(savedPlaylist);
+    console.log("📂 Playlist restored");
+  }
+
+  // Restore current track
+  const savedCurrentTrack = localStorage.getItem("currentTrack");
+  if (savedCurrentTrack !== null) {
+    currentTrack = parseInt(savedCurrentTrack);
+    console.log("🎵 Current track restored:", currentTrack);
+  }
+  
+  // Set audio source & title kalau playlist valid
+  if (playlist.length > 0 && playlist[currentTrack]) {
+    audioPlayer.src = playlist[currentTrack].url;
+    document.getElementById("trackTitle").textContent = playlist[currentTrack].name;
+    audioPlayer.play().catch(() => {}); // play kalau bisa
+  }
+  
+  // Restore EQ sliders
+  const savedEQ = localStorage.getItem("eqValues");
+  if (savedEQ) {
+    const eqValues = JSON.parse(savedEQ);
+    const sliders = document.querySelectorAll(".slider");
+    sliders.forEach((slider, i) => {
+      if (eqValues[i] !== undefined) {
+        slider.value = eqValues[i];
+        if (typeof eqNodes !== "undefined" && eqNodes[i]) {
+          eqNodes[i].gain.value = (eqValues[i] - 50) / 5;
+        }
+      }
+    });
+    console.log("🎚️ EQ sliders restored");
+  }
+}
+
+// Panggil restoreState saat page siap
+window.addEventListener("DOMContentLoaded", () => {
+  restoreState();
+});
+
+// Pas ada perubahan slider / track play, simpan state
+document.querySelectorAll(".slider").forEach(slider => {
+  slider.addEventListener("input", saveState);
+});
+audioPlayer.addEventListener("play", saveState);
+
+
 const imgPickBtn = document.getElementById("imgPickBtn");
 const imgInput = document.getElementById("imgInput");
 
@@ -4366,47 +4438,23 @@ document.addEventListener("DOMContentLoaded", () => {
   window.addEventListener("offline", () => logKoneksiSekarang());  
 });  
   
-document.getElementById("resetBtn").addEventListener("click", function () {  
-  // 1. Clear localStorage dan sessionStorage  
-  localStorage.clear();  
-  sessionStorage.clear();  
-  
-  // 2. Reset semua input (form/input/slider)  
-  document.querySelectorAll("input").forEach(input => {  
-    if (["range", "text", "number"].includes(input.type)) {  
-      input.value = input.defaultValue || 50;  
-    }  
-  });  
-  
-  // 3. Reset EQ Sliders (nilai visual dan node gain)  
-  if (eqNodes?.length) {  
-    eqNodes.forEach((node, i) => {  
-      if (node && typeof node.gain.value === "number") node.gain.value = 0;  
-      const slider = document.querySelectorAll(".slider")[i];  
-      if (slider) slider.value = 50;  
-    });  
-  }  
-  
-  // 4. Reset volume ke default  
-  if (typeof gainNode !== 'undefined' && audioCtx) {  
-    gainNode.gain.setTargetAtTime(1, audioCtx.currentTime, 0.02); // volume default 1  
-  }  
-  
-  // 5. Reset visual style  
-  document.body.classList.remove("dark-mode");  
-  document.body.style.fontSize = "16px";  
-  
-  // 6. Reset preset secara programatik  
-  resetToFlat("basic");  
-  resetToFlat("advance");  
-  
-  // 7. Reset logger preset  
-  lastManualPreset = "Flat"; // ⬅️ agar logger konsisten saat reload  
-  
-  // 8. Reload pakai timestamp agar file fresh  
-  const url = window.location.pathname + '?reset=' + Date.now();  
-  window.location.replace(url);  
-});  
+document.getElementById("resetBtn").addEventListener("click", () => {
+  // Hapus key playlist dan log aja, contoh:
+  localStorage.removeItem("playlist");
+  localStorage.removeItem("logData");
+  sessionStorage.removeItem("playlist");
+  sessionStorage.removeItem("logData");
+
+  // Update UI log supaya bersih tanpa reset background/eq
+  const logView = document.getElementById("testLog");
+  if (logView) logView.textContent = "📂 Playlist Aktif:\n— log dibersihkan —";
+
+  console.log("✅ Playlist dan log dibersihkan, tapi background & EQ tetap.");
+
+  // Kalau perlu juga reset playlist array dan update UI
+  playlist = [];
+  updatePlaylistText();
+});
 
 const lockBtn = document.getElementById("screenLockBtn");
 const lockOverlay = document.getElementById("screenLockOverlay");
