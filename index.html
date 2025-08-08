@@ -692,8 +692,7 @@ background: transparent;
   background: radial-gradient(circle at center, #111 10%, #000 100%);
 }
 
-
-  </style>  
+ </style>  
 <link href="https://fonts.googleapis.com/css2?family=Saira+Stencil+One&display=swap" rel="stylesheet">
 </head>  
 	
@@ -1013,7 +1012,6 @@ background: transparent;
   backdrop-filter: transparent;  
   box-shadow: 0 0 8px rgba(0,255,255,0.3);  
 ">  
-Playlist kosong, silakan pilih lagu!
 </pre>
 
 <canvas id="waveformCanvas" width="320" height="100"></canvas>
@@ -3515,16 +3513,17 @@ function loadTrack(index) {
 audio.addEventListener("play", updatePlayIcon);
 audio.addEventListener("pause", updatePlayIcon);
 
-function togglePlay() {
-  initAudioContext();
-  if (audio.paused) {
-    audio.play();
-  } else {
-    audio.pause();
-  }
-  updatePlayIcon();
-}
-
+// Saat tombol play/pause ditekan  
+function togglePlay() {  
+  initAudioContext();  
+  if (audio.paused) {  
+    audio.play();  
+  } else {  
+    audio.pause();  
+  }  
+  updatePlayIcon();  
+  updatePlaylistText(); // ⬅️ Tambahkan ini  
+}  
 
 function updatePlayIcon() {
   if (!playIcon) return;
@@ -3559,17 +3558,40 @@ document.addEventListener("DOMContentLoaded", () => {
   
     playBtn.addEventListener("click", togglePlay);
 
-  prevBtn.addEventListener("click", () => {
-    currentTrack = (currentTrack - 1 + playlist.length) % playlist.length;
-    loadTrack(currentTrack);
-    audio.play();
-  });
-
-  nextBtn.addEventListener("click", () => {
-    currentTrack = (currentTrack + 1) % playlist.length;
-    loadTrack(currentTrack);
-    audio.play();
-  });
+// Saat lagu selesai  
+audio.addEventListener("ended", () => {  
+  if (repeatMode === "one") {  
+    audio.currentTime = 0;  
+    audio.play();  
+  } else if (repeatMode === "all") {  
+    currentTrack = (currentTrack + 1) % playlist.length;  
+    loadTrack(currentTrack);  
+    audio.play();  
+  } else {  
+    if (currentTrack < playlist.length - 1) {  
+      currentTrack++;  
+      loadTrack(currentTrack);  
+      audio.play();  
+    }  
+  }  
+  updatePlaylistText(); // ⬅️ Tambahkan ini  
+});  
+  
+// Saat tombol next/prev  
+nextBtn.addEventListener("click", () => {  
+  currentTrack = (currentTrack + 1) % playlist.length;  
+  loadTrack(currentTrack);  
+  audio.play();  
+  updatePlaylistText(); // ⬅️ Tambahkan ini  
+});  
+  
+prevBtn.addEventListener("click", () => {  
+  currentTrack = (currentTrack - 1 + playlist.length) % playlist.length;  
+  loadTrack(currentTrack);  
+  audio.play();  
+  updatePlaylistText(); // ⬅️ Tambahkan ini  
+});  
+  
 
   repeatBtn.addEventListener("click", () => {
     if (repeatMode === "off") {
@@ -3591,23 +3613,6 @@ document.addEventListener("DOMContentLoaded", () => {
       repeatIconPath.setAttribute("d", "M7 7h10v2H7v3l-4-4 4-4v3zM17 17H7v-2h10v-3l4 4-4 4v-3z");
     }
   });
-
-audioPlayer.addEventListener('ended', () => {
-  if (repeatMode === "one") {
-    audioPlayer.currentTime = 0;
-    audioPlayer.play();
-  } else if (repeatMode === "all") {
-    currentTrack = (currentTrack + 1) % playlist.length;
-    loadTrack(currentTrack);
-    audioPlayer.play();
-  } else {
-    if (currentTrack < playlist.length - 1) {
-      currentTrack++;
-      loadTrack(currentTrack);
-      audioPlayer.play();
-    }
-  }
-});
 
   audio.addEventListener('timeupdate', () => {
     const percent = (audio.currentTime / audio.duration) * 100;
@@ -3718,6 +3723,7 @@ document.addEventListener("DOMContentLoaded", () => {
   });
 });
 
+const playlistTextElement = document.getElementById("playlistText");
 function renderPlaylist() {
   const logView = document.getElementById("testLog");
 
@@ -3730,30 +3736,31 @@ function renderPlaylist() {
 }
 
 // Pastikan ini hanya 1x didefinisikan
+let blinkState = true;
+
+setInterval(() => {
+  updatePlaylistText();
+  blinkState = !blinkState;
+}, 800);
+
 function updatePlaylistText() {
-  const playlistTextElement = document.getElementById("playlistText");
   const logView = document.getElementById("testLog");
+  if (!playlist || playlist.length === 0 || !logView) return;
 
-  if (!playlist || playlist.length === 0) return;
+  const output = playlist.map((track, i) => {
+    const prefix = `${i + 1}`;
+    const name = track.name || "Tanpa Nama";
 
-const output = playlist.map((track, i) => {
-  const prefix = `${i + 1} ${i === currentIndex ? "" : ""}`;
-  return `${prefix} ${track.name || "Tanpa Nama"}`;
-}).join("\n");
-  
-
-  if (playlistTextElement) {
-    playlistTextElement.textContent = output;
-
-    // Tambah animasi hanya untuk track yang sedang diputar
-    if (audio && !audio.paused) {
-      playlistTextElement.classList.add("playing-animation");
-    } else {
-      playlistTextElement.classList.remove("playing-animation");
+      if (i === currentTrack && !audio.paused) {
+      const markerColor = blinkState ? "cyan" : "red"; // 💡 Ganti warna di sini
+      const marker = `<span style="color:${markerColor}; font-weight:bold;">&gt;&gt;</span>`;
+      return `${marker} ${prefix} ${name}`;
     }
-  }
 
-  if (logView) logView.textContent = `📂 Playlist Aktif:\n${output}`;
+    return `&nbsp;&nbsp;&nbsp;${prefix} ${name}`;
+  }).join("<br>");
+
+  logView.innerHTML = `<b>📂 Playlist Aktif:</b><br>${output}`;
 }
 
 
