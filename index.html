@@ -3627,101 +3627,108 @@ muteBtn.addEventListener("click", () => {
 });  
 
 // ============ 📁 FOLDER PICKER ============      
-let currentIndex = 0;  
-let playlist = [];   
-let currentTrack = 0;  
-  
-const audioPlayer = document.getElementById("audioPlayer");    
-const bgVideo = document.getElementById("bgVideo");    
-const manualPickBtn = document.getElementById("manualPickBtn");    
-const bgPickBtn = document.getElementById("bgPickBtn");    
-const fileInput = document.getElementById("fileInput");    
-const bgInput = document.getElementById("bgInput");    
-    
-// 🎵 PICK AUDIO (multiple files as playlist)    
-manualPickBtn.addEventListener("click", () => fileInput.click());    
-    
+let currentIndex = 0;
+let playlist = [];
+let currentTrack = 0;
+
+const audioPlayer = document.getElementById("audioPlayer");
+const bgVideo = document.getElementById("bgVideo");
+const manualPickBtn = document.getElementById("manualPickBtn");
+const bgPickBtn = document.getElementById("bgPickBtn");
+const fileInput = document.getElementById("fileInput");
+const bgInput = document.getElementById("bgInput");
+
+// === 🎵 PILIH FILE AUDIO ===
+manualPickBtn.addEventListener("click", () => fileInput.click());
+
 fileInput.addEventListener("change", (e) => {
   const files = Array.from(e.target.files);
+  if (files.length === 0) return;
 
-  if (files.length > 0) {
-    const newTracks = files.map(file => ({
-      name: file.name,
-      url: URL.createObjectURL(file)
-    }));
+  const newTracks = files.map(file => ({
+    name: file.name,
+    url: URL.createObjectURL(file)
+  }));
 
-    playlist = [...playlist, ...newTracks];
+  playlist = [...playlist, ...newTracks];
 
-    // Jika ini pertama kali
-    if (playlist.length === newTracks.length) {
-      currentIndex = 0;
-      const track = playlist[currentIndex];
-      audioPlayer.src = track.url;
-      audioPlayer.style.display = "block";
-      document.getElementById("trackTitle").textContent = track.name;
+  // Tampilkan track pertama tapi JANGAN langsung play
+  if (playlist.length === newTracks.length) {
+    currentIndex = 0;
+    const track = playlist[currentIndex];
+    audioPlayer.src = track.url;
+    audioPlayer.style.display = "block";
+    document.getElementById("trackTitle").textContent = track.name;
 
-      localStorage.setItem("lastTrack", track.url);
-      localStorage.setItem("lastTrackTitle", track.name);
-    }
+    localStorage.setItem("lastTrack", track.url);
+    localStorage.setItem("lastTrackTitle", track.name);
+  }
 
-    renderPlaylist(); // <- opsional jika ada
+  renderPlaylist();
+});
+
+// === PLAY TRACK ===
+function playTrack(index) {
+  if (!playlist[index]) return;
+
+  currentIndex = index;
+  const track = playlist[index];
+  audioPlayer.src = track.url;
+  audioPlayer.load(); // muat ulang
+
+  // Tunggu sampai bisa play, baru jalankan
+  audioPlayer.oncanplay = () => {
+    audioPlayer.play().catch(err => console.warn("Play error:", err));
+  };
+
+  audioPlayer.style.display = "block";
+  document.getElementById("trackTitle").textContent = track.name;
+
+  localStorage.setItem("lastTrack", track.url);
+  localStorage.setItem("lastTrackTitle", track.name);
+
+  renderPlaylist();
+}
+
+// === AUTOPLAY NEXT TRACK ===
+audioPlayer.addEventListener("ended", () => {
+  currentIndex++;
+  if (currentIndex < playlist.length) {
+    playTrack(currentIndex);
+  } else {
+    currentIndex = 0;
+    // Gak autoplay ulang, diam aja
   }
 });
-    
-function playTrack(index) {    
-  if (!playlist[index]) return;    
-    
-  const track = playlist[index];    
-  audioPlayer.src = track.url;    
-  audioPlayer.play();    
-  audioPlayer.style.display = "block";    
-  document.getElementById("trackTitle").textContent = track.name;    
-    
-  // Simpan di localStorage    
-  localStorage.setItem("lastTrack", track.url);    
-  localStorage.setItem("lastTrackTitle", track.name);    
-}    
-    
-// Autoplay next track    
-audioPlayer.addEventListener("ended", () => {    
-  currentIndex++;    
-  if (currentIndex < playlist.length) {    
-    playTrack(currentIndex);    
-  } else {    
-    currentIndex = 0;    
-  }    
-});    
-  
-    
-  // ============ PLAYLIST ============      
-document.addEventListener("DOMContentLoaded", () => {    
-  const toggleBtn = document.getElementById("logToggleBtn");    
-  const logView = document.getElementById("testLog");    
-  const logIcon = document.getElementById("logIcon");    
-    
-  toggleBtn.addEventListener("click", () => {    
-    const isVisible = logView.style.display === "block";    
-    logView.style.display = isVisible ? "none" : "block";    
-    logIcon.style.transform = isVisible ? "rotate(0deg)" : "rotate(135deg)";    
-    if (!isVisible) renderPlaylist();    
-  });    
-});    
-    
-function renderPlaylist() {    
-  const logView = document.getElementById("testLog");    
-  if (playlist.length === 0) {    
-    logView.textContent = " 🎵  Belum ada playlist.\nSilakan pilih file dari file picker.";    
-    return;    
-  }    
-    
-  const output = playlist.map((track, i) => `${i + 1} 🎧 ${track.name || 'Tanpa Nama'}`).join("\n");    
-  logView.textContent = `📂 Playlist Aktif:\n${output}`;    
-}    
-    
-// 🎯 Fungsi ini kamu panggil setelah user pilih file/folder via file picker    
-function updatePlaylistFromPicker(files) {    
-  playlist = Array.from(files);    
-  renderPlaylist();    
+
+// === TAMPILKAN PLAYLIST ===
+document.addEventListener("DOMContentLoaded", () => {
+  const toggleBtn = document.getElementById("logToggleBtn");
+  const logView = document.getElementById("testLog");
+  const logIcon = document.getElementById("logIcon");
+
+  toggleBtn.addEventListener("click", () => {
+    const isVisible = logView.style.display === "block";
+    logView.style.display = isVisible ? "none" : "block";
+    logIcon.style.transform = isVisible ? "rotate(0deg)" : "rotate(135deg)";
+    if (!isVisible) renderPlaylist();
+  });
+});
+
+function renderPlaylist() {
+  const logView = document.getElementById("testLog");
+
+  if (playlist.length === 0) {
+    logView.textContent = " 🎵  Belum ada playlist.\nSilakan pilih file dari file picker.";
+    return;
+  }
+
+  const output = playlist.map((track, i) => {
+    const isCurrent = i === currentIndex;
+    return `${isCurrent ? '▶️' : `${i + 1}`} 🎧 ${track.name || 'Tanpa Nama'}`;
+  }).join("\n");
+
+  logView.textContent = `📂 Playlist Aktif:\n${output}`;
 }
 
 // 🎥 or 🖼️ PICK BACKGROUND
