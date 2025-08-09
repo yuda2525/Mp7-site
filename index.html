@@ -3832,114 +3832,8 @@ window.addEventListener("DOMContentLoaded", () => {
     document.body.style.backgroundAttachment = "fixed";
     document.body.style.backgroundPosition = "center";
   }
+});
 
-  // Restore last audio  
-  const lastTrack = localStorage.getItem("lastTrack");  
-  const lastTrackTitle = localStorage.getItem("lastTrackTitle");  
-  if (lastTrack) {  
-    audioPlayer.src = lastTrack;  
-    audioPlayer.style.display = "block";  
-    document.getElementById("trackTitle").textContent = lastTrackTitle || "Audio Track";  
-  }  
-});  
-  
-// --- Save state function ---  
-function saveState() {  
-  // Simpan last track & judulnya  
-  localStorage.setItem("lastTrack", audioPlayer.src || "");  
-  localStorage.setItem("lastTrackTitle", document.getElementById("trackTitle").textContent || "");  
-  
-  // Simpan playlist (as JSON)  
-  localStorage.setItem("playlist", JSON.stringify(playlist));  
-  
-  // Simpan current track index  
-  localStorage.setItem("currentTrackIndex", currentTrack);  
-  
-  // Simpan nilai EQ slider  
-  const sliders = document.querySelectorAll(".slider");  
-  const eqValues = Array.from(sliders).map(s => s.value);  
-  localStorage.setItem("eqValues", JSON.stringify(eqValues));  
-  
-  console.log("🔖 State saved");  
-}  
-  
-// --- Restore state function ---  
-function restoreState() {  
-  // Restore playlist  
-  const savedPlaylist = localStorage.getItem("playlist");  
-  if (savedPlaylist) {  
-    playlist = JSON.parse(savedPlaylist);  
-    console.log("📂 Playlist restored");  
-  }  
-  
-  // Restore current track index  
-  const savedIndex = localStorage.getItem("currentTrackIndex");  
-  if (savedIndex !== null) {  
-    currentTrack = parseInt(savedIndex);  
-    console.log("🎵 Current track restored:", currentTrack);  
-  } else {  
-    currentTrack = 0; // default  
-  }  
-  
-  // Set audio src dan judul track  
-  if (playlist.length > 0 && playlist[currentTrack]) {  
-    audioPlayer.src = playlist[currentTrack].url;  
-    document.getElementById("trackTitle").textContent = playlist[currentTrack].name;  
-  }  
-  
-  // Restore EQ sliders  
-  const savedEQ = localStorage.getItem("eqValues");  
-  if (savedEQ) {  
-    const eqValues = JSON.parse(savedEQ);  
-    const sliders = document.querySelectorAll(".slider");  
-    sliders.forEach((slider, i) => {  
-      if (eqValues[i] !== undefined) {  
-        slider.value = eqValues[i];  
-        if (typeof eqNodes !== "undefined" && eqNodes[i]) {  
-          eqNodes[i].gain.value = (eqValues[i] - 50) / 5;  
-        }  
-      }  
-    });  
-    console.log("🎚️ EQ sliders restored");  
-  }  
-}  
-  
-// Panggil restoreState saat halaman siap  
-window.addEventListener("DOMContentLoaded", () => {  
-  restoreState();  
-});  
-  
-// Simpan state saat ada perubahan:  
-  
-// Saat audio mulai play atau source berubah  
-audioPlayer.addEventListener("play", saveState);  
-  
-// Saat playlist berubah (update playlist), contoh:  
-function updatePlaylist(newPlaylist) {  
-  playlist = newPlaylist;  
-  saveState();  
-  // update UI playlist juga kalau ada  
-}  
-  
-// Saat track diganti  
-function setCurrentTrack(idx) {  
-  if (!playlist[idx]) return;  
-  currentTrack = idx;  
-  audioPlayer.src = playlist[currentTrack].url;  
-  document.getElementById("trackTitle").textContent = playlist[currentTrack].name;  
-  saveState();  
-  audioPlayer.play();  
-}  
-  
-// Pas slider EQ diubah  
-document.querySelectorAll(".slider").forEach((slider, i) => {  
-  slider.addEventListener("input", () => {  
-    if (eqNodes && eqNodes[i]) {  
-      eqNodes[i].gain.value = (slider.value - 50) / 5;  
-    }  
-    saveState();  
-  });  
-});  
 
 const imgPickBtn = document.getElementById("imgPickBtn");
 const imgInput = document.getElementById("imgInput");
@@ -4463,23 +4357,43 @@ document.addEventListener("DOMContentLoaded", () => {
   window.addEventListener("online", () => logKoneksiSekarang());  
   window.addEventListener("offline", () => logKoneksiSekarang());  
 });  
-  
+
+
+  // ============ 🚀 CLEAR CACHE//TRACKLIST ============  
 document.getElementById("resetBtn").addEventListener("click", () => {
-  // Hapus key playlist dan log aja, contoh:
+  // Hapus semua yang berhubungan dengan playlist dan log
   localStorage.removeItem("playlist");
   localStorage.removeItem("logData");
+  localStorage.removeItem("lastTrack");
+  localStorage.removeItem("lastTrackTitle");
+  localStorage.removeItem("currentTrackIndex");
+  localStorage.removeItem("repeatMode");
+  
   sessionStorage.removeItem("playlist");
   sessionStorage.removeItem("logData");
-
-  // Update UI log supaya bersih tanpa reset background/eq
+  
+  // Jangan hapus eqValues supaya EQ tetap tersimpan dan bisa restore
+  
+  // Update UI log supaya bersih (ubah sesuai UI kamu)
   const logView = document.getElementById("testLog");
-  if (logView) logView.textContent = "📂 Playlist Aktif:\n— log dibersihkan —";
-
-  console.log("✅ Playlist dan log dibersihkan, tapi background & EQ tetap.");
-
-  // Kalau perlu juga reset playlist array dan update UI
+  if (logView) logView.textContent = "📂 Playlist & log dibersihkan, tapi EQ tetap aktif.";
+  
+  console.log("✅ Playlist & log cleared, EQ state preserved");
+  
+  // Restore & apply EQ langsung setelah clear cache
+  restoreEQ();
+  
+  // Reset playlist variable dan UI playlist (buat fungsi updatePlaylistText jika ada)
   playlist = [];
-  updatePlaylistText();
+  if (typeof updatePlaylistText === "function") updatePlaylistText();
+  
+  // Update UI track title & audioPlayer tampilannya juga kalo perlu
+  audioPlayer.src = "";
+  document.getElementById("trackTitle").textContent = "— Playlist kosong —";
+  audioPlayer.style.display = "none";
+  
+  // Reset currentTrack index
+  currentTrack = 0;
 });
 
 const lockBtn = document.getElementById("screenLockBtn");
