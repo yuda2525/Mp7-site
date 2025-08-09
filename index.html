@@ -4664,3 +4664,192 @@ console.log("✅ Script Loaded");
 
 
 
+    cancelAnimationFrame(rafId);
+    console.log("60FPS Loop:  OFF");
+  }
+}
+
+// Expose buat bisa dipanggil di console
+window.startLoop = startLoop;
+window.stopLoop = stopLoop;
+
+// Auto start kalau mau
+startLoop();
+
+
+    
+window.addEventListener('DOMContentLoaded', () => {
+  const el = document.getElementById("visualMode");
+
+  if (!el) {
+    console.warn("Elemen #visualMode tidak ditemukan!");
+    return;
+  }
+
+  console.log(" Mode visual aktif!");
+
+  el.classList.add("dolby-vision");
+  el.classList.remove("bravia-cinematic");
+  el.classList.toggle("huawei-vivid");
+  el.classList.add("visual-mode-all");
+});
+
+
+const visualEngineSettings = {
+  postProcess: {
+    exposure: {
+      minBrightness: 0.8,
+      maxBrightness: 1.2,
+      autoAdjust: true,
+      speed: 0.15
+    },
+    contrast: 1.15,
+    saturation: 1.1,
+    bloom: {
+      enabled: true,
+      intensity: 0.3,
+      threshold: 1.1
+    },
+    vignette: {
+      enabled: true,
+      intensity: 0.15,
+      smoothness: 0.6
+    },
+    chromaticAberration: {
+      enabled: true,
+      intensity: 0.02
+    },
+    motionBlur: {
+      enabled: true,
+      shutterAngle: 90
+    },
+    colorGrading: {
+      lift: [1.0, 1.0, 1.0],
+      gamma: [1.05, 1.05, 1.05],
+      gain: [1.1, 1.1, 1.1]
+    },
+    lensFlare: {
+      enabled: true,
+      intensity: 0.2
+    },
+    ambientOcclusion: {
+      enabled: true,
+      radius: 0.5,
+      intensity: 0.6
+    },
+    depthOfField: {
+      enabled: true,
+      focalDistance: 3.0,
+      aperture: 2.8,
+      blurAmount: 0.5
+    }
+  },
+  skybox: {
+    type: "gradient",
+    topColor: "#1c1c2a",
+    bottomColor: "#5c6c80"
+  },
+  lighting: {
+    direction: [0.5, -1, 0.3],
+    intensity: 1.0,
+    color: "#ffffff",
+    shadows: true
+  },
+  autoControl: {
+    autoplay: true,
+    loop: true,
+    muted: false,
+    volume: 1.0,
+    controlsVisible: false
+  }
+};
+
+  const canvas = document.getElementById("hiddenCanvas");
+
+  const scene = new THREE.Scene();
+  const camera = new THREE.PerspectiveCamera(75, 1, 0.1, 1000);
+  camera.position.z = 5;
+
+  const renderer = new THREE.WebGLRenderer({ canvas, alpha: true });
+  renderer.setSize(256, 256); // kecilin ukuran, cukup buat proses belakang layar
+
+  // Buat object 3D
+  const geometry = new THREE.BoxGeometry(2, 2, 2);
+  const material = new THREE.MeshStandardMaterial({ color: 0x00ffcc });
+  const cube = new THREE.Mesh(geometry, material);
+  scene.add(cube);
+
+  // Lighting
+  const light = new THREE.DirectionalLight(0xffffff, 1);
+  light.position.set(5, 5, 5);
+  scene.add(light);
+
+  // Render loop (background)
+  let frame = 0;
+  function animate() {
+    requestAnimationFrame(animate);
+    cube.rotation.x += 0.01;
+    cube.rotation.y += 0.01;
+
+    renderer.render(scene, camera);
+
+    if (++frame % 60 === 0) {
+      console.log("🎥 Background 3D rendering still active", frame);
+    }
+  }
+
+  animate();
+
+  if ('serviceWorker' in navigator) {    
+    navigator.serviceWorker.register('sw.js')    
+      .then(reg => console.log('✅ Service Worker registered:', reg.scope))    
+      .catch(err => console.error('❌ Service Worker registration failed:', err));    
+  }    
+
+
+window.addEventListener("DOMContentLoaded", () => {
+  console.log("📦 DOM Loaded");
+
+  const player = document.getElementById("audioPlayer");
+  if (!player) return console.warn("❌ #audioPlayer tidak ditemukan!");
+
+  const kickstart = async () => {
+    if (!audioCtx) {
+      audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      sourceNode = audioCtx.createMediaElementSource(player);
+      console.log("🚀 AudioContext & SourceNode dibuat");
+
+      try {
+        // ⏳ Inject PowerAmp dulu
+        await injectPowerAmpV2();
+
+        // 🔥 Baru lanjut init chain FX
+        await initAudioContext();
+
+        console.log("✅ Audio Engine aktif, tinggal tekan Play");
+      } catch (err) {
+        console.warn("❌ initAudioContext atau PowerAmp error:", err);
+      }
+    }
+
+    // Remove listener biar tidak ngulang
+    window.removeEventListener("click", kickstart);
+  };
+
+  // 💡 Hanya perlu 1x klik user untuk trigger
+  window.addEventListener("click", kickstart);
+});
+
+
+console.log("✅ Script Loaded");  
+</script>  
+</body>  
+</html>  
+
+
+
+
+
+
+
+
