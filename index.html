@@ -1081,7 +1081,8 @@ const boostLowBtn = document.getElementById("boostLow");
 const boostMidBtn = document.getElementById("boostMid");
 const boostHighBtn = document.getElementById("boostHigh");
 
-bands = [10, 32, 64, 125, 250, 500, 1000, 2000, 4000, 10000, 16000, 20000];
+let eqFilters = [];
+let bands = [10, 32, 64, 125, 250, 500, 1000, 2000, 4000, 10000, 16000, 20000];
 let isRepeat = false;
 let sourceNode = [];
 let volInterval;
@@ -1124,9 +1125,6 @@ let eqBeforeBooster = []; // 🔄 Backup preset sebelum booster aktif
 
 let lastRootType = null; // "basic" | "advance"
 let lastRootPreset = null;
-
-let eqFilters = [];
-let frequencies = [10, 32, 64, 125, 250, 500, 1000, 2000, 4000, 10000, 16000, 20000];
 
 let clarity, clarityGain;
 let loudnessLow, loudnessHigh;
@@ -1691,6 +1689,8 @@ logInfo("Dynamics", { compressor, smartLimiter });
     // Buat node-nya sebelumnya (powerAmpNode & harmonicAIEngine) kalau belum
 
     console.log("🔗 Building initAudioContext");
+    
+    
     
     // ====== 🔀 Chain Setup ======
     let current = sourceNode;
@@ -2538,9 +2538,8 @@ function renderAllBitDepth(durationInSec = 10) {
     window.lastRender32BitOK = true;
 
 
-
-
 // ============ 🎚️ PRESETS ============  
+bands = [10, 32, 64, 125, 250, 500, 1000, 2000, 4000, 10000, 16000, 20000];
 const basicPresets = {  
   "Flat":  {
     eq: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
@@ -2983,7 +2982,7 @@ const advancePresets = {
   },
   stereoWidth: 0.9,
   reverb: 0.25
-},
+  },
 };
 
 // === 🎧 PRESET EQ DEFINITION  
@@ -3102,72 +3101,63 @@ function applyFullPreset(name, preset) {
     return;
   }
 
-try {
-  // Create enhancer gains jika belum ada
-  if (!presenceNode) presenceNode = audioCtx.createGain();
-  if (!brillianceNode) brillianceNode = audioCtx.createGain();
-  if (!warmthNode) warmthNode = audioCtx.createGain();
+  try {
+    if (!presenceNode) presenceNode = audioCtx.createGain();
+    if (!brillianceNode) brillianceNode = audioCtx.createGain();
+    if (!warmthNode) warmthNode = audioCtx.createGain();
 
-  // Validate preset.enhancer
-  const e = preset.enhancer;
-  if (e && typeof e === "object") {
-    if (typeof e.presence === "number") presenceNode.gain.value = e.presence;
-    if (typeof e.brilliance === "number") brillianceNode.gain.value = e.brilliance;
-    if (typeof e.warmth === "number") warmthNode.gain.value = e.warmth;
+    const e = preset.enhancer;
+    if (e && typeof e === "object") {
+      if (typeof e.presence === "number") presenceNode.gain.value = e.presence;
+      if (typeof e.brilliance === "number") brillianceNode.gain.value = e.brilliance;
+      if (typeof e.warmth === "number") warmthNode.gain.value = e.warmth;
+    }
+
+    if (preset.compressor && compressor) {
+      if (typeof preset.compressor.threshold === "number")
+        compressor.threshold.value = preset.compressor.threshold;
+      if (typeof preset.compressor.ratio === "number")
+        compressor.ratio.value = preset.compressor.ratio;
+    }
+  } catch (e) {
+    console.warn("Enhancer/compressor apply error:", e);
+  }
+}  // <-- Penutup fungsi applyFullPreset harus ada di sini!
+
+
+// Fungsi applyVolumeBoost berdiri sendiri, di luar applyFullPreset
+function applyVolumeBoost() {
+  const volPreset = allPresets["Volume++"];
+  if (!volPreset) return;
+
+  if (masterGain) masterGain.gain.value = 1.7;
+  if (clarity) {
+    clarity.gain.value = 2.8;
+    clarity.frequency.value = 4300;
+  }
+  if (clarityGain) clarityGain.gain.value = 0.75;
+  if (toneBias) toneBias.gain.value = 1.4;
+  if (enhancer) enhancer.gain.value = 3.5;
+  if (deEsser) deEsser.gain.value = -5;
+  if (stereoPanner) stereoPanner.pan.value = 0;
+
+  if (softLimiter) {
+    softLimiter.threshold.value = -5;
+    softLimiter.knee.value = 10;
+    softLimiter.ratio.value = 12;
+    softLimiter.attack.value = 0.003;
+    softLimiter.release.value = 0.2;
+  }
+  if (smartLimiter) {
+    smartLimiter.threshold.value = -3;
+    smartLimiter.ratio.value = 15;
   }
 
-  // Set compressor
-  if (preset.compressor && compressor) {
-    if (typeof preset.compressor.threshold === "number")
-      compressor.threshold.value = preset.compressor.threshold;
-    if (typeof preset.compressor.ratio === "number")
-      compressor.ratio.value = preset.compressor.ratio;
-  }
-} catch (e) {
-  console.warn("Enhancer/compressor apply error:", e);
+  console.log("🔥 Volume++ tweak applied");
 }
 
-  // Custom logic presets
-  if (name === "Flat") {
-    if (clarity) {
-      clarity.gain.value = 2.5;
-      clarity.frequency.value = 4200;
-    }
-    if (clarityGain) clarityGain.gain.value = 0.75;
-    if (toneBias) toneBias.gain.value = 1.3;
-    if (deEsser) deEsser.gain.value = -4;
-    console.log("🎧 Flat preset applied");
-  }
-
-  if (name === "Volume++") {
-    if (masterGain) masterGain.gain.value = 1.7;
-    if (clarity) {
-      clarity.gain.value = 2.8;
-      clarity.frequency.value = 4300;
-    }
-    if (clarityGain) clarityGain.gain.value = 0.75;
-    if (toneBias) toneBias.gain.value = 1.4;
-    if (enhancer) enhancer.gain.value = 3.5;
-    if (deEsser) deEsser.gain.value = -5;
-    if (stereoPanner) stereoPanner.pan.value = 0;
-
-    if (softLimiter) {
-      softLimiter.threshold.value = -5;
-      softLimiter.knee.value = 10;
-      softLimiter.ratio.value = 12;
-      softLimiter.attack.value = 0.003;
-      softLimiter.release.value = 0.2;
-    }
-    if (smartLimiter) {
-      smartLimiter.threshold.value = -3;
-      smartLimiter.ratio.value = 15;
-    }
-    console.log("🔥 Volume++ preset aktif: full power!");
-  }
-
-  lastManualPreset = name;
-  console.log(`✅ Applied: ${name}`);
-}
+// contoh pemanggilan bisa di luar, misal:
+applyVolumeBoost();
 
 function applyEnhancer(preset = {}) {
   if (!audioCtx) {
@@ -3236,35 +3226,28 @@ function loadLastPreset() {
   };
 }
 
-function applyPresetCombined(eqName, volName = "Volume++") {
+function applyPresetCombined(eqName) {
   if (!eqName) {
     console.warn("❌ EQ preset kosong, dibatalkan");
     return;
   }
 
   const eqPreset = allPresets[eqName];
-  const volPreset = allPresets[volName] || allPresets["Volume++"];
 
   if (!eqPreset) {
     console.warn(`❌ EQ preset '${eqName}' tidak ditemukan`);
     return;
   }
 
-  console.log(`🎛️ Combined preset: EQ='${eqName}' + Volume='${volName}'`);
+  console.log(`🎛️ Applying EQ preset '${eqName}' + Volume++ tweak`);
 
-  applyFullPreset(eqName, eqPreset);
-
-  if (volPreset) {
-    if (volPreset.enhancer !== undefined && enhancer)
-      enhancer.gain.value = volPreset.enhancer;
-    if (volPreset.compressor !== undefined && compressor)
-      compressor.threshold.value = volPreset.compressor;
-    console.log(`🔊 Volume preset injected: '${volName}'`);
-  }
+  applyFullPreset(eqName, eqPreset);   // Apply preset utama EQ
+  applyVolumeBoost();                  // Inject volume boost tweak
 
   lastEQPreset = eqName;
-  lastVolPreset = volName;
-  saveLastPreset(eqName, volName);
+  lastVolPreset = "Volume++";
+
+  saveLastPreset(eqName, "Volume++");
 }
   
 function saveLastPreset(eq, vol) {
@@ -3278,7 +3261,6 @@ function loadLastPreset() {
     vol: localStorage.getItem("lastVol") || "Volume++"
   };
 }
-
 
 // ✅ ON LOAD (nunggu DOM + slider siap)
 // ON LOAD
@@ -3364,52 +3346,52 @@ function resetToFlat(type) {
 }  
 
 // === basic&advance
+basicSelect.addEventListener("change", () => {
+  resetBooster();
+  eqBeforeBooster = [];
 
-basicSelect.addEventListener("change", () => {  
-  resetBooster(); // ⬅️ Penting: booster off dulu
-  eqBeforeBooster = [];  
+  const selected = basicSelect.value;
 
-  const selected = basicSelect.value;  
+  if (selected === "Flat") {
+    resetToFlat("basic");
+    saveLastPreset("Flat", "Volume++");
+    return;
+  }
 
-  if (selected === "Flat") {  
-    resetToFlat("basic");  
-    saveLastPreset("Flat", defaultVolPreset);  
-    return;  
-  }  
+  if (advanceSelect.value !== "Advance Off/Flat") {
+    resetToFlat("advance");
+  }
 
-  if (advanceSelect.value !== "Advance Off/Flat") {  
-    resetToFlat("advance");  
-  }  
+  applyPresetCombined(selected);  // Cuma kirim nama preset EQ utama, volume boost auto jalan
 
-  applyFullPreset(selected, basicPresets[selected]);  
-  lastBasicPreset = selected;  
-  lastEQPreset = selected; // ✅ update global state  
-  saveLastPreset(selected, defaultVolPreset);  
+  lastBasicPreset = selected;
+  lastEQPreset = selected;
+  lastVolPreset = "Volume++";
+  saveLastPreset(selected, "Volume++");
 });
 
+advanceSelect.addEventListener("change", () => {
+  const selected = advanceSelect.value;
 
-advanceSelect.addEventListener("change", () => {  
-  const selected = advanceSelect.value;  
+  if (selected === "Advance Off/Flat") {
+    resetToFlat("advance");
+    saveLastPreset(lastBasicPreset, lastVolPreset);
+    return;
+  }
 
-  if (selected === "Advance Off/Flat") {  
-    resetToFlat("advance");  
-    saveLastPreset(lastBasicPreset, defaultVolPreset); // ✅ SIMPAN juga!
-    return;  
-  }  
+  if (basicSelect.value !== "Flat") {
+    resetToFlat("basic");
+  }
 
-  if (basicSelect.value !== "Flat") {  
-    resetToFlat("basic");  
-  }  
+  applyPresetCombined(selected);  // Sama, volume boost tetap auto inject
 
-  applyFullPreset(selected, advancePresets[selected]);  
-lastAdvancePreset = selected;
-lastEQPreset = selected; // ✅ Biar play() tau terakhir apa
+  lastAdvancePreset = selected;
+  lastEQPreset = selected;
+  lastVolPreset = "Volume++";
+  saveLastPreset(selected, "Volume++");
+});
+
   
-  // ✅ SIMPAN PILIHAN ADVANCE + VOLUME
-  saveLastPreset(selected, defaultVolPreset);  
-});
-
-
 // === Saat Pilih Basic  
 basicSelect.addEventListener("change", () => {  
   const selected = basicSelect.value;  
@@ -4449,8 +4431,7 @@ function logToPanel(msg) {
 }
 
 
-    
-      window.addEventListener('DOMContentLoaded', () => {
+  window.addEventListener('DOMContentLoaded', () => {
   const el = document.getElementById("visualMode");
 
   if (!el) {
