@@ -3764,108 +3764,111 @@ function updatePlaylistText() {
 }
 
 
+// === IndexedDB Setup ===
+let db;
+const DB_NAME = "BackgroundDB";
+const STORE_NAME = "BackgroundStore";
 
-// 🎥 or 🖼️ PICK BACKGROUND
+function openDB() {
+  return new Promise((resolve, reject) => {
+    const req = indexedDB.open(DB_NAME, 1);
+    req.onupgradeneeded = (e) => {
+      db = e.target.result;
+      db.createObjectStore(STORE_NAME);
+    };
+    req.onsuccess = (e) => {
+      db = e.target.result;
+      resolve();
+    };
+    req.onerror = reject;
+  });
+}
+
+function saveToDB(key, value) {
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction(STORE_NAME, "readwrite");
+    tx.objectStore(STORE_NAME).put(value, key);
+    tx.oncomplete = resolve;
+    tx.onerror = reject;
+  });
+}
+
+function getFromDB(key) {
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction(STORE_NAME, "readonly");
+    const req = tx.objectStore(STORE_NAME).get(key);
+    req.onsuccess = () => resolve(req.result);
+    req.onerror = reject;
+  });
+}
+
+// === FUNCTION SET IMAGE BACKGROUND ===
+function setImageBackground(url) {
+  bgVideo.pause();
+  bgVideo.src = "";
+  bgVideo.style.display = "none";
+
+  document.body.style.backgroundImage = `url('${url}')`;
+  document.body.style.backgroundSize = "cover";
+  document.body.style.backgroundRepeat = "no-repeat";
+  document.body.style.backgroundAttachment = "fixed";
+  document.body.style.backgroundPosition = "center";
+}
+
+// === PICK BACKGROUND (VIDEO / IMAGE) ===
 bgPickBtn.addEventListener("click", () => bgInput.click());
 
-bgInput.addEventListener("change", (e) => {
+bgInput.addEventListener("change", async (e) => {
   const file = e.target.files[0];
   if (!file) return;
 
-  const reader = new FileReader();
+  const fileType = file.type;
+  const fileURL = URL.createObjectURL(file);
 
-  reader.onload = () => {
-    const dataUrl = reader.result;
-    const fileType = file.type;
+  await saveToDB("bgFile", file);
+  await saveToDB("bgType", fileType.startsWith("video/") ? "video" : "image");
 
-    if (fileType.startsWith("video/")) {
-      // === VIDEO SET ===
-      bgVideo.src = dataUrl;
-      bgVideo.style.display = "block";
-      bgVideo.play();
-      document.body.style.backgroundImage = "none";
-
-      // Save to localStorage
-      localStorage.setItem("bgType", "video");
-      localStorage.setItem("bgData", dataUrl);
-    } else if (fileType.startsWith("image/")) {
-      // === IMAGE SET ===
-      bgVideo.pause();
-      bgVideo.src = "";
-      bgVideo.style.display = "none";
-
-      document.body.style.backgroundImage = `url('${dataUrl}')`;
-      document.body.style.backgroundSize = "cover";
-      document.body.style.backgroundRepeat = "no-repeat";
-      document.body.style.backgroundAttachment = "fixed";
-      document.body.style.backgroundPosition = "center";
-
-      // Save to localStorage
-      localStorage.setItem("bgType", "image");
-      localStorage.setItem("bgData", dataUrl);
-    }
-  };
-
-  reader.readAsDataURL(file);
-});
-
-// === RESTORE BACKGROUND ON LOAD ===
-window.addEventListener("DOMContentLoaded", () => {
-  const bgType = localStorage.getItem("bgType");
-  const bgData = localStorage.getItem("bgData");
-
-  if (bgType === "video" && bgData) {
-    bgVideo.src = bgData;
+  if (fileType.startsWith("video/")) {
+    bgVideo.src = fileURL;
     bgVideo.style.display = "block";
     bgVideo.play();
     document.body.style.backgroundImage = "none";
-  }
-
-  if (bgType === "image" && bgData) {
-    bgVideo.pause();
-    bgVideo.src = "";
-    bgVideo.style.display = "none";
-
-    document.body.style.backgroundImage = `url('${bgData}')`;
-    document.body.style.backgroundSize = "cover";
-    document.body.style.backgroundRepeat = "no-repeat";
-    document.body.style.backgroundAttachment = "fixed";
-    document.body.style.backgroundPosition = "center";
+  } else if (fileType.startsWith("image/")) {
+    setImageBackground(fileURL);
   }
 });
 
+// === RESTORE BACKGROUND ON LOAD ===
+window.addEventListener("DOMContentLoaded", async () => {
+  await openDB();
+  const bgType = await getFromDB("bgType");
+  const file = await getFromDB("bgFile");
 
-const imgPickBtn = document.getElementById("imgPickBtn");
-const imgInput = document.getElementById("imgInput");
+  if (!file) return;
+  const fileURL = URL.createObjectURL(file);
 
+  if (bgType.startsWith("video/") || bgType === "video") {
+    bgVideo.src = fileURL;
+    bgVideo.style.display = "block";
+    bgVideo.play();
+    document.body.style.backgroundImage = "none";
+  } else {
+    setImageBackground(fileURL);
+  }
+});
+
+// === PICK IMAGE ONLY ===
 imgPickBtn.addEventListener("click", () => imgInput.click());
 
-imgInput.addEventListener("change", (e) => {
+imgInput.addEventListener("change", async (e) => {
   const file = e.target.files[0];
   if (!file) return;
 
-  const reader = new FileReader();
+  const fileURL = URL.createObjectURL(file);
+  await saveToDB("bgFile", file);
+  await saveToDB("bgType", "image");
 
-  reader.onload = () => {
-    const dataUrl = reader.result;
-
-    // Set image as background
-    bgVideo.pause();
-    bgVideo.src = "";
-    bgVideo.style.display = "none";
-
-    document.body.style.backgroundImage = `url('${dataUrl}')`;
-    document.body.style.backgroundSize = "cover";
-    document.body.style.backgroundRepeat = "no-repeat";
-    document.body.style.backgroundAttachment = "fixed";
-    document.body.style.backgroundPosition = "center";
-
-    // Save to localStorage
-    localStorage.setItem("bgType", "image");
-    localStorage.setItem("bgData", dataUrl);
-  };
-
-  reader.readAsDataURL(file);
+  setImageBackground(fileURL);
 });
 
 // ========== 🎧 STEREO PAN FINAL ==========
