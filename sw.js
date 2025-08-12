@@ -2,6 +2,7 @@ const cacheName = 'yudatime-v1';
 const assetsToCache = [
   './',
   './index.html',
+  './offline.html', 
   './manifest.json',
   './sw.js',
   './assets/lagu.mp3',
@@ -33,8 +34,12 @@ self.addEventListener('activate', event => {
 // Fetch
 self.addEventListener('fetch', event => {
   event.respondWith(
-    caches.match(event.request).then(res => {
-      return res || fetch(event.request);
+    fetch(event.request).catch(() => {
+      // Kalau gagal fetch dan itu navigasi (halaman)
+      if (event.request.mode === 'navigate') {
+        return caches.match('./offline.html');
+      }
+      return caches.match(event.request);
     })
   );
 });
