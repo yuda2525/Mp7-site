@@ -537,7 +537,7 @@ background: transparent;
     }
   
 footer.footer-animated {  
-	      position: absolute;
+	      position: fixed;
   bottom: 15px;
   left: 85px;
   text-align: center;  
@@ -661,6 +661,7 @@ background: transparent;
       margin-top: 20px;
       border-radius: 8px;
           padding-left: 5px;  
+    left: 44px;
     }
     
       @supports (backdrop-filter: blur(10px)) {
@@ -1013,10 +1014,11 @@ background: transparent;
 ">  
 </pre>
 
+
 <canvas id="waveformCanvas" width="320" height="100"></canvas>
-  </div>
-  
-    </div>
+      </div>
+      
+      </div>
 <footer class="footer-animated">
   © 2025 <span class="brand">Y&amp;Z Studio</span> · Powered by AI &amp; Human Creativity
   <br>
@@ -3741,7 +3743,7 @@ function updatePlaylistText() {
     return `&nbsp;&nbsp;&nbsp;${prefix} ${name}`;
   }).join("<br>");
 
-  logView.innerHTML = `<b>📂 Playlist Aktif:</b><br>${output}`;
+  logView.innerHTML = `<b> 🎧 Playlist Aktif:</b><br>${output}`;
 }
 
 
