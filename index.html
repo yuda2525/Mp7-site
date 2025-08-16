@@ -954,7 +954,6 @@ background: transparent;
   <option value="Soft">Soft</option>
   <option value="Normal">Normal</option>
   <option value="Hard">Hard</option>
-  <option value="Extreme">Extreme</option>
 </select>
   
   <div class="row" style="gap: 10px; margin-top:10px;">  
@@ -4096,13 +4095,13 @@ window.addEventListener("DOMContentLoaded", () => {
   setBlendState(false);  
 });  
   
-// ============ ⚡ BOOSTER EQ ============  
+
+// ====== Booster Presets ======
 const boosterPresets = {
   Off: 0,
-  Soft: 2,
-  Normal: 4,
-  Hard: 6,
-  Extreme: 8
+  Soft: 1,
+  Normal: 2,
+  Hard: 3
 };
 
 const bandMap = {
@@ -4117,7 +4116,8 @@ const boosterBtns = {
   HIGH: document.getElementById("boostHigh")
 };
 
-// ✅ BOOSTER UTAMA
+
+// ====== Apply Booster ======
 function applyBooster() {
   if (!eqNodes || eqNodes.length < 12) return;
 
@@ -4131,7 +4131,6 @@ function applyBooster() {
         eqNodes[i].gain.value = val;
         if (sliders[i]) sliders[i].value = 50 + val * 5;
       });
-      console.log("↩️ Restore EQ sebelum booster");
     }
     eqBeforeBooster = [];
     updateBoosterUI();
@@ -4141,7 +4140,6 @@ function applyBooster() {
   // Simpan nilai EQ awal jika belum
   if (eqBeforeBooster.length !== eqNodes.length) {
     eqBeforeBooster = eqNodes.map(node => node.gain.value);
-    console.log("💾 Simpan EQ sebelum booster:", eqBeforeBooster);
   }
 
   // Apply booster
@@ -4152,11 +4150,11 @@ function applyBooster() {
     if (sliders[i]) sliders[i].value = 50 + finalGain * 5;
   });
 
-  console.log(`⚡ BOOST: ${boosterBand} @ ${amount} dB`);
   updateBoosterUI();
+  console.log(`⚡ BOOST: ${boosterBand} @ ${amount} dB`);
 }
 
-// ✅ Highlight UI
+// ====== Update UI ======
 function updateBoosterUI() {
   Object.entries(boosterBtns).forEach(([band, btn]) => {
     btn.classList.toggle("active", band === boosterBand);
@@ -4164,70 +4162,62 @@ function updateBoosterUI() {
   });
 }
 
-// ✅ Pasang tombol boost
+// ====== Pasang tombol band ======
 Object.entries(boosterBtns).forEach(([band, btn]) => {
   btn.addEventListener("click", () => {
-    if (boosterMode === "Off") {
-      console.warn("⚠️ Booster masih OFF");
-      return;
-    }
+    if (boosterMode === "Off") return;
     boosterBand = boosterBand === band ? null : band;
     applyBooster();
   });
 });
 
-// ✅ Mode Booster select
+// ====== Mode Booster select ======
 presetSelect.addEventListener("change", e => {
   boosterMode = e.target.value;
   boosterBand = null;
   eqBeforeBooster = [];
   applyBooster();
 });
-  
-// === RESET BOOSTER SAAT GANTI PRESET BASIC / ADVANCE  
-basicSelect.addEventListener("change", () => {  
-  eqBeforeBooster = [];  
-  const selected = basicSelect.value;  
-  
-  if (selected === "Flat") {  
-    resetToFlat("basic");  
-    return;  
-  }  
-  
-  if (advanceSelect.value !== "Advance Off/Flat") {  
-    resetToFlat("advance");  
-  }  
-  
-  applyFullPreset(selected, basicPresets[selected]);  
-  lastBasicPreset = selected;  
-});  
-  
-advanceSelect.addEventListener("change", () => {  
-  eqBeforeBooster = [];  
-  const selected = advanceSelect.value;  
-  
-  if (selected === "Advance Off/Flat") {  
-    resetToFlat("advance");  
-    return;  
-  }  
-  
-  if (basicSelect.value !== "Flat") {  
-    resetToFlat("basic");  
-  }  
-  
-  applyFullPreset(selected, advancePresets[selected]);  
-  lastAdvancePreset = selected;  
-});  
 
-
+// ====== Reset Booster ======
 function resetBooster() {
   boosterMode = "Off";
   boosterBand = null;
   eqBeforeBooster = [];
-  document.getElementById("presetSelect").value = "Off";
+
+  // Dropdown sync
+  const presetDropdown = document.getElementById("presetSelect");
+  if (presetDropdown) {
+    presetDropdown.value = "Off";
+    presetDropdown.dispatchEvent(new Event('change'));
+  }
+
   applyBooster();
   console.log("🔁 Booster reset (off by accident)");
 }
+
+// ====== Reset saat ganti preset ======
+basicSelect.addEventListener("change", () => {
+  eqBeforeBooster = [];
+  const selected = basicSelect.value;
+  if (selected === "Flat") {
+    resetToFlat("basic");
+    return;
+  }
+  if (advanceSelect.value !== "Advance Off/Flat") resetToFlat("advance");
+  applyFullPreset(selected, basicPresets[selected]);
+});
+
+advanceSelect.addEventListener("change", () => {
+  eqBeforeBooster = [];
+  const selected = advanceSelect.value;
+  if (selected === "Advance Off/Flat") {
+    resetToFlat("advance");
+    return;
+  }
+  if (basicSelect.value !== "Flat") resetToFlat("basic");
+  applyFullPreset(selected, advancePresets[selected]);
+});
   
   
 // ============ 🕒 EVENT ============  
