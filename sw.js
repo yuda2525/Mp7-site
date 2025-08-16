@@ -1,6 +1,6 @@
 // ==================== sw.js ====================
-const cacheName = 'yudatime-v2';
-const assetsToCache = [
+const CACHE_NAME = 'audioplayer-v1';
+const ASSETS_TO_CACHE = [
   './',
   './index.html',
   './offline.html',
@@ -8,18 +8,19 @@ const assetsToCache = [
   './sw.js',
   './style.css',
   './main.js',
-  './bg.jpg',      // background bisa di root
-  './lagu.mp3',    // lagu bisa di root
+  './bg.jpg',      // fallback image
+  './bg.mp4',      // video background
+  './lagu.mp3',    // audio
   './icon-192.png',
   './icon-512.png'
 ];
 
-// Install: pre-cache semua aset
+// Install: cache semua assets
 self.addEventListener('install', event => {
   event.waitUntil(
-    caches.open(cacheName).then(cache => {
+    caches.open(CACHE_NAME).then(cache => {
       console.log('✅ Pre-caching assets');
-      return cache.addAll(assetsToCache);
+      return cache.addAll(ASSETS_TO_CACHE);
     })
   );
   self.skipWaiting();
@@ -28,41 +29,47 @@ self.addEventListener('install', event => {
 // Activate: hapus cache lama
 self.addEventListener('activate', event => {
   event.waitUntil(
-    caches.keys().then(keys => {
-      return Promise.all(
-        keys.filter(key => key !== cacheName).map(key => caches.delete(key))
-      );
-    })
+    caches.keys().then(keys =>
+      Promise.all(
+        keys.filter(key => key !== CACHE_NAME).map(key => caches.delete(key))
+      )
+    )
   );
   self.clients.claim();
 });
 
-// Fetch: cache-first dengan fallback offline
+// Fetch: cache-first + fallback offline
 self.addEventListener('fetch', event => {
   event.respondWith(
-    caches.match(event.request).then(cachedResponse => {
-      if (cachedResponse) return cachedResponse;
+    caches.match(event.request).then(cached => {
+      if (cached) return cached;
 
       return fetch(event.request)
-        .then(response => {
-          // Simpan ke cache untuk next time
-          return caches.open(cacheName).then(cache => {
-            cache.put(event.request, response.clone());
-            return response;
+        .then(resp => {
+          return caches.open(CACHE_NAME).then(cache => {
+            cache.put(event.request, resp.clone());
+            return resp;
           });
         })
         .catch(() => {
-          // Fallback offline
-          if (event.request.mode === 'navigate') {
-            return caches.match('./offline.html');
-          }
-          if (event.request.destination === 'image') {
+          // fallback offline
+          const req = event.request;
+          if (req.mode === 'navigate') return caches.match('./offline.html');
+
+          const url = req.url.toLowerCase();
+
+          if (req.destination === 'image' || url.endsWith('.jpg') || url.endsWith('.png')) {
             return caches.match('./bg.jpg');
           }
-          if (event.request.destination === 'audio') {
+
+          if (req.destination === 'video' || url.endsWith('.mp4')) {
+            return caches.match('./bg.mp4');
+          }
+
+          if (req.destination === 'audio' || url.endsWith('.mp3')) {
             return caches.match('./lagu.mp3');
           }
-        });
+        })
     })
   );
 });
