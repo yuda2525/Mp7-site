@@ -4606,12 +4606,27 @@ const visualEngineSettings = {
 
   animate();
 
-  if ('serviceWorker' in navigator) {    
-    navigator.serviceWorker.register('sw.js')    
-      .then(reg => console.log('✅ Service Worker registered:', reg.scope))    
-      .catch(err => console.error('❌ Service Worker registration failed:', err));    
-  }    
+// Register Service Worker
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('./sw.js')
+    .then(reg => console.log('✅ SW registered:', reg.scope))
+    .catch(err => console.error('❌ SW registration failed:', err));
+}
 
+// Fullscreen on first click
+let fullscreenActivated = false;
+document.addEventListener('click', () => {
+  if (fullscreenActivated) return;
+  fullscreenActivated = true;
+  const el = document.documentElement;
+  el.requestFullscreen?.() || el.webkitRequestFullscreen?.() || el.msRequestFullscreen?.();
+}, { once: true });
+
+// Optional: fallback background from localStorage
+window.addEventListener('load', () => {
+  const savedBg = localStorage.getItem('bgOuter');
+  if (savedBg) document.body.style.backgroundImage = `url('${savedBg}')`;
+});
 
 window.addEventListener("DOMContentLoaded", () => {
   console.log("📦 DOM Loaded");
