@@ -9,8 +9,8 @@ const ASSETS_TO_CACHE = [
   './style.css',
   './main.js',
   './bg.jpg',      // fallback image
-  './bg.mp4',      // video background
-  './lagu.mp3',    // audio
+  './bg.mp4',      // fallback video
+  './lagu.mp3',    // fallback audio
   './icon-192.png',
   './icon-512.png'
 ];
@@ -18,10 +18,7 @@ const ASSETS_TO_CACHE = [
 // Install: cache semua assets
 self.addEventListener('install', event => {
   event.waitUntil(
-    caches.open(CACHE_NAME).then(cache => {
-      console.log('✅ Pre-caching assets');
-      return cache.addAll(ASSETS_TO_CACHE);
-    })
+    caches.open(CACHE_NAME).then(cache => cache.addAll(ASSETS_TO_CACHE))
   );
   self.skipWaiting();
 });
@@ -40,12 +37,15 @@ self.addEventListener('activate', event => {
 
 // Fetch: cache-first + fallback offline
 self.addEventListener('fetch', event => {
+  if (event.request.method !== 'GET') return;
+
   event.respondWith(
     caches.match(event.request).then(cached => {
       if (cached) return cached;
 
       return fetch(event.request)
         .then(resp => {
+          // Simpan ke cache untuk next time
           return caches.open(CACHE_NAME).then(cache => {
             cache.put(event.request, resp.clone());
             return resp;
@@ -69,6 +69,9 @@ self.addEventListener('fetch', event => {
           if (req.destination === 'audio' || url.endsWith('.mp3')) {
             return caches.match('./lagu.mp3');
           }
+
+          // fallback default jika request unknown
+          return caches.match('./offline.html');
         })
     })
   );
