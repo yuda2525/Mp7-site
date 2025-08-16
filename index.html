@@ -2488,17 +2488,52 @@ function encodeWAVFloat32(buffer) {
   return new Blob([wav], { type: "audio/wav" });
 }
 
-// ======= Simple log helper =======
-function log(msg) {
-  console.log(msg);
-  const div = document.getElementById("statusLog");
-  if (div) {
-    const line = document.createElement("div");
-    line.textContent = msg;
-    div.appendChild(line);
+
+// ===== Cache helper =====
+async function renderAllBitDepthLock192k(durationInSec = 10) {
+  const srcBuffer = window.lastRenderedBuffer;
+  if (!srcBuffer) return console.log("❌ Buffer tidak ditemukan");
+
+  let offlineCtx;
+  const targetRate = 192000;
+  try {
+    offlineCtx = new OfflineAudioContext(2, durationInSec * targetRate, targetRate);
+  } catch (err) {
+    console.warn("⚠️ 192kHz gagal, fallback ke sample rate tertinggi browser");
+    // fallback paksa pakai sample rate maksimum dari AudioContext biasa
+    const maxRate = (audioCtx && audioCtx.sampleRate) || 48000;
+    offlineCtx = new OfflineAudioContext(2, durationInSec * maxRate, maxRate);
+  }
+
+  const source = offlineCtx.createBufferSource();
+  source.buffer = srcBuffer;
+
+  // FX Chain
+  const snap = offlineCtx.createBiquadFilter();
+  snap.type = "peaking"; snap.frequency.value = 2100; snap.gain.value = 4; snap.Q.value = 1.2;
+  const clarity = offlineCtx.createBiquadFilter();
+  clarity.type = "highshelf"; clarity.frequency.value = 4800; clarity.gain.value = 3;
+  const boost = offlineCtx.createGain();
+  boost.gain.value = 1.25;
+
+  source.connect(snap).connect(clarity).connect(boost).connect(offlineCtx.destination);
+  source.start();
+
+  console.log(`🎛️ Memproses audio di sample rate target: ${targetRate}Hz ...`);
+
+  try {
+    const renderedBuffer = await offlineCtx.startRendering();
+
+    renderedVariants.pcm16   = encodeWAV16bit(renderedBuffer);
+    renderedVariants.pcm24   = encodeWAV24bit(renderedBuffer);
+    renderedVariants.float32 = encodeWAVFloat32(renderedBuffer);
+
+    console.log("✅ Render selesai. Sample rate final:", renderedBuffer.sampleRate);
+    console.log("🔹 Semua format tersimpan di memori:", renderedVariants);
+  } catch (err) {
+    console.error("❌ Gagal render:", err);
   }
 }
-
 
 
 
