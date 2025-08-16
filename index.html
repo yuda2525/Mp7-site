@@ -2331,172 +2331,16 @@ function drawStereoPanVisual() {
 }
 
 let audioCtx;
-let myDecodedBuffer;
-
 let renderedVariants = {
   pcm16: null,
   pcm24: null,
   float32: null
 };
 
-async function renderAudioVariants(durationInSec = 10) {
-  const sampleRate = audioCtx?.sampleRate || 44100;
-  const srcBuffer = window.lastRenderedBuffer;
-  if (!srcBuffer) return log("❌ Buffer tidak ditemukan");
-
-  const offlineCtx = new OfflineAudioContext(2, durationInSec * sampleRate, sampleRate);
-  const source = offlineCtx.createBufferSource();
-  source.buffer = srcBuffer;
-
-  // Optional efek
-  const snap = offlineCtx.createBiquadFilter();
-  snap.type = "peaking"; snap.frequency.value = 2100; snap.gain.value = 4; snap.Q.value = 1.2;
-
-  const clarity = offlineCtx.createBiquadFilter();
-  clarity.type = "highshelf"; clarity.frequency.value = 4800; clarity.gain.value = 3;
-
-  const boost = offlineCtx.createGain();
-  boost.gain.value = 1.25;
-
-  source.connect(snap).connect(clarity).connect(boost).connect(offlineCtx.destination);
-  source.start();
-
-  log("🎧 [Render] Memproses audio...");
-  const renderedBuffer = await offlineCtx.startRendering();
-
-  // Encode hasil ke memori (tanpa download)
-  renderedVariants.pcm16 = encodeWAV16bit(renderedBuffer);
-  renderedVariants.pcm24 = encodeWAV24bit(renderedBuffer);
-  renderedVariants.float32 = encodeWAVFloat32(renderedBuffer);
-
-  log("✅ Render selesai & disimpan ke memori 🎉");
-}
-
-// === Encode WAV 16-bit PCM
-function encodeWAV16bit(buffer) {
-  const numChannels = buffer.numberOfChannels;
-  const sampleRate = buffer.sampleRate;
-  const length = buffer.length * numChannels * 2;
-  const wav = new DataView(new ArrayBuffer(44 + length));
-  let offset = 0;
-
-  function writeString(s) {
-    for (let i = 0; i < s.length; i++) wav.setUint8(offset++, s.charCodeAt(i));
-  }
-
-  function floatTo16bitPCM(output, offset, input) {
-    for (let i = 0; i < input.length; i++, offset += 2) {
-      let s = Math.max(-1, Math.min(1, input[i]));
-      s = s < 0 ? s * 0x8000 : s * 0x7FFF;
-      output.setInt16(offset, s, true);
-    }
-  }
-
-  writeString("RIFF"); wav.setUint32(offset, 36 + length, true); offset += 4;
-  writeString("WAVE"); writeString("fmt "); wav.setUint32(offset, 16, true); offset += 4;
-  wav.setUint16(offset, 1, true); offset += 2;
-  wav.setUint16(offset, numChannels, true); offset += 2;
-  wav.setUint32(offset, sampleRate, true); offset += 4;
-  wav.setUint32(offset, sampleRate * numChannels * 2, true); offset += 4;
-  wav.setUint16(offset, numChannels * 2, true); offset += 2;
-  wav.setUint16(offset, 16, true); offset += 2;
-  writeString("data"); wav.setUint32(offset, length, true); offset += 4;
-
-  for (let ch = 0; ch < numChannels; ch++) {
-    floatTo16bitPCM(wav, offset + ch * 2, buffer.getChannelData(ch));
-  }
-
-  return new Blob([wav], { type: "audio/wav" });
-}
-
-// === Encode WAV 32-bit Float
-function encodeWAVFloat32(buffer) {
-  const numChannels = buffer.numberOfChannels;
-  const sampleRate = buffer.sampleRate;
-  const length = buffer.length * numChannels * 4;
-  const wav = new DataView(new ArrayBuffer(44 + length));
-  let offset = 0;
-
-  function writeString(s) {
-    for (let i = 0; i < s.length; i++) wav.setUint8(offset++, s.charCodeAt(i));
-  }
-
-  function writeFloat32(output, offset, input) {
-    for (let i = 0; i < input.length; i++, offset += 4) {
-      output.setFloat32(offset, input[i], true);
-    }
-  }
-
-  writeString("RIFF"); wav.setUint32(offset, 36 + length, true); offset += 4;
-  writeString("WAVE"); writeString("fmt "); wav.setUint32(offset, 16, true); offset += 4;
-  wav.setUint16(offset, 3, true); offset += 2; // Format 3 = float
-  wav.setUint16(offset, numChannels, true); offset += 2;
-  wav.setUint32(offset, sampleRate, true); offset += 4;
-  wav.setUint32(offset, sampleRate * numChannels * 4, true); offset += 4;
-  wav.setUint16(offset, numChannels * 4, true); offset += 2;
-  wav.setUint16(offset, 32, true); offset += 2;
-  writeString("data"); wav.setUint32(offset, length, true); offset += 4;
-
-  for (let ch = 0; ch < numChannels; ch++) {
-    writeFloat32(wav, offset + ch * 4, buffer.getChannelData(ch));
-  }
-
-  return new Blob([wav], { type: "audio/wav" });
-}
-
-// Log helper
-function log(msg) {
-  console.log(msg);
-  const div = document.getElementById("statusLog");
-  if (div) {
-    const line = document.createElement("div");
-    line.textContent = msg;
-    div.appendChild(line);
-  }
-}
-
-// === Encode WAV 24-bit PCM
-function encodeWAV24bit(buffer) {
-  const numChannels = buffer.numberOfChannels;
-  const sampleRate = buffer.sampleRate;
-  const length = buffer.length * numChannels * 3; // 3 bytes per sample
-  const wav = new DataView(new ArrayBuffer(44 + length));
-  let offset = 0;
-
-  function writeString(s) {
-    for (let i = 0; i < s.length; i++) wav.setUint8(offset++, s.charCodeAt(i));
-  }
-
-  function floatTo24bitPCM(output, offset, input) {
-    for (let i = 0; i < input.length; i++, offset += 3) {
-      let s = Math.max(-1, Math.min(1, input[i]));
-      let int = Math.floor(s * 8388607); // 2^23 - 1
-      output.setUint8(offset, int & 0xFF);         // low byte
-      output.setUint8(offset + 1, (int >> 8) & 0xFF);  // mid byte
-      output.setUint8(offset + 2, (int >> 16) & 0xFF); // high byte
-    }
-  }
-
-  writeString("RIFF"); wav.setUint32(offset, 36 + length, true); offset += 4;
-  writeString("WAVE"); writeString("fmt "); wav.setUint32(offset, 16, true); offset += 4;
-  wav.setUint16(offset, 1, true); offset += 2; // PCM format
-  wav.setUint16(offset, numChannels, true); offset += 2;
-  wav.setUint32(offset, sampleRate, true); offset += 4;
-  wav.setUint32(offset, sampleRate * numChannels * 3, true); offset += 4; // byteRate
-  wav.setUint16(offset, numChannels * 3, true); offset += 2; // blockAlign
-  wav.setUint16(offset, 24, true); offset += 2; // bitsPerSample
-  writeString("data"); wav.setUint32(offset, length, true); offset += 4;
-
-  // Tulis sample tiap channel
-  for (let ch = 0; ch < numChannels; ch++) {
-    floatTo24bitPCM(wav, offset + ch * 3, buffer.getChannelData(ch));
-  }
-  
-    return new Blob([wav], { type: "audio/wav" });
-}
-
-function renderAllBitDepth(durationInSec = 10) {
-  const sampleRate = audioCtx?.sampleRate || 44100;
+// ======= Render semua bit depth ke memori =======
+async function renderAllBitDepth(durationInSec = 10) {
+  if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  const sampleRate = audioCtx.sampleRate || 44100;
   const srcBuffer = window.lastRenderedBuffer;
   if (!srcBuffer) return log("❌ Buffer tidak ditemukan");
 
@@ -2517,25 +2361,126 @@ function renderAllBitDepth(durationInSec = 10) {
   source.connect(snap).connect(clarity).connect(boost).connect(offlineCtx.destination);
   source.start();
 
-  log("🎛️ [Render] Mulai render...");
+  log("🎛️ [Render] Memproses audio...");
 
-  offlineCtx.startRendering().then(renderedBuffer => {
-    const wav16 = encodeWAV16bit(renderedBuffer);
-    const wav24 = encodeWAV24bit(renderedBuffer);
-    const wav32 = encodeWAVFloat32(renderedBuffer);
+  try {
+    const renderedBuffer = await offlineCtx.startRendering();
 
-    autoDownload(wav16, "rendered-16bit.wav");
-    autoDownload(wav24, "rendered-24bit.wav");
-    autoDownload(wav32, "rendered-32bit-float.wav");
-
-    log("✅ Render & download semua format selesai");
-  }).catch(err => log("❌ Gagal render: " + err.message));
-}
-
+    renderedVariants.pcm16   = encodeWAV16bit(renderedBuffer);
+    renderedVariants.pcm24   = encodeWAV24bit(renderedBuffer);
+    renderedVariants.float32 = encodeWAVFloat32(renderedBuffer);
 
     window.lastRender16BitOK = true;
     window.lastRender24BitOK = true;
     window.lastRender32BitOK = true;
+
+    log("✅ Render selesai, semua format tersimpan di memori");
+  } catch (err) {
+    log("❌ Gagal render: " + err.message);
+  }
+}
+
+// ======= Encode WAV 16-bit =======
+function encodeWAV16bit(buffer) {
+  const numChannels = buffer.numberOfChannels;
+  const sampleRate = buffer.sampleRate;
+  const length = buffer.length * numChannels * 2;
+  const wav = new DataView(new ArrayBuffer(44 + length));
+  let offset = 0;
+
+  function writeString(s) { for (let i = 0; i < s.length; i++) wav.setUint8(offset++, s.charCodeAt(i)); }
+  function floatTo16bitPCM(out, off, input) {
+    for (let i = 0; i < input.length; i++, off += 2) {
+      let s = Math.max(-1, Math.min(1, input[i]));
+      s = s < 0 ? s * 0x8000 : s * 0x7FFF;
+      out.setInt16(off, s, true);
+    }
+  }
+
+  writeString("RIFF"); wav.setUint32(offset, 36 + length, true); offset += 4;
+  writeString("WAVE"); writeString("fmt "); wav.setUint32(offset, 16, true); offset += 4;
+  wav.setUint16(offset, 1, true); offset += 2;
+  wav.setUint16(offset, numChannels, true); offset += 2;
+  wav.setUint32(offset, sampleRate, true); offset += 4;
+  wav.setUint32(offset, sampleRate * numChannels * 2, true); offset += 4;
+  wav.setUint16(offset, numChannels * 2, true); offset += 2;
+  wav.setUint16(offset, 16, true); offset += 2;
+  writeString("data"); wav.setUint32(offset, length, true); offset += 4;
+
+  for (let ch = 0; ch < numChannels; ch++) floatTo16bitPCM(wav, offset + ch * 2, buffer.getChannelData(ch));
+  return new Blob([wav], { type: "audio/wav" });
+}
+
+// ======= Encode WAV 24-bit =======
+function encodeWAV24bit(buffer) {
+  const numChannels = buffer.numberOfChannels;
+  const sampleRate = buffer.sampleRate;
+  const length = buffer.length * numChannels * 3;
+  const wav = new DataView(new ArrayBuffer(44 + length));
+  let offset = 0;
+
+  function writeString(s) { for (let i = 0; i < s.length; i++) wav.setUint8(offset++, s.charCodeAt(i)); }
+  function floatTo24bitPCM(out, off, input) {
+    for (let i = 0; i < input.length; i++, off += 3) {
+      let s = Math.max(-1, Math.min(1, input[i]));
+      let int = Math.floor(s * 8388607);
+      out.setUint8(off, int & 0xFF);
+      out.setUint8(off + 1, (int >> 8) & 0xFF);
+      out.setUint8(off + 2, (int >> 16) & 0xFF);
+    }
+  }
+
+  writeString("RIFF"); wav.setUint32(offset, 36 + length, true); offset += 4;
+  writeString("WAVE"); writeString("fmt "); wav.setUint32(offset, 16, true); offset += 4;
+  wav.setUint16(offset, 1, true); offset += 2;
+  wav.setUint16(offset, numChannels, true); offset += 2;
+  wav.setUint32(offset, sampleRate, true); offset += 4;
+  wav.setUint32(offset, sampleRate * numChannels * 3, true); offset += 4;
+  wav.setUint16(offset, numChannels * 3, true); offset += 2;
+  wav.setUint16(offset, 24, true); offset += 2;
+  writeString("data"); wav.setUint32(offset, length, true); offset += 4;
+
+  for (let ch = 0; ch < numChannels; ch++) floatTo24bitPCM(wav, offset + ch * 3, buffer.getChannelData(ch));
+  return new Blob([wav], { type: "audio/wav" });
+}
+
+// ======= Encode WAV 32-bit Float =======
+function encodeWAVFloat32(buffer) {
+  const numChannels = buffer.numberOfChannels;
+  const sampleRate = buffer.sampleRate;
+  const length = buffer.length * numChannels * 4;
+  const wav = new DataView(new ArrayBuffer(44 + length));
+  let offset = 0;
+
+  function writeString(s) { for (let i = 0; i < s.length; i++) wav.setUint8(offset++, s.charCodeAt(i)); }
+  function writeFloat32(out, off, input) { for (let i = 0; i < input.length; i++, off += 4) out.setFloat32(off, input[i], true); }
+
+  writeString("RIFF"); wav.setUint32(offset, 36 + length, true); offset += 4;
+  writeString("WAVE"); writeString("fmt "); wav.setUint32(offset, 16, true); offset += 4;
+  wav.setUint16(offset, 3, true); offset += 2;
+  wav.setUint16(offset, numChannels, true); offset += 2;
+  wav.setUint32(offset, sampleRate, true); offset += 4;
+  wav.setUint32(offset, sampleRate * numChannels * 4, true); offset += 4;
+  wav.setUint16(offset, numChannels * 4, true); offset += 2;
+  wav.setUint16(offset, 32, true); offset += 2;
+  writeString("data"); wav.setUint32(offset, length, true); offset += 4;
+
+  for (let ch = 0; ch < numChannels; ch++) writeFloat32(wav, offset + ch * 4, buffer.getChannelData(ch));
+  return new Blob([wav], { type: "audio/wav" });
+}
+
+// ======= Simple log helper =======
+function log(msg) {
+  console.log(msg);
+  const div = document.getElementById("statusLog");
+  if (div) {
+    const line = document.createElement("div");
+    line.textContent = msg;
+    div.appendChild(line);
+  }
+}
+
+
 
 
 // ============ 🎚️ PRESETS ============  
