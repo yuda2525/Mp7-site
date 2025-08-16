@@ -2330,12 +2330,31 @@ function drawStereoPanVisual() {
   // Visualisasi pan bisa ditambah nanti, untuk sekarang cukup biar gak error
 }
 
+
+
 let audioCtx;
-let renderedVariants = {
-  pcm16: null,
-  pcm24: null,
-  float32: null
-};
+let renderedVariants = { pcm16: null, pcm24: null, float32: null };
+
+const audioInput = document.getElementById("fileInput");
+
+audioInput.addEventListener("change", async (e) => {
+  const file = e.target.files[0];
+  if (!file) return;
+
+  const arrayBuffer = await file.arrayBuffer();
+  audioCtx.decodeAudioData(arrayBuffer)
+    .then(decoded => {
+      console.log("✅ Audio berhasil decode:", decoded);
+      window.lastRenderedBuffer = decoded;
+      renderAllBitDepth(5); // render 5 detik
+    })
+    .catch(err => console.error("❌ Gagal decode audio:", err));
+});
+
+// trigger input file dari JS (tanpa tombol)
+audioInput.click();
+
+
 
 // ======= Render semua bit depth ke memori =======
 async function renderAllBitDepth(durationInSec = 10) {
