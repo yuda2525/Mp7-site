@@ -1237,8 +1237,10 @@ function createEQSliders() {
 }
 
 
+// ===== INJECT POWERAMP =====
 async function injectPowerAmpV2AndConnect(currentNode) {
   await injectPowerAmpV2();
+
   if (!powerAmpNode) {
     console.warn("❌ powerAmpNode gagal dibuat");
     return currentNode;
@@ -1256,16 +1258,17 @@ async function initAudioContext() {
     audioCtx = new (window.AudioContext || window.webkitAudioContext)();
     sourceNode = audioCtx.createMediaElementSource(audio);
     
-    if (!presenceNode) presenceNode = audioCtx.createGain();
-if (!brillianceNode) brillianceNode = audioCtx.createGain();
-if (!warmthNode) warmthNode = audioCtx.createGain();
-if (!masterGain) masterGain = audioCtx.createGain();
+  // Gain nodes chain
+  if (!presenceNode) presenceNode = audioCtx.createGain();
+  if (!brillianceNode) brillianceNode = audioCtx.createGain();
+  if (!warmthNode) warmthNode = audioCtx.createGain();
+  if (!masterGain) masterGain = audioCtx.createGain();
 
-sourceNode.connect(presenceNode);
-presenceNode.connect(brillianceNode);
-brillianceNode.connect(warmthNode);
-warmthNode.connect(masterGain);
-masterGain.connect(audioCtx.destination);
+  sourceNode.connect(presenceNode);
+  presenceNode.connect(brillianceNode);
+  brillianceNode.connect(warmthNode);
+  warmthNode.connect(masterGain);
+  masterGain.connect(audioCtx.destination);
 
 if (!audioCtx || audioCtx.state !== "running") {
   console.error("❌ AudioContext belum aktif atau belum dibuat.");
@@ -1279,18 +1282,21 @@ if (!sourceNode) {
   console.log("🎙️ Source node OK:", sourceNode);
 }
 
-    // 🎛️ EQ INIT
-    const frequencies = [10, 32, 64, 125, 250, 500, 1000, 2000, 4000, 10000, 16000, 20000];
-    eqNodes = frequencies.map(freq => {
-      const f = audioCtx.createBiquadFilter();
-      f.type = "peaking";
-      f.frequency.value = freq;
-      f.Q.value = 1;
-      f.gain.value = 0;
-      return f;
-    });
-    console.log("🎛️ EQ Nodes initialized");
+  // Generic EQ nodes
+  const frequencies = [10, 32, 64, 125, 250, 500, 1000, 2000, 4000, 10000, 16000, 20000];
+  eqNodes = frequencies.map(freq => {
+    const f = audioCtx.createBiquadFilter();
+    f.type = "peaking";
+    f.frequency.value = freq;
+    f.Q.value = 1;
+    f.gain.value = 0;
+    return f;
+  });
 
+  console.log("🎛️ Generic EQ Nodes initialized");
+
+
+// ===== INIT SPECIFIC EQ FILTERS =====
 function initEQNodes(audioCtx) {
   if (!audioCtx) {
     console.warn("⛔ audioCtx belum diinisialisasi");
@@ -1298,13 +1304,15 @@ function initEQNodes(audioCtx) {
   }
 
   const eqConfig = {
-    bass:   { freq: 100,  gain: 4, type: "lowshelf" },
-    kick:   { freq: 60,   gain: 8, type: "lowshelf" },
-    snare:  { freq: 1500, gain: 6, type: "peaking" },
-    guitar: { freq: 800,  gain: 2, type: "peaking" },
-    hihat:  { freq: 8000, gain: 4, type: "highshelf" },
-    piano:  { freq: 1200, gain: 3, type: "peaking" }
+    bass:   { freq: 100,  gain: 4,  type: "lowshelf" },
+    kick:   { freq: 60,   gain: 8,  type: "lowshelf" },
+    snare:  { freq: 1500, gain: 6,  type: "peaking" },
+    guitar: { freq: 800,  gain: 2,  type: "peaking" },
+    hihat:  { freq: 8000, gain: 4,  type: "highshelf" },
+    piano:  { freq: 1200, gain: 3,  type: "peaking" }
   };
+
+  eqNodes = eqNodes || {};
 
   for (const [name, { freq, gain, type }] of Object.entries(eqConfig)) {
     const filter = audioCtx.createBiquadFilter();
@@ -1315,7 +1323,7 @@ function initEQNodes(audioCtx) {
     eqNodes[name] = filter;
   }
 
-  console.log("✅ EQ Nodes initialized:", eqNodes);
+  console.log("✅ Specific EQ Nodes initialized:", Object.keys(eqNodes));
 }
 
 // Pastikan audioCtx sudah terinisialisasi sebelum baris ini
@@ -1326,45 +1334,73 @@ if (!audioCtx) {
 
 console.log("🎚 Inisialisasi EQ Filters...");
 
-lowCutFilter = audioCtx.createBiquadFilter();
+// ===== SUB / LOW EQ CHAIN =====
+const lowCutFilter = audioCtx.createBiquadFilter();
 lowCutFilter.type = "highpass";
-lowCutFilter.frequency.value = 30;
-lowCutFilter.Q.value = 0.7; // Jangan terlalu sempit
+lowCutFilter.frequency.value = 25; 
+lowCutFilter.Q.value = 0.7; 
 
-subShelf = audioCtx.createBiquadFilter();
+const subShelf = audioCtx.createBiquadFilter();
 subShelf.type = "lowshelf";
 subShelf.frequency.value = 70;
-subShelf.gain.value = 2.5; // boost ringan
+subShelf.gain.value = 4.5; 
 
-subMidCut = audioCtx.createBiquadFilter();
+const subMidCut = audioCtx.createBiquadFilter();
 subMidCut.type = "peaking";
-subMidCut.frequency.value = 300; // area muddiness
+subMidCut.frequency.value = 300;
 subMidCut.Q.value = 1.2;
-subMidCut.gain.value = -2.5;
+subMidCut.gain.value = -1.5; 
 
-subCompressor = audioCtx.createDynamicsCompressor();
+const subCompressor = audioCtx.createDynamicsCompressor();
 subCompressor.threshold.value = -28;
 subCompressor.knee.value = 12;
-subCompressor.ratio.value = 2.5;
+subCompressor.ratio.value = 3;
 subCompressor.attack.value = 0.005;
 subCompressor.release.value = 0.25;
 
+const subGain = audioCtx.createGain();
+subGain.gain.value = 1.1;
+
+// Sambungkan chain ke master atau powerAmpNode
+sourceNode.connect(lowCutFilter);
+lowCutFilter.connect(subShelf);
+subShelf.connect(subMidCut);
+subMidCut.connect(subCompressor);
+subCompressor.connect(subGain);
+subGain.connect(masterGain); // masterGain dari chain utama
+
+console.log("✅ Sub/bass filter & compressor siap");
+
+// ===== DYNAMIC SUB GAIN =====
 function updateSubGain(kickEnergy) {
   const now = audioCtx.currentTime;
   const targetGain = kickEnergy > 120 ? 0.85 : 1.0;
   subGain.gain.setTargetAtTime(targetGain, now, 0.3);
 }
 
-console.log("🧰 Sub Compressor siap:", subCompressor);
-
 console.log("✅ Semua filter EQ bawah berhasil di-set!");
 
-function renderFrame() {
-  // Analisis real-time
-  const kickEnergy = analyseKick(); // fungsi lo sendiri
-  updateSubGain(kickEnergy);
+// ===== ANALYSER NODE REAL-TIME =====
+const kickAnalyser = audioCtx.createAnalyser();
+kickAnalyser.fftSize = 256; // resolusi cukup untuk low-end
+const dataArray = new Uint8Array(kickAnalyser.frequencyBinCount);
 
-  requestAnimationFrame(renderFrame);
+// Sambungkan source ke analyser (tetap ke chain utama)
+sourceNode.connect(kickAnalyser);
+
+// Fungsi analisis kick real-time
+function analyseKick() {
+  kickAnalyser.getByteFrequencyData(dataArray);
+  
+  // Ambil frekuensi rendah (misal bin 0–5) untuk kick
+  let sum = 0;
+  for (let i = 0; i < 6; i++) {
+    sum += dataArray[i];
+  }
+  
+  // Rata-rata energi low-end
+  const avg = sum / 6;
+  return avg;
 }
 
   // ✅ Low-shelf filter buat angkat bass
@@ -1692,10 +1728,11 @@ logInfo("Dynamics", { compressor, smartLimiter });
     
     
     
-    // ====== 🔀 Chain Setup ======
-    let current = sourceNode;
+    
+// ====== 🔀 Chain Setup ======
+let current = sourceNode;
 
-// EQ Slider 12-band
+// ===== EQ Slider 12-band =====
 if (eqNodes?.length) {
   eqNodes.forEach(node => {
     current.connect(node);
@@ -1704,7 +1741,7 @@ if (eqNodes?.length) {
   console.log(`🎚️ EQ Connected (${eqNodes.length} bands)`);
 }
 
-// FX Chain
+// ===== FX Chain =====
 const fxChain = [
   subwoofer,
   loudnessLow,
@@ -1714,6 +1751,7 @@ const fxChain = [
   deEsser,
   ambient,
 ];
+
 fxChain.forEach(node => {
   if (node) {
     current.connect(node);
@@ -1722,7 +1760,9 @@ fxChain.forEach(node => {
 });
 console.log("🎛️ FX Chain Connected");
 
+// ===== Helper untuk connect array node =====
 function connectChain(nodes) {
+  if (!nodes || nodes.length < 2) return;
   for (let i = 0; i < nodes.length - 1; i++) {
     if (nodes[i] && nodes[i + 1]) {
       nodes[i].connect(nodes[i + 1]);
@@ -1730,13 +1770,38 @@ function connectChain(nodes) {
   }
 }
 
+// ===== Optional: connect chain FX otomatis ke master =====
+if (current) {
+  current.connect(masterGain); // masterGain dari chain utama
+}
 
+
+// ===== Build Subwoofer Chain =====
 function buildSubwooferChain(audioCtx, inputNode) {
   const lowCut = audioCtx.createBiquadFilter();
-  const shelf = audioCtx.createBiquadFilter();
-  const midCut = audioCtx.createBiquadFilter();
-  const comp = audioCtx.createDynamicsCompressor();
+  lowCut.type = "highpass";
+  lowCut.frequency.value = 30;
+  lowCut.Q.value = 0.7;
 
+  const shelf = audioCtx.createBiquadFilter();
+  shelf.type = "lowshelf";
+  shelf.frequency.value = 70;
+  shelf.gain.value = 2.5;
+
+  const midCut = audioCtx.createBiquadFilter();
+  midCut.type = "peaking";
+  midCut.frequency.value = 300;
+  midCut.Q.value = 1.2;
+  midCut.gain.value = -2.5;
+
+  const comp = audioCtx.createDynamicsCompressor();
+  comp.threshold.value = -28;
+  comp.knee.value = 12;
+  comp.ratio.value = 2.5;
+  comp.attack.value = 0.005;
+  comp.release.value = 0.25;
+
+  // Chain connection
   inputNode.connect(lowCut);
   lowCut.connect(shelf);
   shelf.connect(midCut);
@@ -1745,6 +1810,16 @@ function buildSubwooferChain(audioCtx, inputNode) {
   return comp; // ujung chain
 }
 
+// ===== Helper connectChain =====
+function connectChain(nodes) {
+  for (let i = 0; i < nodes.length - 1; i++) {
+    if (nodes[i] && nodes[i + 1]) {
+      nodes[i].connect(nodes[i + 1]);
+    }
+  }
+}
+
+// ===== FX / Instrument Chains =====
 connectChain([
   snareBody,
   snareCutMud,
@@ -1793,7 +1868,7 @@ connectChain([
   biquadFilter,
 ]);
 
-// Dynamics Chain
+// ===== Dynamics Chain =====
 current.connect(compressor);
 compressor.connect(agcLimiter);
 agcLimiter.connect(softLimiter);
@@ -1802,26 +1877,27 @@ peakLimiter.connect(smartLimiter);
 current = smartLimiter;
 console.log("🧰 Dynamics Connected");
 
-// PowerAmp (optional)
-if (!powerAmpNode) {
-  console.log("⏳ Menunggu PowerAmp ready...");
-  await injectPowerAmpV2(); // injeksi dulu
+// ===== PowerAmp Injection =====
+async function connectPowerAmp(current) {
+  if (!powerAmpNode) {
+    console.log("⏳ Menunggu PowerAmp ready...");
+    await injectPowerAmpV2();
+  }
+
+  if (powerAmpNode && typeof powerAmpNode.connect === "function") {
+    current.connect(powerAmpNode);
+    console.log("⚡ PowerAmp Connected!");
+    return powerAmpNode;
+  } else {
+    console.warn("⚠️ PowerAmpNode belum siap, dilewati");
+    return current;
+  }
 }
 
-if (powerAmpNode && typeof powerAmpNode.connect === "function") {
-  current.connect(powerAmpNode);
-  current = powerAmpNode;
-  console.log("⚡ PowerAmp Connected!");
-} else {
-  console.warn("⚠️ PowerAmpNode belum siap, dilewati");
-}
-
-  
-if (!powerAmpNode) {  
-  console.warn("❌ PowerAmpNode gagal dibuat");  
-} else {  
-  console.log("⚡ PowerAmp connected:", powerAmpNode);  
-}  
+// Gunakan async wrapper supaya aman
+(async () => {
+  current = await connectPowerAmp(current);
+})();
   
 
 // Final Gain Stage
@@ -3129,7 +3205,7 @@ function applyVolumeBoost() {
   const volPreset = allPresets["Volume++"];
   if (!volPreset) return;
 
-  if (masterGain) masterGain.gain.value = 1.7;
+  if (masterGain) masterGain.gain.value = 1.0;
   if (clarity) {
     clarity.gain.value = 2.8;
     clarity.frequency.value = 4300;
