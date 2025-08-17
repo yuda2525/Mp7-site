@@ -2225,21 +2225,13 @@ try {
   }
 }
 
-function startWaveform() {
-  if (!analyser || !freqCanvas) return;
-  if (!waveformRunning) {
-    waveformRunning = true;
-    renderFreq();
-  }
-}
-
 let waveformRunning = false;
 
 let freqCanvas;
 let freqCtx;
 let freqDataArray;
 
-
+// ====== DRAW WAVEFORM ======
 function drawWaveform(analyser) {
   const waveCanvas = document.getElementById("waveformCanvas");
   if (!waveCanvas) return;
@@ -2307,28 +2299,20 @@ waveCtx.fillRect(0, 0, waveCanvas.width, waveCanvas.height);
 
 waveCtx.restore();
 
-    requestAnimationFrame(render); // 🔁 loop animasi
+    requestAnimationFrame(render);
   }
 
-  render(); // 🚀 mulai loop
+  if (!waveformRunning) {
+    waveformRunning = true;
+    render();
+  }
 }
 
-player.addEventListener("play", () => {
-  audioCtx.resume();
-  drawWaveform(analyser);  // yang ini udah auto-loop
-});
-
-
+// ====== RECONNECT STEREO ======
 function reconnectNodesToStereo() {
-  // Putuskan koneksi lama
-  try {
-    source.disconnect();
-    gainNode.disconnect();
-    stereoMerger.disconnect();
-  } catch (e) {}
+  try { source.disconnect(); gainNode.disconnect(); stereoMerger.disconnect(); } catch(e){}
 
   if (stereoEnabled) {
-    // stereo ON
     source.connect(splitter);
     splitter.connect(leftGain, 0);
     splitter.connect(rightGain, 1);
@@ -2336,24 +2320,158 @@ function reconnectNodesToStereo() {
     rightGain.connect(stereoMerger, 0, 1);
     stereoMerger.connect(analyser);
   } else {
-    // stereo OFF
     source.connect(gainNode);
     gainNode.connect(analyser);
   }
 
   analyser.connect(audioCtx.destination);
 
-  // Pastikan waveform jalan
-  if (!waveformRunning) {
-    waveformRunning = true;
-    drawWaveform();
+  drawWaveform(analyser); // pastikan waveform jalan
+}
+
+// ====== DRAW STEREO PEAK ======
+function drawStereoPeak(canvasId) {
+  const canvas = document.getElementById(canvasId);
+  if (!canvas || !stereoAnalyser) return;
+  const ctx = canvas.getContext("2d");
+  let data = new Uint8Array(stereoAnalyser.frequencyBinCount);
+
+  function loop() {
+    requestAnimationFrame(loop);
+
+    if (!stereoEnabled) {
+      ctx.clearRect(0,0,canvas.width,canvas.height);
+      return;
+    }
+
+    stereoAnalyser.getByteTimeDomainData(data);
+    ctx.clearRect(0,0,canvas.width,canvas.height);
+    ctx.beginPath();
+    ctx.lineWidth = 2;
+    ctx.strokeStyle = "#00f";
+
+    const slice = canvas.width / data.length;
+    let x = 0;
+    for (let i = 0; i < data.length; i++) {
+      const y = (data[i] / 255) * canvas.height;
+      i===0 ? ctx.moveTo(x,y) : ctx.lineTo(x,y);
+      x += slice;
+    }
+    ctx.stroke();
   }
+
+  loop();
 }
 
-function drawStereoPanVisual() {
-  // Visualisasi pan bisa ditambah nanti, untuk sekarang cukup biar gak error
+// ====== DOM INIT ======
+document.addEventListener("DOMContentLoaded", () => {
+  applyStereoRouting();
+  drawStereoPeak("stereoCanvas");
+});
+
+player.addEventListener("play", () => {
+  audioCtx.resume();
+  drawWaveform(analyser);
+});
+
+
+let snowEnabled = false;
+let audioPlaying = false; // track audio state
+
+function addMaximalSparklingSnow(analyser) {
+const canvas = document.createElement("canvas");
+document.body.appendChild(canvas);
+canvas.style.position = "fixed";
+canvas.style.top = "0";
+canvas.style.left = "0";
+canvas.style.width = "100%";
+canvas.style.height = "100%";
+canvas.style.pointerEvents = "none";
+canvas.style.zIndex = "-2";
+canvas.width = window.innerWidth;
+canvas.height = window.innerHeight;
+
+const ctx = canvas.getContext("2d", { willReadFrequently: true });
+const freqData = new Uint8Array(analyser.frequencyBinCount);
+
+const snowflakes = Array.from({ length: 60 }, () => ({
+x: Math.random() * canvas.width,
+y: Math.random() * canvas.height,
+size: Math.random() * 2 + 1.5,
+speed: Math.random() * 0.5 + 0.2,
+sparkle: Math.random(),
+sparkleSpeed: Math.random() * 0.03 + 0.015,
+flashChance: Math.random() * 0.1 + 0.05,
+glowHue: Math.random() * 360,
+saturation: Math.random() * 50 + 50,
+lightness: Math.random() * 30 + 50,
+prevValue: 0
+}));
+
+window.addEventListener("resize", () => {
+canvas.width = window.innerWidth;
+canvas.height = window.innerHeight;
+});
+
+window.addEventListener("dblclick", () => {
+snowEnabled = !snowEnabled;
+canvas.style.display = snowEnabled ? "block" : "none";
+});
+
+function render() {
+requestAnimationFrame(render);
+if (!snowEnabled) return;
+
+// Hanya ambil audio data kalau audio lagi play  
+if (audioPlaying) analyser.getByteFrequencyData(freqData);  
+
+ctx.clearRect(0, 0, canvas.width, canvas.height);  
+
+snowflakes.forEach((flake, i) => {  
+  // ambil value dari audio kalau audio playing, kalau nggak gunakan 0  
+  const value = audioPlaying ? freqData[Math.floor(i * freqData.length / snowflakes.length)] : 0;  
+  const smoothValue = flake.prevValue * 0.75 + value * 0.25;  
+  flake.prevValue = smoothValue;  
+
+  const speedBoost = (smoothValue / 255) * 1.5;  
+  flake.y += flake.speed + speedBoost;  
+  if (flake.y > canvas.height) flake.y = 0;  
+
+  flake.sparkle += flake.sparkleSpeed;  
+  if (flake.sparkle > 1) flake.sparkle = 0;  
+
+  const flash = Math.random() < flake.flashChance ? 1 : 0;  
+  const alpha = 0.15 + flake.sparkle * 0.7 + flash * 0.7 + (smoothValue / 255) * 0.25;  
+  const sizeBoost = flake.size * (0.5 + (smoothValue / 255) * 0.8 + flash * 0.5);  
+
+  const hue = flake.glowHue + (smoothValue / 255) * 60;  
+  const sat = flake.saturation;  
+  const light = flake.lightness;  
+
+  ctx.fillStyle = `hsla(${hue}, ${sat}%, ${light}%, ${alpha})`;  
+  ctx.shadowColor = `hsla(${hue}, ${sat}%, ${light}%, ${alpha})`;  
+  ctx.shadowBlur = 20 + 30 * flake.sparkle + flash * 40;  
+
+  ctx.beginPath();  
+  ctx.arc(flake.x, flake.y, sizeBoost, 0, Math.PI * 2);  
+  ctx.fill();  
+});
+
 }
 
+render();
+}
+
+// event audio
+player.addEventListener("play", () => {
+audioCtx.resume();
+audioPlaying = true;
+addMaximalSparklingSnow(analyser);
+});
+
+player.addEventListener("pause", () => {
+audioPlaying = false;
+});
 
 
 let audioCtx;
@@ -3949,63 +4067,6 @@ function stopSlowPan() {
   panTimer = null;
 }
 
-// ========== 🎛️ DRAW PEAK/WAVE DARI STEREO ==========
-function drawStereoPeak(canvasId) {
-  const canvas = document.getElementById(canvasId);
-  if (!canvas) return;
-
-  const ctx = canvas.getContext("2d");
-  let data;
-
-  function loop() {
-    requestAnimationFrame(loop);
-
-    if (!stereoEnabled || !stereoAnalyser) {
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
-      return;
-    }
-
-    if (!data || data.length !== stereoAnalyser.frequencyBinCount) {
-      data = new Uint8Array(stereoAnalyser.frequencyBinCount);
-    }
-
-    stereoAnalyser.getByteTimeDomainData(data);
-
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-    ctx.beginPath();
-    ctx.lineWidth = 2;
-    ctx.strokeStyle = "#00f";
-
-    const slice = canvas.width / data.length;
-    for (let i = 0; i < data.length; i++) {
-      const y = (data[i] / 255.0) * canvas.height;
-      const x = i * slice;
-      ctx.lineTo(x, y);
-    }
-
-    ctx.stroke();
-  }
-
-  loop();
-}
-
-// === DOM Handler
-document.addEventListener("DOMContentLoaded", () => {
-// const btn = document.getElementById("stereoToggleBtn");
-  // if (btn) {
-  //   btn.addEventListener("click", () => {
-  //     stereoEnabled = !stereoEnabled;
-  //     applyStereoRouting();
-  //   });
-  // }
-
-  // ⛳ Jalankan saat awal agar routing benar
-  applyStereoRouting();
-
-  // 🖼️ Gambar stereo peak ke canvas
-  drawStereoPeak("stereoCanvas"); 
-});
-  
 // ========== 🔀 BLEND PRESET + SURVIVAL ==========  
   
 function updateBlendUI() {  
