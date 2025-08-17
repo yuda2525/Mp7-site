@@ -1378,16 +1378,6 @@ subCompressor.release.value = 0.35;    // Lepas lebih smooth
   lowShelf.frequency.value = 150;
   lowShelf.gain.value = 3;
 
-// Sambungkan chain ke master atau powerAmpNode
-sourceNode.connect(lowCutFilter);
-lowCutFilter.connect(subShelf);
-subShelf.connect(subMidCut);
-subMidCut.connect(subCompressor);
-
-// Tambahkan lowShelf di sini, setelah subCompressor
-subCompressor.connect(lowShelf);
-lowShelf.connect(masterGain);
-
 console.log("✅ Sub/bass filter & compressor siap");
 
 // ===== DYNAMIC SUB GAIN =====
@@ -1739,11 +1729,6 @@ function connectChain(nodes) {
   }
 }
 
-// ===== Optional: connect chain FX otomatis ke master =====
-if (current) {
-  current.connect(masterGain); // masterGain dari chain utama
-}
-
 
 // ===== Build Subwoofer Chain =====
 function buildSubwooferChain(audioCtx, inputNode) {
@@ -1756,12 +1741,6 @@ function buildSubwooferChain(audioCtx, inputNode) {
   shelf.type = "lowshelf";
   shelf.frequency.value = 70;
   shelf.gain.value = 2.5;
-
-  const midCut = audioCtx.createBiquadFilter();
-  midCut.type = "peaking";
-  midCut.frequency.value = 300;
-  midCut.Q.value = 1.2;
-  midCut.gain.value = -2.5;
 
   const comp = audioCtx.createDynamicsCompressor();
   comp.threshold.value = -28;
