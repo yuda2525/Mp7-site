@@ -1334,40 +1334,59 @@ if (!audioCtx) {
 
 console.log("🎚 Inisialisasi EQ Filters...");
 
+let bassKick = audioCtx.createBiquadFilter();
+bassKick.type = "peaking";
+bassKick.frequency.value = 70;
+bassKick.gain.value = 3; // kick lebih nendang
+
+let bassLine = audioCtx.createBiquadFilter();
+bassLine.type = "peaking";
+bassLine.frequency.value = 110;
+bassLine.gain.value = 3; // bass lebih tebal
+
+let lowPass = audioCtx.createBiquadFilter();
+lowPass.type = "lowpass";
+lowPass.frequency.value = 14000;
+
 // ===== SUB / LOW EQ CHAIN =====
 const lowCutFilter = audioCtx.createBiquadFilter();
 lowCutFilter.type = "highpass";
-lowCutFilter.frequency.value = 25; 
-lowCutFilter.Q.value = 0.7; 
+lowCutFilter.frequency.value = 28; // Lebih rendah dikit
+lowCutFilter.Q.value = 0.6; // Lebih natural
 
 const subShelf = audioCtx.createBiquadFilter();
 subShelf.type = "lowshelf";
-subShelf.frequency.value = 70;
-subShelf.gain.value = 4.5; 
+subShelf.frequency.value = 65; // Turun dikit biar nggak bentrok kick
+subShelf.gain.value = 1.8; // Boost lebih halus
 
 const subMidCut = audioCtx.createBiquadFilter();
 subMidCut.type = "peaking";
-subMidCut.frequency.value = 300;
-subMidCut.Q.value = 1.2;
-subMidCut.gain.value = -1.5; 
+subMidCut.frequency.value = 280; // Lebih “safe zone”
+subMidCut.Q.value = 1.1;          // Lebih natural
+subMidCut.gain.value = -1.6;      // Cut cukup, nggak kebanyakan
 
 const subCompressor = audioCtx.createDynamicsCompressor();
-subCompressor.threshold.value = -28;
-subCompressor.knee.value = 12;
-subCompressor.ratio.value = 3;
-subCompressor.attack.value = 0.005;
-subCompressor.release.value = 0.25;
+subCompressor.threshold.value = -30;   // Lebih smooth
+subCompressor.knee.value = 10;         // Lebih soft
+subCompressor.ratio.value = 2.2;       // Lebih ringan
+subCompressor.attack.value = 0.01;     // Lebih lambat, natural
+subCompressor.release.value = 0.35;    // Lepas lebih smooth
 
-const subGain = audioCtx.createGain();
-subGain.gain.value = 1.1;
+  // ✅ Low-shelf filter buat angkat bass
+  lowShelf = audioCtx.createBiquadFilter();
+  lowShelf.type = 'lowshelf';
+  lowShelf.frequency.value = 150;
+  lowShelf.gain.value = 3;
 
 // Sambungkan chain ke master atau powerAmpNode
 sourceNode.connect(lowCutFilter);
 lowCutFilter.connect(subShelf);
 subShelf.connect(subMidCut);
 subMidCut.connect(subCompressor);
-subCompressor.connect(subGain);
-subGain.connect(masterGain); // masterGain dari chain utama
+
+// Tambahkan lowShelf di sini, setelah subCompressor
+subCompressor.connect(lowShelf);
+lowShelf.connect(masterGain);
 
 console.log("✅ Sub/bass filter & compressor siap");
 
@@ -1402,54 +1421,6 @@ function analyseKick() {
   const avg = sum / 6;
   return avg;
 }
-
-  // ✅ Low-shelf filter buat angkat bass
-  lowShelf = audioCtx.createBiquadFilter();
-  lowShelf.type = 'lowshelf';
-  lowShelf.frequency.value = 150;
-  lowShelf.gain.value = 3;
-
-// Bass
-eqNodes.bass = audioCtx.createBiquadFilter();
-eqNodes.bass.type = "lowshelf";
-eqNodes.bass.frequency.value = 100;
-eqNodes.bass.gain.value = 4;
-eqNodes.bass.Q.value = 1;
-
-// Kick
-eqNodes.kick = audioCtx.createBiquadFilter();
-eqNodes.kick.type = "lowshelf";
-eqNodes.kick.frequency.value = 60;
-eqNodes.kick.gain.value = 8;
-eqNodes.kick.Q.value = 1;
-
-// Snare
-eqNodes.snare = audioCtx.createBiquadFilter();
-eqNodes.snare.type = "peaking";
-eqNodes.snare.frequency.value = 1500;
-eqNodes.snare.gain.value = 6;
-eqNodes.snare.Q.value = 1;
-
-// Guitar
-eqNodes.guitar = audioCtx.createBiquadFilter();
-eqNodes.guitar.type = "peaking";
-eqNodes.guitar.frequency.value = 800;
-eqNodes.guitar.gain.value = 2;
-eqNodes.guitar.Q.value = 1;
-
-// Hihat
-eqNodes.hihat = audioCtx.createBiquadFilter();
-eqNodes.hihat.type = "highshelf";
-eqNodes.hihat.frequency.value = 8000;
-eqNodes.hihat.gain.value = 4;
-eqNodes.hihat.Q.value = 1;
-
-// Piano
-eqNodes.piano = audioCtx.createBiquadFilter();
-eqNodes.piano.type = "peaking";
-eqNodes.piano.frequency.value = 1200;
-eqNodes.piano.gain.value = 3;
-eqNodes.piano.Q.value = 1;
 
 console.log("✅ EQ Nodes (gain nyata) sudah diinisialisasi:", eqNodes);
 
@@ -1700,7 +1671,7 @@ console.log("🎨 FX Filters aktif:", {
   loudnessLow, loudnessHigh, subwoofer, deEsser  
 });  
   
-console.log("🌌 Spatial & Reverb units:", {  
+console.log("?? Spatial & Reverb units:", {  
   pianoReverb,  
   orchestraReverb,  
   stereoWidener,  
@@ -1725,8 +1696,6 @@ logInfo("Dynamics", { compressor, smartLimiter });
     // Buat node-nya sebelumnya (powerAmpNode & harmonicAIEngine) kalau belum
 
     console.log("🔗 Building initAudioContext");
-    
-    
     
     
 // ====== 🔀 Chain Setup ======
