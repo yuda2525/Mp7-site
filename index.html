@@ -2417,103 +2417,128 @@ player.addEventListener("play", () => {
 });
 
 
+
 let snowEnabled = false;
-let audioPlaying = false; // track audio state
+let audioPlaying = false;
+let snowAnimationId = null;
 
 function addMaximalSparklingSnow(analyser) {
-const canvas = document.createElement("canvas");
-document.body.appendChild(canvas);
-canvas.style.position = "fixed";
-canvas.style.top = "0";
-canvas.style.left = "0";
-canvas.style.width = "100%";
-canvas.style.height = "100%";
-canvas.style.pointerEvents = "none";
-canvas.style.zIndex = "-2";
-canvas.width = window.innerWidth;
-canvas.height = window.innerHeight;
+    // Clear previous canvas & animation jika ada
+    const existingCanvas = document.getElementById("snowCanvas");
+    if (existingCanvas) {
+        cancelAnimationFrame(snowAnimationId);
+        existingCanvas.remove();
+    }
 
-const ctx = canvas.getContext("2d", { willReadFrequently: true });
-const freqData = new Uint8Array(analyser.frequencyBinCount);
+    // Init canvas
+    const canvas = document.createElement("canvas");
+    canvas.id = "snowCanvas";
+    document.body.appendChild(canvas);
+    canvas.style.position = "fixed";
+    canvas.style.top = "0";
+    canvas.style.left = "0";
+    canvas.style.width = "100%";
+    canvas.style.height = "100%";
+    canvas.style.pointerEvents = "none";
+    canvas.style.zIndex = "-2";
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+    const ctx = canvas.getContext("2d", { willReadFrequently: true });
 
-const snowflakes = Array.from({ length: 60 }, () => ({
-x: Math.random() * canvas.width,
-y: Math.random() * canvas.height,
-size: Math.random() * 2 + 1.5,
-speed: Math.random() * 0.5 + 0.2,
-sparkle: Math.random(),
-sparkleSpeed: Math.random() * 0.03 + 0.015,
-flashChance: Math.random() * 0.1 + 0.05,
-glowHue: Math.random() * 360,
-saturation: Math.random() * 50 + 50,
-lightness: Math.random() * 30 + 50,
-prevValue: 0
-}));
+    const freqData = new Uint8Array(analyser.frequencyBinCount);
 
-window.addEventListener("resize", () => {
-canvas.width = window.innerWidth;
-canvas.height = window.innerHeight;
-});
+    const snowflakes = Array.from({ length: 60 }, () => ({
+        x: Math.random() * canvas.width,
+        y: Math.random() * canvas.height,
+        size: Math.random() * 2 + 1.5,
+        speed: Math.random() * 0.5 + 0.2,
+        sparkle: Math.random(),
+        sparkleSpeed: Math.random() * 0.03 + 0.015,
+        flashChance: Math.random() * 0.1 + 0.05,
+        glowHue: Math.random() * 360,
+        saturation: Math.random() * 50 + 50,
+        lightness: Math.random() * 30 + 50,
+        prevValue: 0
+    }));
 
+    window.addEventListener("resize", () => {
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+    });
+
+    function render() {
+        snowAnimationId = requestAnimationFrame(render);
+        if (!snowEnabled) {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            cancelAnimationFrame(snowAnimationId);
+            canvas.remove();
+            return;
+        }
+
+        if (audioPlaying) analyser.getByteFrequencyData(freqData);
+
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+        snowflakes.forEach((flake, i) => {
+            const value = audioPlaying ? freqData[Math.floor(i * freqData.length / snowflakes.length)] : 0;
+            const smoothValue = flake.prevValue * 0.75 + value * 0.25;
+            flake.prevValue = smoothValue;
+
+            const speedBoost = (smoothValue / 255) * 1.5;
+            flake.y += flake.speed + speedBoost;
+            if (flake.y > canvas.height) flake.y = 0;
+
+            flake.sparkle += flake.sparkleSpeed;
+            if (flake.sparkle > 1) flake.sparkle = 0;
+
+            const flash = Math.random() < flake.flashChance ? 1 : 0;
+            const alpha = 0.15 + flake.sparkle * 0.7 + flash * 0.7 + (smoothValue / 255) * 0.25;
+            const sizeBoost = flake.size * (0.5 + (smoothValue / 255) * 0.8 + flash * 0.5);
+
+            const hue = flake.glowHue + (smoothValue / 255) * 60;
+            const sat = flake.saturation;
+            const light = flake.lightness;
+
+            ctx.fillStyle = `hsla(${hue}, ${sat}%, ${light}%, ${alpha})`;
+            ctx.shadowColor = `hsla(${hue}, ${sat}%, ${light}%, ${alpha})`;
+            ctx.shadowBlur = 20 + 30 * flake.sparkle + flash * 40;
+
+            ctx.beginPath();
+            ctx.arc(flake.x, flake.y, sizeBoost, 0, Math.PI * 2);
+            ctx.fill();
+        });
+    }
+
+    render();
+}
+
+// Double tap to toggle snow
+let lastTap = 0;
 window.addEventListener("dblclick", () => {
-snowEnabled = !snowEnabled;
-canvas.style.display = snowEnabled ? "block" : "none";
+    snowEnabled = !snowEnabled;
+    if (snowEnabled && audioPlaying) {
+        addMaximalSparklingSnow(analyser);
+    } else if (!snowEnabled) {
+        const existingCanvas = document.getElementById("snowCanvas");
+        if (existingCanvas) {
+            cancelAnimationFrame(snowAnimationId);
+            existingCanvas.remove();
+        }
+    }
 });
 
-function render() {
-requestAnimationFrame(render);
-if (!snowEnabled) return;
-
-// Hanya ambil audio data kalau audio lagi play  
-if (audioPlaying) analyser.getByteFrequencyData(freqData);  
-
-ctx.clearRect(0, 0, canvas.width, canvas.height);  
-
-snowflakes.forEach((flake, i) => {  
-  // ambil value dari audio kalau audio playing, kalau nggak gunakan 0  
-  const value = audioPlaying ? freqData[Math.floor(i * freqData.length / snowflakes.length)] : 0;  
-  const smoothValue = flake.prevValue * 0.75 + value * 0.25;  
-  flake.prevValue = smoothValue;  
-
-  const speedBoost = (smoothValue / 255) * 1.5;  
-  flake.y += flake.speed + speedBoost;  
-  if (flake.y > canvas.height) flake.y = 0;  
-
-  flake.sparkle += flake.sparkleSpeed;  
-  if (flake.sparkle > 1) flake.sparkle = 0;  
-
-  const flash = Math.random() < flake.flashChance ? 1 : 0;  
-  const alpha = 0.15 + flake.sparkle * 0.7 + flash * 0.7 + (smoothValue / 255) * 0.25;  
-  const sizeBoost = flake.size * (0.5 + (smoothValue / 255) * 0.8 + flash * 0.5);  
-
-  const hue = flake.glowHue + (smoothValue / 255) * 60;  
-  const sat = flake.saturation;  
-  const light = flake.lightness;  
-
-  ctx.fillStyle = `hsla(${hue}, ${sat}%, ${light}%, ${alpha})`;  
-  ctx.shadowColor = `hsla(${hue}, ${sat}%, ${light}%, ${alpha})`;  
-  ctx.shadowBlur = 20 + 30 * flake.sparkle + flash * 40;  
-
-  ctx.beginPath();  
-  ctx.arc(flake.x, flake.y, sizeBoost, 0, Math.PI * 2);  
-  ctx.fill();  
-});
-
-}
-
-render();
-}
-
-// event audio
+// Audio event handling
 player.addEventListener("play", () => {
-audioCtx.resume();
-audioPlaying = true;
-addMaximalSparklingSnow(analyser);
+    audioCtx.resume();
+    audioPlaying = true;
+    if (snowEnabled) addMaximalSparklingSnow(analyser);
 });
 
 player.addEventListener("pause", () => {
-audioPlaying = false;
+    audioPlaying = false;
 });
+
+
 
 
 let audioCtx;
