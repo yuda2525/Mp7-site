@@ -2746,37 +2746,6 @@ async function renderAllBitDepthLock192k(durationInSec = 10) {
 
 
 
-
-
-// ==================== Preload Large Audio Buffer ====================
-// audioBuffers & audioCtx sudah global, jangan declare ulang
-async function preloadAudioBuffer(src, index) {
-  try {
-    const response = await fetch(src);
-    const arrayBuffer = await response.arrayBuffer();
-    const decoded = await audioCtx.decodeAudioData(arrayBuffer);
-    audioBuffers[index] = decoded;
-    console.log(`✅ Buffered: ${src}`);
-  } catch (err) {
-    console.warn(`❌ Gagal preload ${src}:`, err);
-  }
-}
-
-// Tunggu sampai playlist siap sebelum preload
-window.addEventListener('load', () => {
-  if (!window.playlist || !Array.isArray(playlist)) {
-    console.warn("❌ Playlist belum siap, preload buffer dibatalkan");
-    return;
-  }
-
-  // Preload semua track besar tanpa nabrak main player / tombol
-  playlist.forEach((src, i) => preloadAudioBuffer(src, i));
-
-  console.log("🎛️ Audio player ready. Large tracks buffered via AudioContext to avoid reload.");
-});
-
-
-
 // ============ 🎚️ PRESETS ============  
 bands = [10, 32, 64, 125, 250, 500, 1000, 2000, 4000, 10000, 16000, 20000];
 const basicPresets = {  
@@ -4839,59 +4808,6 @@ window.addEventListener('error', (e) => {
 
 
 // ==================== Audio Player Setup ====================
-// Preload all audio
-const audioElements = playlist.map(src => {
-  const aud = new Audio(src);
-  aud.preload = 'auto';
-  return aud;
-});
-
-// Load first track into main player
-audioPlayer.src = playlist[currentTrack];
-audioPlayer.preload = 'auto';
-
-// ==================== Player Controls ====================
-function playTrack(index) {
-  if (index < 0 || index >= playlist.length) return;
-  currentTrack = index;
-  audioPlayer.src = playlist[currentTrack];
-  audioPlayer.play().catch(() => console.warn('Autoplay blocked'));
-}
-
-function nextTrack() {
-  currentTrack = (currentTrack + 1) % playlist.length;
-  playTrack(currentTrack);
-}
-
-function prevTrack() {
-  currentTrack = (currentTrack - 1 + playlist.length) % playlist.length;
-  playTrack(currentTrack);
-}
-
-// ==================== Autoplay / End Handling ====================
-audioPlayer.addEventListener('ended', () => {
-  nextTrack();
-});
-
-// ==================== Optional: Keyboard Controls ====================
-window.addEventListener('keydown', (e) => {
-  if (e.code === 'ArrowRight') nextTrack();
-  if (e.code === 'ArrowLeft') prevTrack();
-  if (e.code === 'Space') {
-    e.preventDefault();
-    audioPlayer.paused ? audioPlayer.play() : audioPlayer.pause();
-  }
-});
-
-// ==================== Preload Large Audio Smooth ====================
-// optional: pre-buffer audio to avoid lag on large files
-audioElements.forEach(aud => {
-  aud.addEventListener('canplaythrough', () => {
-    console.log(`✅ Preloaded: ${aud.src}`);
-  });
-});
-
-
 window.addEventListener("DOMContentLoaded", () => {
   console.log("📦 DOM Loaded");
 
