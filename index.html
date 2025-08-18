@@ -4748,26 +4748,61 @@ const visualEngineSettings = {
   animate();
 
 
-// Register Service Worker
+// ==================== SW REGISTER ====================
 if ('serviceWorker' in navigator) {
   navigator.serviceWorker.register('./sw.js')
     .then(reg => console.log('✅ SW registered:', reg.scope))
     .catch(err => console.error('❌ SW registration failed:', err));
 }
 
-// Optional: fallback background from localStorage
+// ==================== PRELOAD LOCAL MEDIA ====================
+const localMedia = [
+  './bg.mp4',
+  './lagu1.mp3',
+  './lagu2.mp3',
+  './lagu3.mp3'
+];
+
+localMedia.forEach(src => {
+  const ext = src.split('.').pop();
+  if (ext === 'mp4') {
+    const vid = document.createElement('video');
+    vid.src = src;
+    vid.preload = 'auto';
+    vid.muted = true;
+    vid.loop = true;
+    vid.style.display = 'none';
+    document.body.appendChild(vid);
+  } else if (ext === 'mp3') {
+    const aud = document.createElement('audio');
+    aud.src = src;
+    aud.preload = 'auto';
+    aud.style.display = 'none';
+    document.body.appendChild(aud);
+  }
+});
+
+// ==================== LOAD BACKGROUND FROM LOCALSTORAGE ====================
 window.addEventListener('load', () => {
   const savedBg = localStorage.getItem('bgOuter');
-  const bgVideo = document.getElementById('bgVideo'); // misal ada <video id="bgVideo">
-  
+  const bgVideo = document.getElementById('bgVideo'); // pastikan ada <video id="bgVideo">
+
   if (savedBg) {
     if (savedBg.endsWith('.mp4') && bgVideo) {
       bgVideo.src = savedBg;
-      bgVideo.play().catch(()=>{}); // autoplay
+      bgVideo.loop = true;
+      bgVideo.muted = true;
+      bgVideo.preload = 'auto';
+      bgVideo.play().catch(()=>{});
     } else {
       document.body.style.backgroundImage = `url('${savedBg}')`;
     }
   }
+});
+
+// ==================== OPTIONAL FALLBACK ====================
+window.addEventListener('error', (e) => {
+  console.warn('Media load error:', e.target.src);
 });
 
 window.addEventListener("DOMContentLoaded", () => {
