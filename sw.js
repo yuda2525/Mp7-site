@@ -1,5 +1,5 @@
 // ==================== SW.JS ====================
-const CACHE_NAME = 'audioplayer-v3';
+const CACHE_NAME = 'CorE-Y² Audio Player';
 const ASSETS_TO_CACHE = [
   './',
   './index.html',
@@ -8,8 +8,8 @@ const ASSETS_TO_CACHE = [
   './style.css',
   './main.js',
   './bg.jpg',
-  './icon-192.png',
-  './icon-512.png'
+  './Icon-192.png',
+  './Icon-512.png'
   // audio/video besar TIDAK dicache
 ];
 
