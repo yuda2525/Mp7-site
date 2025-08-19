@@ -4753,6 +4753,7 @@ const visualEngineSettings = {
   }
 
   animate();
+  
 
 // ==================== Audio Player Setup ====================
 window.addEventListener("DOMContentLoaded", () => {
@@ -4789,12 +4790,27 @@ window.addEventListener("DOMContentLoaded", () => {
 });
 
 
-  if ('serviceWorker' in navigator) {    
-    navigator.serviceWorker.register('sw.js')    
-      .then(reg => console.log('✅ Service Worker registered:', reg.scope))    
-      .catch(err => console.error('❌ Service Worker registration failed:', err));    
-  }    
+// Register Service Worker
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('./sw.js')
+    .then(reg => console.log('✅ SW registered:', reg.scope))
+    .catch(err => console.error('❌ SW registration failed:', err));
+}
 
+// Optional: fallback background from localStorage
+window.addEventListener('load', () => {
+  const savedBg = localStorage.getItem('bgOuter');
+  const bgVideo = document.getElementById('bgVideo'); // misal ada <video id="bgVideo">
+  
+  if (savedBg) {
+    if (savedBg.endsWith('.mp4') && bgVideo) {
+      bgVideo.src = savedBg;
+      bgVideo.play().catch(()=>{}); // autoplay
+    } else {
+      document.body.style.backgroundImage = `url('${savedBg}')`;
+    }
+  }
+});
 
 console.log("✅ Script Loaded");  
 </script>  
