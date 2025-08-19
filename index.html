@@ -4755,55 +4755,12 @@ const visualEngineSettings = {
   animate();
 
 
-// ==================== PRELOAD LOCAL MEDIA (BESAR) ====================
-const localMedia = [
-  './bg.mp4',          
-  './lagu1.mp3',       
-  './lagu2.mp3',
-  './lagu80mb.mp3',    
-  './lagu100mb.mp3'    
-];
 
-localMedia.forEach(src => {
-  const ext = src.split('.').pop().toLowerCase();
-
-  if (ext === 'mp4') {
-    const vid = document.createElement('video');
-    vid.src = src;
-    vid.preload = 'auto';
-    vid.muted = true;
-    vid.loop = true;
-    vid.style.display = 'none';
-    vid.onerror = () => console.warn(`Gagal load video: ${src}`);
-    document.body.appendChild(vid);
-
-  } else if (ext === 'mp3') {
-    const aud = document.createElement('audio');
-    aud.src = src;
-    aud.preload = (src.includes('80mb') || src.includes('100mb')) ? 'metadata' : 'auto';
-    aud.style.display = 'none';
-    aud.onerror = () => console.warn(`Gagal load audio: ${src}`);
-    document.body.appendChild(aud);
-  }
-});
-
-// ==================== LOAD BACKGROUND DARI LOCALSTORAGE ====================
-window.addEventListener('load', () => {
-  const savedBg = localStorage.getItem('bgOuter');
-  const bgVideo = document.getElementById('bgVideo');
-
-  if (savedBg) {
-    if (savedBg.endsWith('.mp4') && bgVideo) {
-      bgVideo.src = savedBg;
-      bgVideo.loop = true;
-      bgVideo.muted = true;
-      bgVideo.preload = 'auto';
-      bgVideo.play().catch(()=>{});
-    } else {
-      document.body.style.backgroundImage = `url('${savedBg}')`;
-    }
-  }
-});
+  if ('serviceWorker' in navigator) {    
+    navigator.serviceWorker.register('sw.js')    
+      .then(reg => console.log('✅ Service Worker registered:', reg.scope))    
+      .catch(err => console.error('❌ Service Worker registration failed:', err));    
+  }    
 
 
 // ==================== Audio Player Setup ====================
