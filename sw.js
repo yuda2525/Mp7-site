@@ -1,5 +1,5 @@
 // ==================== SW.JS ====================
-const CACHE_NAME = 'CorE-Y² Audio Player';
+const CACHE_NAME = 'corey2-audio-player-v1';
 const ASSETS_TO_CACHE = [
   './',
   './index.html',
@@ -8,12 +8,11 @@ const ASSETS_TO_CACHE = [
   './style.css',
   './main.js',
   './bg.jpg',
-  './Icon-192.png',
-  './Icon-512.png'
+  './assets/Icon-192.png',
+  './assets/Icon-512.png'
   // audio/video besar TIDAK dicache
 ];
 
-// Install: cache semua assets kecil
 self.addEventListener('install', event => {
   event.waitUntil(
     caches.open(CACHE_NAME).then(cache => cache.addAll(ASSETS_TO_CACHE))
@@ -21,19 +20,15 @@ self.addEventListener('install', event => {
   self.skipWaiting();
 });
 
-// Activate: hapus cache lama
 self.addEventListener('activate', event => {
   event.waitUntil(
     caches.keys().then(keys =>
-      Promise.all(
-        keys.filter(key => key !== CACHE_NAME).map(key => caches.delete(key))
-      )
+      Promise.all(keys.filter(key => key !== CACHE_NAME).map(key => caches.delete(key)))
     )
   );
   self.clients.claim();
 });
 
-// Fetch: cache-first untuk assets kecil, media besar dari lokal
 self.addEventListener('fetch', event => {
   if (event.request.method !== 'GET') return;
 
@@ -41,7 +36,6 @@ self.addEventListener('fetch', event => {
   const isMedia = url.endsWith('.mp3') || url.endsWith('.mp4');
 
   if (isMedia) {
-    // File besar: langsung dari folder lokal
     event.respondWith(
       fetch(event.request).catch(() => {
         if (url.endsWith('.mp3')) return caches.match('./lagu1.mp3');
@@ -49,7 +43,6 @@ self.addEventListener('fetch', event => {
       })
     );
   } else {
-    // Assets kecil: cache-first
     event.respondWith(
       caches.match(event.request).then(cached => {
         if (cached) return cached;
@@ -60,7 +53,7 @@ self.addEventListener('fetch', event => {
               return resp;
             });
           })
-          .catch(() => caches.match('./offline.html'))
+          .catch(() => caches.match('./offline.html'));
       })
     );
   }
