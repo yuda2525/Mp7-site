@@ -1,22 +1,28 @@
 <!DOCTYPE html>
 <html lang="id">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  
+  <!-- ✅ Author & Copyright -->
   <meta name="author" content="CorE-Y² - Powered by AI & Human Creativity">
-<meta name="copyright" content="© 2025 CorE-Y² - yudabastard84@gmail.com">
-	<meta name="theme-color" content="#000000" />        
-        
-<!-- iOS support -->        
-<meta name="apple-mobile-web-app-title" content="Audio Player" />        
-<meta name="color-scheme" content="dark light">
-<link rel="apple-touch-startup-image" href="assets/splash-screen.png">    
-    <link rel="stylesheet" href="style.css" />  
+  <meta name="copyright" content="© 2025 CorE-Y² - yudabastard84@gmail.com">
+  <meta name="theme-color" content="#000000" />        
+  
+  <!-- ✅ iOS support -->        
+  <meta name="apple-mobile-web-app-title" content="CorE-Y² Player" />        
+  <meta name="color-scheme" content="dark light">
+  <link rel="apple-touch-startup-image" href="assets/splash-screen.png">    
+
+  <!-- ✅ Styles -->
+  <link rel="stylesheet" href="style.css" />  
 
   <!-- ✅ SEO & Social Share -->
+  <meta property="og:title" content="CorE-Y² Audio Player">
+  <meta property="og:description" content="Audio Player modern powered by AI & Human Creativity">
   <meta property="og:image" content="assets/Icon-512.png">
   <meta property="og:type" content="website">
-  <meta property="og:url" content="https://yuda2525.github.io/YOUR-PWA-FOLDER/">
+  <meta property="og:url" content="https://yuda2525.github.io/Mp7-site/">
 
   <!-- ✅ Favicon & Icons -->
   <link rel="icon" type="image/png" sizes="192x192" href="assets/Icon-192.png">
@@ -28,7 +34,8 @@
   <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-  <title> Audio Player Final</title>
+
+  <title>CorE-Y² Audio Player</title>
   <style>
 :root {
   --color-primary: rgba(0, 255, 238, 0.08);       /* soft glass base */
@@ -4748,24 +4755,18 @@ const visualEngineSettings = {
   animate();
 
 
-// ==================== SW REGISTER ====================
-if ('serviceWorker' in navigator) {
-  navigator.serviceWorker.register('./sw.js')
-    .then(reg => console.log('✅ SW registered:', reg.scope))
-    .catch(err => console.error('❌ SW registration failed:', err));
-}
-
 // ==================== PRELOAD LOCAL MEDIA (BESAR) ====================
 const localMedia = [
-  './bg.mp4',          // background video
-  './lagu1.mp3',       // audio normal
+  './bg.mp4',          
+  './lagu1.mp3',       
   './lagu2.mp3',
-  './lagu80mb.mp3',    // audio besar
-  './lagu100mb.mp3'    // audio besar
+  './lagu80mb.mp3',    
+  './lagu100mb.mp3'    
 ];
 
 localMedia.forEach(src => {
   const ext = src.split('.').pop().toLowerCase();
+
   if (ext === 'mp4') {
     const vid = document.createElement('video');
     vid.src = src;
@@ -4773,12 +4774,15 @@ localMedia.forEach(src => {
     vid.muted = true;
     vid.loop = true;
     vid.style.display = 'none';
+    vid.onerror = () => console.warn(`Gagal load video: ${src}`);
     document.body.appendChild(vid);
+
   } else if (ext === 'mp3') {
     const aud = document.createElement('audio');
     aud.src = src;
-    aud.preload = 'auto';
+    aud.preload = (src.includes('80mb') || src.includes('100mb')) ? 'metadata' : 'auto';
     aud.style.display = 'none';
+    aud.onerror = () => console.warn(`Gagal load audio: ${src}`);
     document.body.appendChild(aud);
   }
 });
@@ -4799,11 +4803,6 @@ window.addEventListener('load', () => {
       document.body.style.backgroundImage = `url('${savedBg}')`;
     }
   }
-});
-
-// ==================== OPTIONAL FALLBACK ====================
-window.addEventListener('error', (e) => {
-  console.warn('Media load error:', e.target.src);
 });
 
 
