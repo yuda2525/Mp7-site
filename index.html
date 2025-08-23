@@ -2424,7 +2424,7 @@ player.addEventListener("play", () => {
 });
 
 
-
+// ====== DOM INIT ======
 let snowEnabled = false;
 let audioPlaying = false;
 let snowAnimationId = null;
@@ -2447,7 +2447,7 @@ function addMaximalSparklingSnow(analyser) {
     canvas.style.width = "100%";
     canvas.style.height = "100%";
     canvas.style.pointerEvents = "none";
-    canvas.style.zIndex = "-2";
+    canvas.style.zIndex = "0";
     canvas.width = window.innerWidth;
     canvas.height = window.innerHeight;
     const ctx = canvas.getContext("2d", { willReadFrequently: true });
