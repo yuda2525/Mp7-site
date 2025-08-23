@@ -2499,8 +2499,8 @@ function addMaximalSparklingSnow(analyser) {
             if (flake.sparkle > 1) flake.sparkle = 0;
 
             const flash = Math.random() < flake.flashChance ? 1 : 0;
-            const alpha = 0.15 + flake.sparkle * 0.7 + flash * 0.7 + (smoothValue / 255) * 0.25;
-            const sizeBoost = flake.size * (0.5 + (smoothValue / 255) * 0.8 + flash * 0.5);
+const alpha = 0.05 + flake.sparkle * 0.7 + flash * 0.9 + flash * 0.7 + (smoothValue / 255) * 0.25;
+            const sizeBoost = flake.size * (0.5 + (smoothValue / 255) * 0.7 + flash * 0.5);
 
             const hue = flake.glowHue + (smoothValue / 255) * 60;
             const sat = flake.saturation;
@@ -2510,11 +2510,17 @@ function addMaximalSparklingSnow(analyser) {
             ctx.shadowColor = `hsla(${hue}, ${sat}%, ${light}%, ${alpha})`;
             ctx.shadowBlur = 20 + 30 * flake.sparkle + flash * 40;
 
-            ctx.beginPath();
-            ctx.arc(flake.x, flake.y, sizeBoost, 0, Math.PI * 2);
-            ctx.fill();
-        });
-    }
+// flake utama
+ctx.beginPath();
+ctx.arc(flake.x, flake.y, sizeBoost, 0, Math.PI * 2);
+ctx.fill();
+
+// inner glow
+ctx.beginPath();
+ctx.arc(flake.x, flake.y, sizeBoost * 0.4, 0, Math.PI * 2);
+ctx.fill();
+  }); 
+} 
 
     render();
 }
